@@ -1,0 +1,170 @@
+#include "stdio.h"
+#include "stdlib.h"
+#include "stdarg.h"
+#include "string.h"
+#include "structDef.h"
+#include "Buzzer.h"
+#include "HT1632_C52.h"
+#include "SevenSegDisplay.h"
+#include "LED_Matrix.h"
+#include "RM6T6.h"
+#include "Key.h"
+#include "Mode.h"
+#include "Program.h"
+#include "btm.h"
+#include "SystemStick.h"
+#include "DisplayBoard.h"
+#include "RealityKey.h"
+#include "FAN.h"
+#include "BT_SPK.h"
+
+#ifndef __SYSTEM_H__
+#define __SYSTEM_H__
+
+
+#define System_Version "V10"
+
+extern char ucProductionSerialNumber[30];     //生產序號
+
+//----------IWDG ---------
+//#include "stm32f0xx_hal_iwdg.h"
+#define Config_WDG   0
+extern unsigned char Feed_Dog_Flag;
+
+/*
+#define System_INCLINE_Max 150
+#define System_SPEED_Max   120
+*/
+
+//App Mode
+extern ucSubSystemMode_Def ucSubSystemMode;
+
+extern unsigned short usAppStageNumber;
+
+
+//Power 5V Control
+extern void Power_5V_ON();
+extern void Power_5V_OFF();
+
+//---  5K WHR  hand HHR-----
+#define configUSE_WHR  1
+#define configUSE_HHR  1
+extern unsigned char ucWhr;	
+extern unsigned char HR5KPairOkFlag;
+
+extern unsigned char ucHhr;
+
+void HR_5K_Init();
+void Hand_HR__Init();
+
+extern void F_HR(void);
+extern void F_HRProcess(void);
+
+
+//----  Safe Key  -----
+void SafeKey_Init();
+void SafeKey_Detect();
+extern SafeKey_State_def safekey;
+
+//      Flash
+extern void Write_SerialNumber_To_Flash(char *Data);
+extern void Read_SerialNumber_From_Flash(char *Data);
+
+extern void Flash_Read_Test(unsigned int Sector_Addr);
+extern void FlashErase(unsigned int Sector);
+extern void Flash_Init();
+extern void FlashTest();
+extern void Flash_Custom_Data_Loading();
+extern void Flash_Custom_Data_Saving();
+extern void SaveWorkoutData();
+
+extern void Flash_Write_OTA_Mode();
+extern void Flash_Write_Applicantion_Mode();
+extern void Flash_Write_BootLoader_Mode();
+
+extern void OTA_Mode_Check();
+extern void Update_FW_Flash_Erase();
+extern void Write_EE_Flash_FW_Data_16Byte( unsigned int page , unsigned char *Data);
+extern void Fw_Write_Finish_Check();
+
+extern unsigned char Flash_Test_Engineer();
+
+
+extern OTA_FW_Transmit_Info_Def FW;
+extern unsigned char OTA_Mode_Flag;
+
+
+
+extern Machine_Data_Def  Machine_Data;
+extern void Write_Machine_Data_Init(System_Unit_Def Unit);
+extern void Machine_Data_Update();
+extern void Flash_Machine_Data_Loading();
+
+
+extern Custom_Program_Data_Def MyCustom_1;
+extern Custom_Program_Data_Def MyCustom_2;
+
+extern User_Program_Data_Def MyUser_1;
+extern User_Program_Data_Def MyUser_2;
+
+extern unsigned short usNowHeartRate;    //使用者心跳 
+extern void F_HeartRate_Supervisor();
+
+//extern unsigned int Total_Machine_Distants;  //機器跑的總里程  單位 公里/10 => 1:100公尺
+//extern unsigned int Total_Machine_Times;     //機器跑的總時間  單位 ? 
+
+extern Time_Display_Def       Time_Display_Type;
+extern Calories_Display_Def   Calories_Display_Type;
+extern unsigned char         Pace_Display_Switch;
+
+extern System_Mode_Def System_Mode;
+extern System_Unit_Def System_Unit;
+extern unsigned char str_cNt;
+extern short Move_X;
+
+extern unsigned short System_INCLINE; //0~150   => 0.0~15.0 %   =>0~31
+extern unsigned short System_SPEED;   //0 ~ 120 
+
+extern unsigned short usMET;
+
+extern unsigned int Pace_Freq;  //步頻
+extern unsigned int Pace_Dist;  //步幅
+extern unsigned int Pace_Spd;   //步速
+extern unsigned long ulAltitude;
+
+unsigned char charArrayEquals( char A1[], char A2[]);
+
+//----------------  Bitmap ------------------------------
+extern const unsigned char *CapitalAlphabetArray[];
+extern const unsigned char *NumberArray[];
+extern const unsigned char*Pattern_Array[];
+
+extern const unsigned char ATTACUS_Logo[];
+extern const unsigned char Light_Eye[];
+extern const unsigned char Love_Workout[];
+extern const unsigned char Boil_30min[];
+extern const unsigned char ALA_LOGO[];
+extern const unsigned char ATTACUS_String[];
+extern const unsigned char ALATECH_Vertical[];
+extern const unsigned char Buy_Cheese[];
+
+extern const unsigned char P_SetGoalTime[];
+extern const unsigned char P_SetAge[];
+extern const unsigned char P_SetWeight[];
+extern const unsigned char ALA_LOGO_String[];
+
+extern const unsigned char Heart_Empty[];
+extern const unsigned char Heart_Solid[];
+extern const unsigned char EZ_I_Icon[];
+extern const unsigned char BLE_HR_Icon[];
+extern const unsigned char ANT_HR_Icon[];
+extern const unsigned char Download_Icon[];
+extern const unsigned char SPK_ON_Icon[];
+extern const unsigned char SPK_OFF_Icon[];
+
+//----------------  Debug  ------------------------------
+extern void TimePeriodTest();
+
+
+
+#endif
