@@ -34,13 +34,28 @@ void HAL_I2C_MspInit(I2C_HandleTypeDef* hi2c)
     PB6     ------> I2C1_SCL
     PB9     ------> I2C1_SDA 
     */
+      //-----------------------------------------------------------
+      GPIO_InitStruct.Pin    = GPIO_PIN_6|GPIO_PIN_9;
+      GPIO_InitStruct.Mode  = GPIO_MODE_OUTPUT_PP;
+      GPIO_InitStruct.Pull  = GPIO_NOPULL;
+      GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
+      HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+      
+      HAL_GPIO_WritePin(GPIOB, GPIO_PIN_9, GPIO_PIN_SET);   //SDA 強制拉high
+      HAL_GPIO_WritePin(GPIOB, GPIO_PIN_6, GPIO_PIN_SET);   //SCL 強制拉high
+      
+      __HAL_I2C_DISABLE(hi2c);
+      for(unsigned char i=0;i<100;i++);              /*delay awhile*/  
+      __HAL_I2C_ENABLE(hi2c);
+      //----------------------------------------------------------------
+      
     GPIO_InitStruct.Pin = GPIO_PIN_6|GPIO_PIN_9;
     GPIO_InitStruct.Mode = GPIO_MODE_AF_OD;
     GPIO_InitStruct.Pull = GPIO_PULLUP;
     GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
     GPIO_InitStruct.Alternate = GPIO_AF4_I2C1;
     HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
-
+    
     __HAL_RCC_I2C1_CLK_ENABLE();
     /* I2C1 interrupt Init */
     HAL_NVIC_SetPriority(I2C1_EV_IRQn, 0, 0);

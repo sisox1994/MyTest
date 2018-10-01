@@ -68,7 +68,7 @@ int main(void)
 
     while (1)
     {
-
+        
         
         
         FAN_SET_PWM_DUTY(My_PWM_Value);
