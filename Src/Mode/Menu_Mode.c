@@ -399,6 +399,7 @@ extern UART_HandleTypeDef huart2;
 
 void Menu_Key(){
      
+ 
     
     if( KeyCatch(0,1 , Inc_15) ){
         
@@ -563,7 +564,7 @@ void Menu_Key(){
         } 
     }
     
-    if( KeyCatch(0,1 , Start) ){
+    if( KeyCatch(0,1 , Start)  ||   PauseKey() ){  //  PauseKey 暫時當開始
         
         if(Program_Select == User_1 || Program_Select == User_2){
             

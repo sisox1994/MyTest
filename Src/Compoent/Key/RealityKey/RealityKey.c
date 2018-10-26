@@ -11,7 +11,7 @@ GPIO_PinState   PE_7_incUP;
 GPIO_PinState   PE_8_inc_Down;
 unsigned short Debounce_Time;
 unsigned short Debounce_Time_ADJ = 50;  //除彈跳時間
-unsigned char Holding_Cnt;    //偵測按住多久用的Counter
+unsigned int Holding_Cnt;    //偵測按住多久用的Counter
 
 void Reality_Key_Init(){
 
@@ -74,19 +74,26 @@ unsigned char R_KeyCatch(KeyName_Def KeyName){  //普通按一下
 }
 
 //按住超過 0.8秒  每隔0.1秒  return 1
+
+KeyName_Def  Holding_Key_Name;
+unsigned char Hold_Key_Flag;
 unsigned char R_KeyContinueProcess(KeyName_Def KeyName){  
+    
     if(Catch_Key_Save == KeyName){
+        Holding_Key_Name = KeyName;
         if( T100ms_R_KeyHold_Flag){
             T100ms_R_KeyHold_Flag = 0;
             
             Holding_Cnt++;
             if(Holding_Cnt>8){   
+                Hold_Key_Flag =1;
                 return 1;
             }
         }
     }else{
         __asm("NOP");
     }
+    Hold_Key_Flag =0;
     return 0;
 }
 

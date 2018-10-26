@@ -593,11 +593,11 @@ void Write_Machine_Data_Init(System_Unit_Def Unit){
     
     if(Unit == Metric ){
 	Machine_Data.System_UNIT = Metric;
-        Machine_Data.System_SPEED_Max = 160;
+        Machine_Data.System_SPEED_Max = 240;
         Machine_Data.System_SPEED_Min = 8;
     }else if(Unit == Imperial){
         Machine_Data.System_UNIT = Imperial;
-        Machine_Data.System_SPEED_Max = 100;
+        Machine_Data.System_SPEED_Max = 150;
         Machine_Data.System_SPEED_Min = 5;
     }           
     

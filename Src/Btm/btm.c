@@ -2889,7 +2889,7 @@ void F_Btm_FTMS_B2_Read(){
                 RM6_Task_Adder(Set_SPEED);
                 RM6_Task_Adder(Motor_STOP);
                 
-                Buzzer_BeeBee(500, 10);
+               Buzzer_BeeBee(Time_Set, Cnt_Set);
             }
             __asm("NOP");
         }else if(ucBtmRxData[3] == 0x02){

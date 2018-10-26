@@ -82,10 +82,10 @@ void Update_BarArray_Data_Ex(){
     }
     
     BarArray_Shift_Process();
-    DrawBarArray_Workout(Program_Data.BarArray_Display , Program_Data.PeriodIndex_After_Shift , 0 );
+    //DrawBarArray_Workout(Program_Data.BarArray_Display , Program_Data.PeriodIndex_After_Shift , 0 );
     
-    writeLEDMatrix();
-    ClearBlinkCnt_BarArray();
+    //writeLEDMatrix();
+    //ClearBlinkCnt_BarArray();
     
 }
 
@@ -108,13 +108,13 @@ unsigned char Quick_INCLINE__Key(){
     }
  
     if(R_KeyCatch( Inc_Up) || R_KeyContinueProcess(Inc_Up)){
-        if(System_INCLINE<Machine_Data.System_INCLINE_Max) System_INCLINE++;
+        if(System_INCLINE<Machine_Data.System_INCLINE_Max) System_INCLINE+=5;
         __asm("NOP");
          return 1;
     }
     
     if(R_KeyCatch( Inc_Down) || R_KeyContinueProcess(Inc_Down)){
-        if(System_INCLINE>Machine_Data.System_INCLINE_Min)System_INCLINE--;
+        if(System_INCLINE>Machine_Data.System_INCLINE_Min)System_INCLINE-=5;
         __asm("NOP");
          return 1;
     }
@@ -219,7 +219,7 @@ void Workout_Key(){
         __asm("NOP");
     }  
     
-    if( KeyCatch(0,1 , Stop) ){
+    if( KeyCatch(0,1 , Stop) ||  PauseKey() ){
         
         IntoPauseMode_Process(); 
         
@@ -230,7 +230,7 @@ void Workout_Key(){
         RM6_Task_Adder(Set_SPEED);
         RM6_Task_Adder(Motor_STOP);
         
-        Buzzer_BeeBee(500, 10);
+        Buzzer_BeeBee(Time_Set, Cnt_Set);
     }
     
     if( KeyCatch(0,1 , Spd_12) ){  //(++   時間)
@@ -284,7 +284,7 @@ void Workout_Key(){
     if(Quick_SPEED__Key() == 1){
     
         Rst_Speed_Blink();
-        SPEED_Changing_Flag = 0;
+        //SPEED_Changing_Flag = 0;
        
         RM6_Task_Adder(Set_SPEED);
     
@@ -292,8 +292,8 @@ void Workout_Key(){
     
     if(Quick_INCLINE__Key() == 1){
         
-        Rst_Incline_Blink();
-        INCL_Moveing_Flag = 0;
+        //Rst_Incline_Blink();
+        //INCL_Moveing_Flag = 0;
         RM6_Task_Adder(Set_INCLINE);
         
         switch(Program_Select){
@@ -333,6 +333,11 @@ void Workout_Key(){
         }
     }
 }
+
+
+unsigned short Time_Set = 600;
+unsigned char Cnt_Set = 2;
+
 
 unsigned int uiAvgSpeed_Tmp;
 unsigned int uiAvgSpeed;
@@ -375,7 +380,7 @@ void TimeProcess(){
             System_INCLINE = 0;
             RM6_Task_Adder(Set_INCLINE);
             
-            Buzzer_BeeBee(500, 10);
+            Buzzer_BeeBee(Time_Set, Cnt_Set);
         }
     }
     
@@ -401,7 +406,7 @@ void TimeProcess(){
                 System_INCLINE = 0;
                 RM6_Task_Adder(Set_INCLINE);
                 
-                Buzzer_BeeBee(500, 10);
+                Buzzer_BeeBee(Time_Set, Cnt_Set);
                 
             }
             
@@ -769,8 +774,10 @@ void Workout_Func(){
     
     ucSubSystemMode = C_App_RunningVal;
     
-    if(T250ms_Flag){
-        T250ms_Flag = 0;
+    Workout_Key();
+    
+    if(T100ms_Workout_Display_Flag){
+        T100ms_Workout_Display_Flag = 0;
         //bar 顯示 + 閃爍
 
         switch(Program_Select){
@@ -878,6 +885,6 @@ void Workout_Func(){
     
     CloudRun_Workout_Data_Broadcast(); //500ms 丟
    
-    Workout_Key();
+    
     
 }

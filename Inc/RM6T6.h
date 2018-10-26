@@ -3,7 +3,7 @@
 #ifndef    __RM6T6_H__
 #define    __RM6T6_H__
 
-#define RM6T6_IN_USE  0
+#define RM6T6_IN_USE  1
 
 #define UART_TxBufDataLength 15
 #define UART_RxBufDataLength 20

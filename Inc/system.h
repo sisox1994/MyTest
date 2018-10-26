@@ -65,6 +65,10 @@ extern void F_HRProcess(void);
 void SafeKey_Init();
 void SafeKey_Detect();
 extern SafeKey_State_def safekey;
+unsigned char PauseKey();
+extern unsigned short Time_Set;
+extern unsigned char Cnt_Set;
+
 
 //      Flash
 extern void Write_SerialNumber_To_Flash(char *Data);

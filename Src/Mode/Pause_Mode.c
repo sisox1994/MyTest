@@ -14,7 +14,7 @@ void IntoPauseMode_Process(){
 
 void Pause_Key(){
 
-    if( KeyCatch(0,1 , Start) ){
+    if( KeyCatch(0,1 , Start)  || PauseKey()){
         IntoWorkoutModeProcess();
         
         if(System_Unit == Metric  ){  

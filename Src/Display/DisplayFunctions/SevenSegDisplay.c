@@ -563,13 +563,9 @@ void SET_SPEED_Blink( unsigned short Value ,DOT_Def dot ,Format_Def format ,unsi
             SevenSegmentBuffer[MSB_BYTE/4] = 0x00;
             SevenSegmentBuffer[MID_BYTE/4] = 0x00;
             SevenSegmentBuffer[LSB_BYTE/4] = 0x00;
-        
         }     
     }
-    
 }
-
-    
 
 void SET_Seg_Display_Blink(Seg_Display_ITEM_Def Item , unsigned short Value ,DOT_Def dot ,Format_Def format ,unsigned char Blink_Swich ){
     
@@ -1097,25 +1093,19 @@ unsigned char Blink_Flag;
 
 void TIME_SET_Display( Seg_Display_ITEM_Def Item  , unsigned int Value , unsigned char BlinkMask , unsigned char Force){
     
-
     unsigned char BYTE_1;
     unsigned char BYTE_2;
-    
     unsigned char BYTE_3;
     unsigned char BYTE_4;
-    
     unsigned char COLON;
     
     if(Item == PACE_SPD){
         
         //if(Value < 3600){       //      步速> (一小時 ) ==> 一樣顯示 XX分鐘: XX秒
-            
             BYTE_4 = (Value / 60) / 10;
             BYTE_3 = (Value / 60) % 10;
-            
             BYTE_2 = (Value % 60) / 10;
             BYTE_1 = (Value % 60) % 10;
-            
         //}
         
     }else{
@@ -1124,7 +1114,6 @@ void TIME_SET_Display( Seg_Display_ITEM_Def Item  , unsigned int Value , unsigne
             
             BYTE_4 = (Value / 60) / 10;
             BYTE_3 = (Value / 60) % 10;
-            
             BYTE_2 = (Value % 60) / 10;
             BYTE_1 = (Value % 60) % 10;
             
@@ -1132,16 +1121,11 @@ void TIME_SET_Display( Seg_Display_ITEM_Def Item  , unsigned int Value , unsigne
             
             BYTE_4 = (Value / 3600) / 10;
             BYTE_3 = (Value / 3600) % 10;
-            
             BYTE_2 = ((Value % 3600)/60) / 10;
             BYTE_1 = ((Value % 3600)/60) % 10;
             
         }
-    
     }
-    
-    
-
     
     if( (Item == PACE) || (Item == CALORIES) || (Item == TIME) || (Item == PACE_SPD)){
         
@@ -1166,7 +1150,6 @@ void TIME_SET_Display( Seg_Display_ITEM_Def Item  , unsigned int Value , unsigne
             BIT_3 = Item + 12;
             COLON = Item + 4;
             break;
-
         }
         
         if(Item == PACE_SPD){
@@ -1175,7 +1158,6 @@ void TIME_SET_Display( Seg_Display_ITEM_Def Item  , unsigned int Value , unsigne
             BIT_2 = PACE + 12;
             BIT_3 = PACE + 16;
             COLON = PACE + 8;
-        
         }
         
         //強迫全部顯示
@@ -1304,6 +1286,11 @@ unsigned char Pace_Display_Switch;
 unsigned char L_Mode = 'N';
 unsigned char R_Mode = 'N';
 
+
+extern unsigned int Holding_Cnt;    //偵測按住多久用的Counter  >8 判定為按住
+extern unsigned char Hold_Key_Flag;
+extern KeyName_Def  Holding_Key_Name;
+
 void Workout_Value_DisplayProcess(){
 
     if(System_Mode != StartUP){
@@ -1325,8 +1312,16 @@ void Workout_Value_DisplayProcess(){
                     SET_Seg_Display(HEARTRATE  , 0 , ND , DEC );
                     usNowHeartRate = 0;
                 }
-                
             }    
+        }
+        
+        if(Holding_Cnt > 8){ //按鈕按住
+            if( (Holding_Key_Name == Inc_Up) || (Holding_Key_Name == Inc_Down) ){
+                INCL_Moveing_Flag = 0;
+            }
+            if( (Holding_Key_Name == Spd_Up) || (Holding_Key_Name == Spd_Down) ){
+                 SPEED_Changing_Flag = 0;
+            }
         }
         
         SET_INCLINE_Blink( System_INCLINE ,D2 ,DEC  , INCL_Moveing_Flag);

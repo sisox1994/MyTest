@@ -122,6 +122,9 @@ void time(){
     if(TimerCnt%250 == 0){   //Workout Display
         T250ms_Flag = 1;       
     }
+    if(TimerCnt%5 == 0){   //Workout Display
+        T100ms_Workout_Display_Flag = 1;
+    }
     if(TimerCnt%100 == 0){     //偵測按鈕按住多少(100ms)
         T100ms_KeyHold_Flag = 1; 
     }
@@ -154,6 +157,9 @@ void time(){
     
     if(NeverClearCnt%500 == 0){  //偵測藍芽喇叭連線用
         T500ms_BTSPK_Det_Flag = 1;
+    }
+    if(NeverClearCnt%500 == 0){  //偵測pauseKey用
+        T100ms_PauseKey_Flag = 1;
     }
     //-------------------------------------------------------------------//
     

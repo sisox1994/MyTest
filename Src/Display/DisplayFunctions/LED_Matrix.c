@@ -1655,7 +1655,7 @@ void Basic_HRC_Display(){
     
 }
 
-void DrawBarArray_Workout( unsigned char *BarArray_Temp , unsigned char Blink_Index , unsigned char Blink_Flag ){
+void DrawBarArray_Workout( unsigned char *BarArray_Temp , unsigned char Blink_Index , unsigned char B_Flag ){
 
    
     //***************************************************
@@ -1670,30 +1670,26 @@ void DrawBarArray_Workout( unsigned char *BarArray_Temp , unsigned char Blink_In
     }
     
     if(Blink_Flag_Work == 1){
-        
         if(Blink_Index < 32){
             LedMatrixBuffer[Blink_Index] = 0x00;
         }
-        
     }
     
-    if(Blink_Flag == 1){
-        
+    if(B_Flag == 1){
         
         if(T500ms_BarArray_Blink_Flag){
             T500ms_BarArray_Blink_Flag = 0;
             
             if(Blink_Flag_Work){
-                Blink_Flag_Work = 0;
+               Blink_Flag_Work = 0;
             }else if(Blink_Flag_Work == 0){
                 Blink_Flag_Work = 1;
-            }
-            
+            }   
         }
         
  
-    }else if(Blink_Flag == 0){
-        ClearBlinkCnt_BarArray();
+    }else if(B_Flag == 0){
+        //ClearBlinkCnt_BarArray();
         Blink_Flag_Work = 1;
     }
     

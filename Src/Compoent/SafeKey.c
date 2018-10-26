@@ -15,8 +15,9 @@
 void SafeKey_Init();
 void SafeKey_Detect();
 
-#define    RealSafeKey   0
+#define    RealSafeKey  0
 
+GPIO_PinState Pause_State;
 void SafeKey_Init(){
  
     GPIO_InitTypeDef GPIO_InitStruct;
@@ -48,17 +49,50 @@ void SafeKey_Detect(){
     }else{
         safekey = Plug_IN;
     }
+    
+    
+    
+    
 }
+unsigned char Pause_press_Flag;
+unsigned char PauseKey(){
+
+    Pause_State =  HAL_GPIO_ReadPin(PAUSE_KEY_GPIO,PAUSE_KEY_PIN);
+    
+    if(T100ms_PauseKey_Flag){
+       
+        if(Pause_press_Flag == 0){
+           
+            if(Pause_State == GPIO_PIN_RESET){
+             
+                Pause_press_Flag =1;
+            }
+        }
+    }
+   
+    
+    if(Pause_press_Flag == 1){
+        if(Pause_State == GPIO_PIN_SET){
+            T100ms_PauseKey_Flag = 0;
+            Pause_press_Flag = 0;
+            return 1;
+        }
+    }
+    return 0;
+}
+
 
 void Safe_Func(){
     
     if(T_Marquee_Flag){
         T_Marquee_Flag = 0; 
         
-        F_String_buffer_Auto( Left, "PLUG      IN      SAFETY" ,50 ,0);
+        //F_String_buffer_Auto( Left, "PLUG      IN      SAFETY" ,50 ,0);
+        F_String_buffer_Auto( Left, "EMERGENCY       STOP" ,40 ,0);
         
         writeLEDMatrix();
         Turn_OFF_All_Segment();
+        SET_DisplayBoard_Data('X',0,0,'X',0,0);
     }
     
     if(safekey == Plug_IN){
