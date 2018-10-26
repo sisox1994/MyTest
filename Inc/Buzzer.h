@@ -1,13 +1,10 @@
-
 #ifndef __BUZZER_H__
 #define __BUZZER_H__
 
-#define Buzzer_Enable 1     //1 開   0關
-
+#define Use_Buzzer  1     //1 開   0關
 
 #define Buzzer_GPIO GPIOB
 #define Buzzer_Pin  GPIO_PIN_5
-
 #define BuzzerTimeValue  50;
 
 void Buzzer_Init();

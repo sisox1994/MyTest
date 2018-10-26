@@ -2,7 +2,6 @@
 
 I2C_HandleTypeDef hi2c1;
 
-
 #define I2C_Slave_Address   0x72
 unsigned char DataBuffer[8];
 HAL_StatusTypeDef I2C_status;
@@ -34,22 +33,6 @@ void SET_DisplayBoard_Data(unsigned char L_mode,unsigned char L_dot,unsigned sho
         I2C_status =  HAL_I2C_Master_Transmit(&hi2c1, I2C_Slave_Address , DataBuffer, 8, 10);
         Tr_cnt++;
     }
-    if(Tr_cnt ==100){
-    
-        /*
-        HAL_Delay(100);
-         Buzzer_BeeBee(50, 2);
-        HAL_I2C_MspDeInit(&hi2c1);
-        HAL_I2C_MspInit(&hi2c1);
-        __HAL_I2C_CLEAR_FLAG(&hi2c1, I2C_FLAG_STOPF); 
-        I2C_RESET_CR2(&hi2c1);                                                   
-        hi2c1.State = HAL_I2C_STATE_READY;
-        hi2c1.Mode  = HAL_I2C_MODE_NONE;
-        __HAL_UNLOCK(&hi2c1);                                                  
-        HAL_Delay(100);
-        */
-    }
-    
     
     if(I2C_status != HAL_OK){
         
@@ -94,5 +77,3 @@ void DisplayBoard_I2C_Init(){
     SET_DisplayBoard_Data('X',0,0,'X',0,0);
 
 }
-
-

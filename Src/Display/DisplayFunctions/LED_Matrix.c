@@ -6,7 +6,6 @@
 #define StayCnt_Def      10
 #define Sus_Speed_Value  15
 
-
 unsigned char Stay_100ms_Cnt = 0;
 static unsigned char  StayCnt;
 unsigned char MatrixBlink_Flag = 0;
@@ -16,7 +15,6 @@ short Shift_Y = 0;
 
 unsigned char DataCheckBuffer[32];
 
-
 unsigned char LedMatrixBuffer[32];                                                                          
 const unsigned char MatrixOderTable[32] = { 14, 0, 1, 16, 2, 15, 13, 12,
                                             19, 3, 4, 21, 5, 20, 18, 17,
@@ -24,21 +22,15 @@ const unsigned char MatrixOderTable[32] = { 14, 0, 1, 16, 2, 15, 13, 12,
                                             29, 9,10, 31,11, 30, 28, 27 };
 
 
-
-
 void Clear_DataCheckBuffer(){
-
     memset(DataCheckBuffer,0x00,32);
-    
 }
-
 
 void ClearLEDBuffer(){
     
     for(unsigned char i = 0; i < 32;i++){
         LedMatrixBuffer[i] = 0x00;
     }
-
 }
 
 void LedMatrixMappingProcess(unsigned char *buffer ,short posX ,short posY){
@@ -53,7 +45,6 @@ void LedMatrixMappingProcess(unsigned char *buffer ,short posX ,short posY){
                 LedMatrixBuffer_Process[i] = buffer[i + (0-posX)];
             } 
         }   
-        
     }else if(posX >= 0){
         
         for(unsigned char i = 0; (i+posX)< 32 ; i++){
@@ -61,21 +52,17 @@ void LedMatrixMappingProcess(unsigned char *buffer ,short posX ,short posY){
         }
         
     }
-    
     if(posY < 0){
         
         for(unsigned char i = 0; i < 32 ; i++){
             LedMatrixBuffer_Process[i] = LedMatrixBuffer_Process[i] << (0-posY);
         }   
-        
     }else if(posY >= 0){
         
         for(unsigned char i = 0; i < 32 ; i++){
             LedMatrixBuffer_Process[i] = LedMatrixBuffer_Process[i] >> (posY);
         }  
     }
-    
-    
     for(unsigned char i = 0; i < 32 ; i++){
         LedMatrixBuffer[i] |= LedMatrixBuffer_Process[i];
     }  
@@ -88,18 +75,15 @@ unsigned char LedMatrixBuffer_Temp_For_Show[2][80];
 void Draw(short posX ,short posY ,const unsigned char *Data ,unsigned short Speed){     //  跟原本的buffer內容做OR
     
     MarqueeCnt = Speed;
-
+    
     unsigned char height;
     unsigned char width;
-    
     unsigned char Page_1_index;
     unsigned char Page_2_index;
     unsigned char Page_offset;
-    
-    
+     
     width  = Data[0];
     height = Data[1];
-    
     //-----------------------------------------------
     
     unsigned char PageNum;
@@ -129,58 +113,42 @@ void Draw(short posX ,short posY ,const unsigned char *Data ,unsigned short Spee
             Page_1_index = 0;
             Page_2_index = 0;
         }
-
-        
     }
-
-    
     //先清掉站存資料的Buffer
     for(unsigned char i = 0; i < 2 ; i++){
         memset(LedMatrixBuffer_Temp_For_Show[i],0x00,80);
     }
     
-
     //從Data 裡面取要處理的陣列數值
     if(PageNum == 0){
         
 
     }else if(PageNum == 1){  
-      
         for(unsigned char j = 0; j < width; j++){
             
             LedMatrixBuffer_Temp_For_Show[0][j] = Data[ (width * Page_1_index) + j + 2 ];  
-            
         } 
-
     }else if(PageNum == 2){
-    
         for(unsigned char j = 0; j < width; j++){
-            
             LedMatrixBuffer_Temp_For_Show[0][j] = Data[ (width * Page_1_index) + j + 2 ];  
             LedMatrixBuffer_Temp_For_Show[1][j] = Data[ (width * Page_2_index) + j + 2 ]; 
-            
         } 
     }
 
     unsigned char LedMatrixBuffer_Process[32];
     memset(LedMatrixBuffer_Process,0x00,32);
   
-    
     //剛好顯示一整列
     if( PageNum == 1){
         
         if(posY < 0){  
-            
             if( (0 - posY) < 8 ){
-                
                 Page_offset = (0 - posY) % 8;
-                
                 for(unsigned char i = 0; ( i + posX ) < 32 ; i++){
                     
                     LedMatrixBuffer_Process[i] = LedMatrixBuffer_Temp_For_Show[0][i + (0-posX)]>>(Page_offset);
                     __asm("NOP");
                 }
-                
             }
             __asm("NOP");
             
@@ -206,14 +174,10 @@ void Draw(short posX ,short posY ,const unsigned char *Data ,unsigned short Spee
                     }
                       __asm("NOP");
                 }
-                
                  __asm("NOP");
             }   
             //----------------------------------------------------------------------------------------------
-            
         }
-        
-      
         
     }else if( PageNum == 2 ){
         
@@ -228,7 +192,6 @@ void Draw(short posX ,short posY ,const unsigned char *Data ,unsigned short Spee
                     LedMatrixBuffer_Process[i] = LedMatrixBuffer_Temp_For_Show[0][i + (0-posX)]>>(Page_offset);
                     __asm("NOP");
                 }
-                
             }            
             
             __asm("NOP");
@@ -259,21 +222,13 @@ void Draw(short posX ,short posY ,const unsigned char *Data ,unsigned short Spee
         
         __asm("NOP");
     }
-
-    
     for(unsigned char i = 0; i < 32 ; i++){
         LedMatrixBuffer[i] |= LedMatrixBuffer_Process[i];
     } 
-    
-
 }
-
-
-
 
 unsigned char Draw_Auto( Direction_Def Dir, const unsigned char *Data ,unsigned short Speed ,unsigned char Blink){
         
-
     unsigned char height;
     unsigned char width;
     
@@ -357,7 +312,6 @@ unsigned char Draw_Auto( Direction_Def Dir, const unsigned char *Data ,unsigned 
                 return 1;
             }
         } 
-    
     }
 
     if(Dir == Left ){
@@ -382,8 +336,6 @@ unsigned char Draw_Auto( Direction_Def Dir, const unsigned char *Data ,unsigned 
 
     }
     
-    
-    
     //----------------閃爍 處理  ---------------
     if(Blink == 1){
         
@@ -402,9 +354,7 @@ unsigned char Draw_Auto( Direction_Def Dir, const unsigned char *Data ,unsigned 
         }else if(MatrixBlink_Flag == 0){
             ClearLEDBuffer();
         }
-        
-        
-    
+
     }else if(Blink == 0){
         ClearBlinkCnt();
         MatrixBlink_Flag = 0;
@@ -423,14 +373,12 @@ unsigned char Draw_Auto( Direction_Def Dir, const unsigned char *Data ,unsigned 
             }else{
                 Stay_100ms_Cnt ++;
             }
-            
         }
     }
     
 
     return 0;
 }
-
 
 short TotalLength;
 
@@ -440,22 +388,17 @@ void F_String_buffer(short posX ,short posY,unsigned char *StrArray ,unsigned sh
 
     unsigned char move = 0;
     unsigned char LedMatrixBuffer_Temp[320];
-
-    
     
     memset(LedMatrixBuffer_Temp,0x00,320);
-    
-    
+
     for(int i = 0; i< Length ; i++){
         if ( (*(StrArray+i) >= 'A' ) &&  (*(StrArray+i) <= 'Z' )){
             
             unsigned char C_index = *(StrArray+i) - 0x41 ;
             unsigned char C_width = CapitalAlphabetArray[C_index][0];   //去陣列抓字元寬度出來
             
-            for(int j = 0; j < C_width ; j++){    //j = 0~5
-                
-                LedMatrixBuffer_Temp[move + j] = CapitalAlphabetArray[C_index][j +2];
-                
+            for(int j = 0; j < C_width ; j++){    //j = 0~5   
+                LedMatrixBuffer_Temp[move + j] = CapitalAlphabetArray[C_index][j +2];   
             }
             
             move = move + C_width;
@@ -470,9 +413,7 @@ void F_String_buffer(short posX ,short posY,unsigned char *StrArray ,unsigned sh
             unsigned char C_width = NumberArray[C_index][0];   //去陣列抓字元寬度出來
             
             for(int j = 0; j < C_width ; j++){    //j = 0~5
-                
                 LedMatrixBuffer_Temp[move + j] = NumberArray[C_index][j +2];
-                
             }         
             move = move + C_width;
             
@@ -482,30 +423,17 @@ void F_String_buffer(short posX ,short posY,unsigned char *StrArray ,unsigned sh
             unsigned char C_width = Pattern_Array[C_index][0];   //去陣列抓字元寬度出來
             
             for(int j = 0; j < C_width ; j++){    //j = 0~5
-                
-                LedMatrixBuffer_Temp[ move+ j ] = Pattern_Array[C_index][j +2];
-                
+                LedMatrixBuffer_Temp[ move+ j ] = Pattern_Array[C_index][j +2];  
             }       
-            
             move = move + C_width;
         }
-        
     }
     
     TotalLength = move; 
-    
-    
+
     LedMatrixMappingProcess(LedMatrixBuffer_Temp ,posX,posY);
 
 }
-
-
-
-
-
-
-
-
 
 unsigned char F_String_buffer_Auto( Direction_Def Dir, unsigned char *StrArray ,unsigned short Speed ,unsigned char Blink){
     
@@ -565,21 +493,17 @@ unsigned char F_String_buffer_Auto( Direction_Def Dir, unsigned char *StrArray ,
 
     //----數字沒有超出範圍就置中----------
     
-    
-
     if(width < 32){
         offSet_Center = 0;
        // offSet_Center = (32 - width)/2;
     }else{
         offSet_Center = 0;
     }
-    
-    
+
     __asm("NOP");
     
     //---------------------------  顯示物件判斷  --------------------------------------------
 
-        
     for(unsigned char i = 0; i<32; i++){
         if(DataCheckBuffer[i] != LedMatrixBuffer_Temp[i]){
             memcpy(DataCheckBuffer,LedMatrixBuffer_Temp,32);
@@ -599,15 +523,10 @@ unsigned char F_String_buffer_Auto( Direction_Def Dir, unsigned char *StrArray ,
                 Shift_X = 0 + offSet_Center;
                 Shift_Y = 0;
             }
-            
-            
         }  
     }
     
-    
     //--------------------------------  跑馬燈 跑完一輪   --------------------------------
-    
-
     
     if((Dir == Left) || (Dir == Left_and_Stay)){
         
@@ -638,7 +557,6 @@ unsigned char F_String_buffer_Auto( Direction_Def Dir, unsigned char *StrArray ,
                 return 1;
             }
         } 
-        
     }else if((Dir == Up) || (Dir == Up_and_Stay)){
         
         if(Shift_Y >= 0){
@@ -651,8 +569,7 @@ unsigned char F_String_buffer_Auto( Direction_Def Dir, unsigned char *StrArray ,
                 Shift_Y = height;
                 return 1;
             }
-        } 
-        
+        }    
     }else if( (Dir == Down) || (Dir == Down_and_Stay) ){
     
         if(Shift_Y >= 0){
@@ -677,7 +594,6 @@ unsigned char F_String_buffer_Auto( Direction_Def Dir, unsigned char *StrArray ,
         Shift_Y = 0;
         
     }else if(Dir == Left_and_Stay){
-        
         //------停頓點判斷---------------------
         if(StayCnt > 0){
             StayCnt--;
@@ -763,13 +679,9 @@ unsigned char F_String_buffer_Auto( Direction_Def Dir, unsigned char *StrArray ,
         if(Shift_Y >0){
             Speed = Speed + Sus_Speed_Value;
         }
-        //--------------------------------------
-                
+        //--------------------------------------     
     }
    //--------------------------------------------------------------- 
-    
-    
-    
     //----------------閃爍 處理  ---------------
     if(Blink == 1){
         
@@ -788,17 +700,12 @@ unsigned char F_String_buffer_Auto( Direction_Def Dir, unsigned char *StrArray ,
         }else if(MatrixBlink_Flag == 0){
             ClearLEDBuffer();
         }
-        
-        
     
     }else if(Blink == 0){
         ClearBlinkCnt();
         MatrixBlink_Flag = 0;
         F_String_buffer(Shift_X , Shift_Y+1 , StrArray , Length , Speed);
     }
-
-    
-    
     if(Dir == Stay){
         
         if(T100ms_Flag){
@@ -812,12 +719,9 @@ unsigned char F_String_buffer_Auto( Direction_Def Dir, unsigned char *StrArray ,
             
         }
     }
-    
 
     return 0;
 }
-
-
 
 unsigned char F_String_buffer_Auto_Middle( Direction_Def Dir, unsigned char *StrArray ,unsigned short Speed ,unsigned char Blink){
 
@@ -882,13 +786,10 @@ unsigned char F_String_buffer_Auto_Middle( Direction_Def Dir, unsigned char *Str
     }else{
         offSet_Center = 0;
     }
-    
-    
     __asm("NOP");
     
     //---------------------------  顯示物件判斷  --------------------------------------------
 
-        
     for(unsigned char i = 0; i<32; i++){
         if(DataCheckBuffer[i] != LedMatrixBuffer_Temp[i]){
             memcpy(DataCheckBuffer,LedMatrixBuffer_Temp,32);
@@ -906,16 +807,11 @@ unsigned char F_String_buffer_Auto_Middle( Direction_Def Dir, unsigned char *Str
                 Stay_100ms_Cnt = 0;
                 Shift_X = 0 + offSet_Center;
                 Shift_Y = 0;
-            }
-            
-            
+            } 
         }  
     }
-    
-    
+ 
     //--------------------------------  跑馬燈 跑完一輪   --------------------------------
-    
-
     
     if((Dir == Left) || (Dir == Left_and_Stay)){
         
@@ -974,7 +870,6 @@ unsigned char F_String_buffer_Auto_Middle( Direction_Def Dir, unsigned char *Str
         } 
     }
     //------------------------------------------------------------------------------
-
     
     //-------------------------   移動參數處理  ------------------------------------
     if(Dir == Left ){
@@ -1074,8 +969,6 @@ unsigned char F_String_buffer_Auto_Middle( Direction_Def Dir, unsigned char *Str
     }
    //--------------------------------------------------------------- 
     
-    
-    
     //----------------閃爍 處理  ---------------
     if(Blink == 1){
         
@@ -1095,16 +988,12 @@ unsigned char F_String_buffer_Auto_Middle( Direction_Def Dir, unsigned char *Str
         }else if(MatrixBlink_Flag == 0){
             ClearLEDBuffer();
         }
-        
-        
-    
+
     }else if(Blink == 0){
         ClearBlinkCnt();
         MatrixBlink_Flag = 0;
         F_String_buffer(Shift_X , Shift_Y+1 , StrArray , Length , Speed);
     }
-
-    
     
     if(Dir == Stay){
         

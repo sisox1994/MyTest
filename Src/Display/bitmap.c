@@ -1,5 +1,3 @@
-
-
 const unsigned char Letter_A[]={6,8,
 0x3E,0x50,0x90,0x50,0x3E,0x00};//A
 const unsigned char Letter_B[]={6,8,

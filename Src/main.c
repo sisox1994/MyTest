@@ -2,19 +2,12 @@
 #include "stm32f4xx_hal.h"
 #include "system.h"
 
-
 UART_HandleTypeDef huart6;
-
 void SystemClock_Config(void);
-
 void GPIO_CLK_Enable();
-
 void MX_USART1_UART_Init(void);
 void MX_USART2_UART_Init(void);
-static void MX_USART6_UART_Init(void);
-
-                          
-
+             
 unsigned char My_PWM_Value = 0;
 int main(void)
 {
@@ -68,9 +61,7 @@ int main(void)
 
     while (1)
     {
-        
-        
-        
+  
         FAN_SET_PWM_DUTY(My_PWM_Value);
        
         if(System_Mode != StartUP){
@@ -220,24 +211,6 @@ void MX_USART2_UART_Init(void)
 */
 }
 
-/* USART6 init function */
-static void MX_USART6_UART_Init(void)
-{
-
-  huart6.Instance = USART6;
-  huart6.Init.BaudRate = 115200;
-  huart6.Init.WordLength = UART_WORDLENGTH_8B;
-  huart6.Init.StopBits = UART_STOPBITS_1;
-  huart6.Init.Parity = UART_PARITY_NONE;
-  huart6.Init.Mode = UART_MODE_TX_RX;
-  huart6.Init.HwFlowCtl = UART_HWCONTROL_NONE;
-  huart6.Init.OverSampling = UART_OVERSAMPLING_16;
-  if (HAL_UART_Init(&huart6) != HAL_OK)
-  {
-    _Error_Handler(__FILE__, __LINE__);
-  }
-
-}
 
 void GPIO_CLK_Enable(){
   __HAL_RCC_GPIOE_CLK_ENABLE();

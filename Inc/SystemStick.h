@@ -33,7 +33,7 @@ extern Flags_32bit TimeFlag;
 #define T1s_HR_Monitor_Flag            TimeFlag.B23
 #define T500ms_cmd39_Flag              TimeFlag.B24
 #define T100ms_PauseKey_Flag              TimeFlag.B25
-#define T100ms_Workout_Display_Flag       TimeFlag.B26
+#define T5ms_Workout_Display_Flag       TimeFlag.B26
 
 
 extern unsigned short Ble_wait_disconnect_Time_out_Cnt;

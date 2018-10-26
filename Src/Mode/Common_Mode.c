@@ -1,10 +1,8 @@
 #include "system.h"
 
-
 void IntoReadyMode_Process(){
 
     if(Program_Select == APP_Cloud_Run){
-    
         Cloud_Run_Program_Init();
     }
     

@@ -93,11 +93,8 @@ extern void Fw_Write_Finish_Check();
 
 extern unsigned char Flash_Test_Engineer();
 
-
 extern OTA_FW_Transmit_Info_Def FW;
 extern unsigned char OTA_Mode_Flag;
-
-
 
 extern Machine_Data_Def  Machine_Data;
 extern void Write_Machine_Data_Init(System_Unit_Def Unit);
@@ -168,7 +165,5 @@ extern const unsigned char SPK_OFF_Icon[];
 
 //----------------  Debug  ------------------------------
 extern void TimePeriodTest();
-
-
 
 #endif

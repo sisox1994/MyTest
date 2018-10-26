@@ -1,10 +1,7 @@
 #include "stm32f4xx_hal.h"
 #include "system.h"
 
-/*
- PD4 --> PAUSE KEY
- PD5 --> SAFETY
-*/
+#define    Use_SafeKey  0
 
 #define SAFETY_PIN    GPIO_PIN_5
 #define SAFETY_GPIO   GPIOD
@@ -14,8 +11,6 @@
 
 void SafeKey_Init();
 void SafeKey_Detect();
-
-#define    RealSafeKey  0
 
 GPIO_PinState Pause_State;
 void SafeKey_Init(){
@@ -39,8 +34,7 @@ void SafeKey_Detect(){
     
     if(HAL_GPIO_ReadPin(SAFETY_GPIO,SAFETY_PIN) == 1){ 
         safekey = Plug_Out;
-#if RealSafeKey
-        
+#if Use_SafeKey
         if( (System_Mode == CooolDown) || (System_Mode == Workout) || (System_Mode == WarmUp) ){
             Machine_Data_Update();
         }   
@@ -49,10 +43,6 @@ void SafeKey_Detect(){
     }else{
         safekey = Plug_IN;
     }
-    
-    
-    
-    
 }
 unsigned char Pause_press_Flag;
 unsigned char PauseKey(){
@@ -62,7 +52,6 @@ unsigned char PauseKey(){
     if(T100ms_PauseKey_Flag){
        
         if(Pause_press_Flag == 0){
-           
             if(Pause_State == GPIO_PIN_RESET){
              
                 Pause_press_Flag =1;
@@ -70,7 +59,6 @@ unsigned char PauseKey(){
         }
     }
    
-    
     if(Pause_press_Flag == 1){
         if(Pause_State == GPIO_PIN_SET){
             T100ms_PauseKey_Flag = 0;
@@ -81,15 +69,12 @@ unsigned char PauseKey(){
     return 0;
 }
 
-
 void Safe_Func(){
     
     if(T_Marquee_Flag){
         T_Marquee_Flag = 0; 
-        
         //F_String_buffer_Auto( Left, "PLUG      IN      SAFETY" ,50 ,0);
         F_String_buffer_Auto( Left, "EMERGENCY       STOP" ,40 ,0);
-        
         writeLEDMatrix();
         Turn_OFF_All_Segment();
         SET_DisplayBoard_Data('X',0,0,'X',0,0);
@@ -99,5 +84,4 @@ void Safe_Func(){
         Turn_OFF_All_LEDMatrix();
         HAL_NVIC_SystemReset();
     }
-    
 }

@@ -3,12 +3,9 @@
 #include "system.h"
 #include "btm.h"
 
-
-
 void Linked_Check_For_New_Scan(Btm_Task_Def btmTask){
 
     if( (Linked_HR_info.Link_state == Linked) ||  (Linked_HR_info.Link_state == Linked_2)){//-Linked 狀態 由CB資料接收確認
-        
         
         //-------------------------------------------------------------連線中  所以先 --  斷線
         if(Linked_HR_info.SensorType == BLE_HR){
@@ -33,14 +30,7 @@ void Linked_Check_For_New_Scan(Btm_Task_Def btmTask){
     }
 }
 
-
-
-
-
-
 void Btm_Task_Adder(Btm_Task_Def btmTask){
-    
- 
     
     //目前沒有任務的話就不去確認 直接新增任務到清單
     if( btm_Task_Cnt == 0 ){
@@ -53,13 +43,10 @@ void Btm_Task_Adder(Btm_Task_Def btmTask){
                 Linked_Check_For_New_Scan(btmTask);
             }  
             
-            
         }else{
             btmTask_List[btm_Task_Cnt] = btmTask;
             btm_Task_Cnt++;
         }
-        
-        
         
     }else{
         
@@ -72,9 +59,7 @@ void Btm_Task_Adder(Btm_Task_Def btmTask){
                 break;
             }
         }
-        
          Task_Exit_Flag = 0;  //允許重複
-        
         if(Task_Exit_Flag == 0){
             
             if(btm_Task_Cnt < Task_Amount){  //最多 N個任務在駐列清單
@@ -91,14 +76,9 @@ void Btm_Task_Adder(Btm_Task_Def btmTask){
                     btmTask_List[btm_Task_Cnt] = btmTask;
                     btm_Task_Cnt++;   
                 }
-
-            }
-            
-        }
-        
+            }   
+        } 
     }
-        
-    
 }
 
 
@@ -125,11 +105,8 @@ void APP_background_Broadcast(){
               case C_App_toRunGoVal:
                 Btm_Task_Adder(C_39Val);
                 break;
-                
             }
-        
         }
-
     }
 }
 
@@ -182,8 +159,7 @@ void BTM_background_Task(){
                       case BLE_HRC_Link:
                         Link_Sensor_E2_BLE(BLE_Paired_device_list.BLE_Paired_Device_Addr_List[0]);
                         break;
-                        
-                        
+  
                      //-----------------Fw Update---------------------------
                       case C_02Val:
                         F_BtmReply02Cmd();
@@ -192,8 +168,6 @@ void BTM_background_Task(){
                         F_BtmReply04Cmd();
                         break;
                     
-                      
-                        
                      //--------------雲跑 --Cloud Run    -------------------------
                       
                       case C_35Val:
@@ -279,10 +253,7 @@ void BTM_background_Task(){
                 
                 btm_Task_Cnt = btm_Task_Cnt - 1;
                 
-            }
-            
-        }
-        
+            }  
+        }   
     }
-
 }

@@ -1,4 +1,3 @@
-
 #include "system.h"
 
 void KeyTest(){
@@ -61,7 +60,7 @@ void KeyTest(){
         F_CMD(Write, 2340);
         HAL_Delay(20);
     }
-    
+   
     //-------------------------------------
     if(KeyCatch(0,1,Enter) ){
         F_OUT();

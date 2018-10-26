@@ -1,8 +1,6 @@
 #ifndef __BTM_H__
 #define __BTM_H__
 
-
-
 typedef enum{
     
     C_App_IdleVal     = 0,
@@ -13,26 +11,22 @@ typedef enum{
     C_App_CoolDownVal = 5,
     C_App_PauseVal    = 6,
     C_App_StopVal     = 7,
-  
     C_App_UserVal     = 9,
     C_App_Dist1Val    = 10,
     C_App_Dist2Val    = 11,
     C_App_toRun321GoVal =12,
     
-
 }ucSubSystemMode_Def;
 
 
 typedef enum{
     
-    Digital_Watch     = 0,
-    App               = 1, 
-    Cloud_Run         = 2,
-    void_Run          = 3
+    Digital_Watch = 0,
+    App                  = 1, 
+    Cloud_Run      = 2,
+    void_Run         = 3
 
 }ucAppTypeModeDef;
-
-
 
 
 typedef enum{
@@ -46,8 +40,6 @@ typedef enum{
     
     BLE_HRC_Pairing      = 5,
     BLE_HRC_Link         = 6,
-    
-    
     
     C_02Val = 12,
     C_04Val = 14,
@@ -106,24 +98,15 @@ typedef struct{
     unsigned int   c_Times;
     unsigned short c_HeartRate;
     unsigned short c_Stage;
-    
     unsigned short c_Speed;
     unsigned short c_Incline;
-    
     unsigned int   c_Distance;
     unsigned int   c_Calories;
-    
     unsigned int   c_Step;
-    
     unsigned long  c_ALTI;
-    
     unsigned char  c_SPFreq;    
-    
 
 }Cmd_39_outData_Def;
-
-
-
 
 typedef enum{
 
@@ -143,12 +126,10 @@ typedef enum{
 
       Scaning   = 0x40,
       Scaning2  = 0x4C,
-      
       Paired_OK = 0x41,
       No_Device = 0x42,
       Scan_Time_Out = 0x4F,
       
-
 }Scan_State_Def;
 
 typedef enum{
@@ -157,7 +138,6 @@ typedef enum{
       Linked_2   = 0x42,
       connected  = 0x44,
       fail       = 0x45,
-      
       disconnect = 0x46,
       receive    = 0x48,
       nodify_ok  = 0x49,
@@ -167,14 +147,11 @@ typedef enum{
       bonding_succes  = 0x4D,
       bonding_fail    = 0x4E,
       time_out        = 0x4F,
-      
       ble_researching = 0xFC,
       wait_disconnect = 0xFD,
       wait_hr_value   = 0xFE,
       hr_disconnect   = 0xFF
-          
-      
-      
+             
 }Linking_State_Def;
 
 
@@ -185,7 +162,6 @@ typedef enum{
     
 }Trans_Dir_Def;
 
-
 typedef struct{
     
     Trans_Dir_Def TransDir;
@@ -194,38 +170,30 @@ typedef struct{
     
     //--------------------ANT+
     unsigned short ANT_ID;
-    
     //-------------------BLE
     unsigned char DeviceNumber;
     unsigned char RSSI;
-   
     unsigned short       UUID;
     Sensor_UUID_Type_Def  Type_Check;
-    
     char DeviceName[13];
     
     
 }Scan_Meseseage_def;
 
 
-
 typedef struct{
     
-
     Sensor_UUID_Type_Def  Pairing_Sensor_Type;
     char BLE_Addrs[6];
     unsigned char BLE_ADDR_TYPE;
        
-    
 }Pairing_Meseseage_def;
 
 
 typedef struct{
     
-
     unsigned char Paired_Device_Cnt;
     Pairing_Meseseage_def BLE_Paired_Device_Addr_List[10]; //儲存已經成功配對到的藍芽裝置地址
-       
     
 }BLE_Paired_Device_Addr_List_def;
 
@@ -241,63 +209,47 @@ typedef struct{
 
 typedef struct{
     
-
     Sensor_UUID_Type_Def SensorType;    
     char DeviceName[13];
     unsigned short ANT_ID;
     unsigned short usHR_bpm;
-    
     Linking_State_Def Link_state;
     
     char BLE_Addrs[6];
 
 }Now_Linked_HR_Sensor_Info_Def;
 
-
-
 typedef struct{
     
-
     ucAppTypeModeDef TypeMode;
     unsigned short  Stage;
     Switch_def       AutoPause;
-    
     unsigned char CloudRun_Inc_Buffer[432];
-    
     unsigned short C_Time;
     unsigned char  C_Age;
     unsigned short C_Weight;
     unsigned char  PlayGround;
-    
     unsigned short Total_Dist;
     unsigned short Stage_Dist;
-    
 
 }CloudRun_Init_INFO_Def;
-
 
 typedef enum{
 
     No_Error   = 0,
     Data_Lost  = 1,
     Size_Error = 2,
-
     
 }Error_Type_Def;
-
 
 typedef struct{
     
     unsigned int  total_Size;
     unsigned int  Byte_Cnt;
-    
     unsigned short total_Page;
     unsigned short Transmit_Page;
-      
     unsigned short Error_Cnt;
-  
     Error_Type_Def  Error_Type;
-    
 
 }OTA_FW_Transmit_Info_Def;
 
@@ -305,12 +257,9 @@ typedef struct{
 #define Task_Amount  6
 
 extern unsigned char FW_Transmiting_03_Flag;
-
 extern unsigned char ucAppINCBuffer[432];
-
 extern unsigned int uiAppTotalDist;
 extern unsigned int uiAppStageDist;
-
 extern unsigned int uiAppTotalDist;
 extern Cmd_39_outData_Def  Cloud_0x39_Info;
 extern BLE_Device_List_def BLE_Scan_Device_List;

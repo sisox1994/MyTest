@@ -1,9 +1,7 @@
 #include "system.h"
 
 
-
 unsigned char EngineerTestItem;
-
 unsigned char LED_SweepCnt;
 
 unsigned char TestValue = 1;
@@ -396,9 +394,7 @@ void Engineer_Func(){
                 Turn_OFF_All_Segment();
                 EngineerTestItem = 15;
             }  
-        }
-        
-        
+        } 
         //---------------------------------E5  藍芽心跳測試----------------
          if(EngineerTestItem == 15){
             
@@ -409,7 +405,6 @@ void Engineer_Func(){
                 EngineerTestItem = 16;
                 RestStepValue();
             }    
-            
         }
         if(EngineerTestItem == 16){
             
@@ -421,7 +416,6 @@ void Engineer_Func(){
                 EngineerTestItem = 17;
                 RestStepValue();
             }    
-            
         }
         if(EngineerTestItem == 17){   //--------------藍芽心跳搜尋中
             
@@ -454,16 +448,12 @@ void Engineer_Func(){
                         
                     }
                 }
-                
-               
             }  
-            
         }
         if(EngineerTestItem == 18){   //--------------藍芽心跳連線
             
             memset(LedMatrixBuffer,0x00,32);
             F_String_buffer_Auto_Middle( Stay, "LINK" ,50 ,0);
-            
              SET_Seg_Display(HEARTRATE  , Linked_HR_info.usHR_bpm , ND , DEC );
              writeSegmentBuffer();
              
@@ -473,13 +463,9 @@ void Engineer_Func(){
                 EngineerTestItem = 19;
                 
                 Response_Message.Control_code =(Control_code_Def)0x00;
-                Response_Message.Instruction_code =0x00;
-                
-                
+                Response_Message.Instruction_code =0x00;  
             }  
         }
-        
-    
         //------------------------------E6  下控測試--------------------------
         if(EngineerTestItem == 19){   
             memset(LedMatrixBuffer,0x00,32);
@@ -501,7 +487,6 @@ void Engineer_Func(){
            if( KeyCatch(0,1 , Start) ){
                  EngineerTestItem = 21;
             }  
-           
         }
         
         if(EngineerTestItem == 21){   
@@ -514,16 +499,13 @@ void Engineer_Func(){
                }
            } 
         }
-        
          if(EngineerTestItem == 22){         
              memset(LedMatrixBuffer,0x00,32);
              F_String_buffer_Auto_Middle( Stay, "OK" ,50 ,0);
-             
-             
+
              if( KeyCatch(0,1 , Start) ){
                  EngineerTestItem = 23;
             }  
-  
         }
         if(EngineerTestItem == 23){         
             memset(LedMatrixBuffer,0x00,32);
@@ -533,8 +515,6 @@ void Engineer_Func(){
                 HAL_NVIC_SystemReset();
             }  
         } 
-        
-        
 
         if(T250ms_Flag){
             T250ms_Flag = 0;
@@ -543,11 +523,7 @@ void Engineer_Func(){
             }
             if(EngineerTestItem == 21){
                 F_CMD(Write,87);  //丟測試CMD 給下控
-            }
-           
+            } 
         }
 
 }
-
-
-

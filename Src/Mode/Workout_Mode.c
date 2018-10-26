@@ -776,8 +776,8 @@ void Workout_Func(){
     
     Workout_Key();
     
-    if(T100ms_Workout_Display_Flag){
-        T100ms_Workout_Display_Flag = 0;
+    if(T5ms_Workout_Display_Flag){
+        T5ms_Workout_Display_Flag = 0;
         //bar Εγ₯ά + °{Γ{
 
         switch(Program_Select){

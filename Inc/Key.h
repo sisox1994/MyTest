@@ -1,4 +1,3 @@
-
 #ifndef    __KEY_H__
 #define    __KEY_H__
 
@@ -23,8 +22,6 @@ typedef enum{
 
   BLE     = 7,
   Enter     = 6,
-  
-  
   
 }Key_Name_Def;
 extern unsigned char KeyDelaying_Flag;

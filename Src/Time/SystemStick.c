@@ -123,7 +123,7 @@ void time(){
         T250ms_Flag = 1;       
     }
     if(TimerCnt%5 == 0){   //Workout Display
-        T100ms_Workout_Display_Flag = 1;
+        T5ms_Workout_Display_Flag = 1;
     }
     if(TimerCnt%100 == 0){     //°»´ú«ö¶s«ö¦í¦h¤Ö(100ms)
         T100ms_KeyHold_Flag = 1; 
