@@ -9,6 +9,17 @@ void MX_USART1_UART_Init(void);
 void MX_USART2_UART_Init(void);
              
 unsigned char My_PWM_Value = 0;
+
+void Other_Init(){
+#if Use_FAN
+    FAN_PWM_Init();
+#endif    
+    
+#if Use_BTSPK 
+    BT_SPK_DET_PIN_Init();
+#endif
+}
+
 int main(void)
 {
     
@@ -18,6 +29,8 @@ int main(void)
     SafeKey_Init();
     Flash_Init();
     Power_5V_ON();
+    
+    //FlashErase(0);
     
     Flash_Machine_Data_Loading();
     Read_SerialNumber_From_Flash(ucProductionSerialNumber);  //Read  BTM  Serial Number
@@ -30,43 +43,48 @@ int main(void)
     
     Buzzer_BeeBee(500, 2);
     
-    if(OTA_Mode_Flag == 0){          
+    if(OTA_Mode_Flag == 0){   
         
+        System_Mode = StartUp; 
         Turn_ON_All_LEDMatrix();
         Turn_ON_All_Segment();  
         Key_GPIO_Init();
         Reality_Key_Init();
-        FAN_PWM_Init();
-        BT_SPK_DET_PIN_Init();
-        
+        //Other_Init();       //風扇跟藍芽喇叭
         RM6T6_Init();
         HR_5K_Init();
         Hand_HR__Init();
-        Manual_Init();
         Flash_Custom_Data_Loading();
         Btm_Task_Adder(Feature_FTMS);
         Btm_Task_Adder(Type_FTMS);
         Btm_Task_Adder(Flag_FTMS);
-        Btm_Task_Adder(FEC_SET_SN);
-        Btm_Task_Adder(FEC_Data_Config_Page_0); // page 0
-        Btm_Task_Adder(FEC_Data_Config_Page_1); // page 1
+        Btm_Task_Adder(FEC_SET_SN);               //0xB5
+        Btm_Task_Adder(FEC_Data_Config_Page_0); // 0xB4 page 0
+        Btm_Task_Adder(FEC_Data_Config_Page_1); // 0xB4 page 1
         
         
     }else if(OTA_Mode_Flag == 1){
         //Feed_Dog_Flag = 0;             
-        System_Mode = C_Sys_OTAModeVal;
+        System_Mode = Sys_OTA_Mode;
     }
     
+#if FAKE_RM6T6_Mode
+    System_Mode = RS485_Test_Mode;
+#endif
     
-
+    
     while (1)
     {
-  
+        
+#if Use_FAN     
         FAN_SET_PWM_DUTY(My_PWM_Value);
-       
-        if(System_Mode != StartUP){
+#endif
+        
+#if Use_BTSPK 
+        if(System_Mode != StartUp){
             BT_SPK_Detect();
         }
+#endif   
 
         RealityKey_PressDetect();
         
@@ -77,17 +95,17 @@ int main(void)
             F_HeartRate_Supervisor(); 
             RM6_background_Task(); // 變頻器 任務排程器
             APP_background_Broadcast();   //0x39  每隔5秒  丟系統狀態       
-        }
+        }  
         
         switch(System_Mode){
-          case StartUP:
+          case StartUp:
             StartUp_Func();
             break;
-          case Menu:
-            Menu_Func();
+          case Idle:
+            Idle_Func();
             break;
-          case Program_Setting:
-            ProgramSetting_Func();
+          case Prog_Set:
+            ProgSet_Func();
             break;
           case Ready:
             Ready_Func();
@@ -113,15 +131,16 @@ int main(void)
           case Safe:
             Safe_Func();
             break;
-          case C_APPModeVal:
-            APP_Mode_Func();
-            break;
-          case  C_Sys_OTAModeVal:
+          case  Sys_OTA_Mode:
             OTA_Mode_Func();
             break;
+            
+#if FAKE_RM6T6_Mode
           case  RS485_Test_Mode:
             RS485_Test_Func();
             break;
+#endif
+            
         }
     }
 

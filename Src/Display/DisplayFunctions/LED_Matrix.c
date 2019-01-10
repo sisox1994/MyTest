@@ -1515,32 +1515,38 @@ void DrawBarArray(unsigned char *BarArray_Temp){
 
 unsigned char Blink_Flag_Work;
 
-
+unsigned short Hr_Display_Cnt;
 void Basic_HRC_Display(){
-
-    switch(str_cNt){
-        
-      case 0:
-        Draw(7 ,0 ,Heart_Empty ,500);
-        Draw(18 ,0 ,Heart_Empty ,500);
-
-
-        str_cNt++;
-        str_cNt = str_cNt%2;
-        break; 
-      case 1:
-        Draw(7 ,0 ,Heart_Empty ,500);
-        
-        if(usNowHeartRate != 0){
-            Draw(18 ,0 ,Heart_Solid ,500);
-        }else{
+    
+    //Hr_Display_Cnt++;
+    
+    //if(Hr_Display_Cnt%100==0){
+        switch((str_cNt/100)%2){
+            
+          case 0:
+            Draw(7 ,0 ,Heart_Empty ,500);
             Draw(18 ,0 ,Heart_Empty ,500);
+            
+            
+            //str_cNt++;
+            //str_cNt = str_cNt%2;
+            break; 
+          case 1:
+            Draw(7 ,0 ,Heart_Empty ,500);
+            
+            if(usNowHeartRate != 0){
+                Draw(18 ,0 ,Heart_Solid ,500);
+            }else{
+                Draw(18 ,0 ,Heart_Empty ,500);
+            }
+            
+            
+           //str_cNt = str_cNt/;
+            break; 
         }
-       
         str_cNt++;
-        str_cNt = str_cNt%2;
-        break; 
-    }
+        
+    //}
     
 }
 
@@ -1587,6 +1593,65 @@ void DrawBarArray_Workout( unsigned char *BarArray_Temp , unsigned char Blink_In
 
 void writeLEDMatrix(){
     
+    
+    if(DIST_Icon_Display_Cnt){
+        memset(LedMatrixBuffer,0x00,32);
+        //Draw_Auto( Stay, BLE_HR_Icon ,50 ,0);
+         F_String_buffer_Auto_Middle(Stay,"DIST" ,30 ,0);
+    }
+    
+    if(ALTI_Icon_Display_Cnt){
+        memset(LedMatrixBuffer,0x00,32);
+        //Draw_Auto( Stay,ANT_HR_Icon ,50 ,0);
+        F_String_buffer_Auto_Middle(Stay,"ALTI" ,30 ,0);
+    }
+    if(CAL_Icon_Display_Cnt){
+        memset(LedMatrixBuffer,0x00,32);
+        //Draw_Auto( Stay, BLE_HR_Icon ,50 ,0);
+        F_String_buffer_Auto_Middle(Stay,"CAL" ,30 ,0);
+    }
+    if(CALH_Icon_Display_Cnt){
+        memset(LedMatrixBuffer,0x00,32);
+        //Draw_Auto( Stay,ANT_HR_Icon ,50 ,0);
+        F_String_buffer_Auto_Middle(Stay,"CAL  H" ,30 ,0);
+    }
+    if(ELAPSED_Icon_Display_Cnt){
+        memset(LedMatrixBuffer,0x00,32);
+        //Draw_Auto( Stay, BLE_HR_Icon ,50 ,0);
+        F_String_buffer_Auto_Middle(Stay,"ETIME" ,30 ,0);
+  
+    }
+    if(REMAINNING_Icon_Display_Cnt){
+        memset(LedMatrixBuffer,0x00,32);
+       //Draw_Auto( Stay,ANT_HR_Icon ,50 ,0);
+       F_String_buffer_Auto_Middle(Stay,"RTIME" ,30 ,0);
+        
+    }
+    if(PACE_Icon_Display_Cnt){
+        memset(LedMatrixBuffer,0x00,32);
+        //Draw_Auto( Stay, BLE_HR_Icon ,50 ,0);
+        F_String_buffer_Auto_Middle(Stay,"PACE" ,30 ,0);
+    }
+    if(STEP_Icon_Display_Cnt){
+        memset(LedMatrixBuffer,0x00,32);
+        //Draw_Auto( Stay,ANT_HR_Icon ,50 ,0);
+        F_String_buffer_Auto_Middle(Stay,"STEP" ,30 ,0);
+    }
+    if(MET_Icon_Display_Cnt){
+        memset(LedMatrixBuffer,0x00,32);
+        //Draw_Auto( Stay, BLE_HR_Icon ,50 ,0);
+        F_String_buffer_Auto_Middle(Stay,"MET" ,30 ,0);
+    }
+    if(HR_Icon_Display_Cnt){
+        memset(LedMatrixBuffer,0x00,32);
+        //Draw_Auto( Stay,ANT_HR_Icon ,50 ,0);
+        F_String_buffer_Auto_Middle(Stay,"HR" ,30 ,0);
+    }
+    
+    
+    
+    //-----------------------------------------------
+    
     if(Ble_Icon_Display_Cnt){
         //Draw(16 ,0 ,BLE_HR_Icon ,70);.
         memset(LedMatrixBuffer,0x00,32);
@@ -1598,6 +1663,7 @@ void writeLEDMatrix(){
         Draw_Auto( Stay,ANT_HR_Icon ,50 ,0);
     }
     
+    
     if(BTSPK_Icon_Display_Cnt){
         memset(LedMatrixBuffer,0x00,32);
         Draw_Auto( Stay, SPK_ON_Icon ,50 ,0);
@@ -1607,6 +1673,13 @@ void writeLEDMatrix(){
         memset(LedMatrixBuffer,0x00,32);
         Draw_Auto( Stay, SPK_OFF_Icon ,50 ,0);
     }
+    
+    if(APP_Connected_Display_Cnt){
+        memset(LedMatrixBuffer,0x00,32);
+        F_String_buffer_Auto_Middle( Stay, "APP" ,50 ,0);
+    }
+    
+    //---------------------------------------------------
     
     
     for(unsigned char i = 0; i < 32;i++){
@@ -1618,131 +1691,3 @@ void writeLEDMatrix(){
         LedMatrixBuffer[i] = 0x00;
     }  
 }
-
-
-//unsigned char LedMatrixBuffer_Temp_Ex[120][80];
-
-/*
-unsigned char Page1_index;
-unsigned char Page2_index;
-
-
-
-
-void Draw(short posX ,short posY ,const unsigned char *Data ,unsigned short Speed){     //  跟原本的buffer內容做OR
-    
-    MarqueeCnt = Speed;
-    
-    //unsigned char move = 0;
-    //unsigned char LedMatrixBuffer_Temp[320];
-    
-    unsigned char height;
-    unsigned char width;
-    
-    width  = Data[0];
-    height = Data[1];
-    
-    //-----------------------------------------------
-    
-    
-    for(unsigned char i = 0; i < 120 ; i++){
-        memset(LedMatrixBuffer_Temp_Ex[i],0x00,80);
-    }
-    
-    for(unsigned char i = 0; i < height ; i++){
-        for(unsigned char j = 0; j < width; j++){
-            
-            LedMatrixBuffer_Temp_Ex[i][j] = Data[ (width * i) + j + 2 ];  
-        
-        }    
-    }
-
-    unsigned char LedMatrixBuffer_Process[32];
-    memset(LedMatrixBuffer_Process,0x00,32);
-  
-    
-    if( (posY+8) % 8 == 0){
-        
-        if(posY < 0){  
-            __asm("NOP");
-        }else if(posY >=0){
-            
-            
-            Page1_index = (posY+8)/8 -1;
-             
-            //----------------------------------------------------------------------------------------------
-            if(posX < 0){
-                
-                for(unsigned char i = 0; i < 32 ; i++){
-                    
-                    if(  (i + (0-posX)) < 80){
-                        LedMatrixBuffer_Process[i] = LedMatrixBuffer_Temp_Ex[Page1_index][i + (0-posX)]; 
-                        __asm("NOP");
-                    }   
-                } 
-                
-            }else if(posX >= 0){
-                for(unsigned char i = 0; ( i + posX ) < 32 ; i++){
-                    if(Page1_index < ((height )/8 ) ){
-                        LedMatrixBuffer_Process[i + posX] = LedMatrixBuffer_Temp_Ex[Page1_index][i] ;
-                    }
-                      __asm("NOP");
-                }
-                
-                 __asm("NOP");
-            }   
-            //----------------------------------------------------------------------------------------------
-            
-        }
-        
-      
-        
-    }else if(  ((posY+8) % 8 ) !=  0 ){
-        
-        if(posY < 0){
-            if( (0 - posY) <= 8 ){
-                
-                Page_offset = (0 - posY) % 8;
-                
-                for(unsigned char i = 0; ( i + posX ) < 32 ; i++){
-                    
-                    LedMatrixBuffer_Process[i] = LedMatrixBuffer_Temp_Ex[0][i + (0-posX)]>>(Page_offset);
-                    __asm("NOP");
-                }
-                
-            }            
-            
-            __asm("NOP");
-            
-        }else if(posY >= 0){
-            //--------------------------------------------------------------------------------------------------
-            Page_offset = (posY+8) % 8;
-            Page1_index = (posY+8)/8 -1;
-            Page2_index = (posY+8)/8;
-            
-            for(unsigned char i = 0; ( i + posX ) < 32 ; i++){
-                
-                if( posY < height){
-                    LedMatrixBuffer_Process[i] = LedMatrixBuffer_Temp_Ex[Page1_index][i + (0-posX)]<<(Page_offset);
-                    __asm("NOP");
-                    if(  Page1_index <(height )/8 -1){
-                        LedMatrixBuffer_Process[i] |= LedMatrixBuffer_Temp_Ex[Page2_index][i + (0-posX)]>>(8-Page_offset);
-                    }
-                }
-
-            }
-            //----------------------------------------------------------------------------------------------------
-            
-        }        
-        
-        
-        __asm("NOP");
-    }
-
-    
-    for(unsigned char i = 0; i < 32 ; i++){
-        LedMatrixBuffer[i] |= LedMatrixBuffer_Process[i];
-    } 
-    
-}
-*/

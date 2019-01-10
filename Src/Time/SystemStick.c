@@ -10,8 +10,28 @@ unsigned short BlinkCnt2;
 unsigned short BlinkCnt3;
 unsigned short BlinkCnt4;
 unsigned short MarqueeCnt = 75;
+
 unsigned short Ble_Icon_Display_Cnt;
 unsigned short ANT_Icon_Display_Cnt;
+
+unsigned char APP_Connected_Display_Cnt;
+
+unsigned char DIST_Icon_Display_Cnt;
+unsigned char ALTI_Icon_Display_Cnt;
+
+unsigned char CAL_Icon_Display_Cnt;
+unsigned char CALH_Icon_Display_Cnt;
+
+unsigned char ELAPSED_Icon_Display_Cnt;
+unsigned char REMAINNING_Icon_Display_Cnt;
+
+unsigned char PACE_Icon_Display_Cnt;
+unsigned char STEP_Icon_Display_Cnt;
+
+unsigned char MET_Icon_Display_Cnt;
+unsigned char HR_Icon_Display_Cnt;
+
+
 unsigned short  BTSPK_Icon_Display_Cnt;
 unsigned short  BTSPK_OFF_Icon_Display_Cnt;
 
@@ -81,12 +101,50 @@ void time(){
         if(ANT_Icon_Display_Cnt > 0){
             ANT_Icon_Display_Cnt--;
         } 
+        if(APP_Connected_Display_Cnt > 0){
+            APP_Connected_Display_Cnt--;
+        }  
         if(BTSPK_Icon_Display_Cnt > 0){
             BTSPK_Icon_Display_Cnt--;
         } 
         if(BTSPK_OFF_Icon_Display_Cnt > 0){
             BTSPK_OFF_Icon_Display_Cnt--;
         } 
+        //------------------------------------------
+        if(DIST_Icon_Display_Cnt > 0){
+            DIST_Icon_Display_Cnt--;
+        }
+        if(ALTI_Icon_Display_Cnt > 0){
+            ALTI_Icon_Display_Cnt--;
+        } 
+        if(CAL_Icon_Display_Cnt > 0){
+            CAL_Icon_Display_Cnt--;
+        } 
+        if(CALH_Icon_Display_Cnt > 0){
+            CALH_Icon_Display_Cnt--;
+        } 
+        //--
+        if(ELAPSED_Icon_Display_Cnt > 0){
+            ELAPSED_Icon_Display_Cnt--;
+        }
+        if(REMAINNING_Icon_Display_Cnt > 0){
+            REMAINNING_Icon_Display_Cnt--;
+        } 
+        if(PACE_Icon_Display_Cnt > 0){
+            PACE_Icon_Display_Cnt--;
+        } 
+        if(STEP_Icon_Display_Cnt > 0){
+            STEP_Icon_Display_Cnt--;
+        } 
+        //--
+        if(MET_Icon_Display_Cnt > 0){
+            MET_Icon_Display_Cnt--;
+        }
+        if(HR_Icon_Display_Cnt > 0){
+            HR_Icon_Display_Cnt--;
+        } 
+             
+        //------------------------------------------------
         
     }
     
@@ -152,7 +210,7 @@ void time(){
         T1s_HR_Monitor_Flag = 1;
     }
     if(NeverClearCnt%1000 == 0){   //偵測幾秒回IDLE 模式
-        T1s_Menu_Idle = 1;
+        T1s_Idle = 1;
     }
     
     if(NeverClearCnt%500 == 0){  //偵測藍芽喇叭連線用

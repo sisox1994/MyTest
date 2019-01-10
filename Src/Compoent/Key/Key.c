@@ -99,11 +99,20 @@ unsigned char KeyForContinueProcess(Key_Name_Def KeyCheck){
     if(KeyPressRelease_Array[0] == KeyCheck_Save){
         
         for(unsigned char i = 0 ; i < 7; i++){
-            HAL_GPIO_WritePin( Key_GPIO_Array[i]  , Key_Pin_Array[i] , GPIO_PIN_RESET); 
+             
             for(unsigned char j = 0; j < 7; j++ ){
                 if(j != i){
                     HAL_GPIO_WritePin( Key_GPIO_Array[j]  , Key_Pin_Array[j] , GPIO_PIN_SET); 
                 }
+            }
+            //------------------------------------------------------------------------
+            for(int i = 0;i<50;i++){
+                __asm("NOP");
+            }
+            HAL_GPIO_WritePin( Key_GPIO_Array[i]  , Key_Pin_Array[i] , GPIO_PIN_RESET);
+            
+            for(int i = 0;i<50;i++){
+                __asm("NOP");
             }
             
             //--------------------------------------------------------------------
@@ -128,7 +137,7 @@ unsigned char KeyForContinueProcess(Key_Name_Def KeyCheck){
     return 0;            
 }
 
-extern unsigned char ret_Idle_cnt;
+
 unsigned char KeyCatch(unsigned char Sec ,uint8_t Num, ...){
     
     memset(KeyPressCheck_Array,0x00,10);
@@ -205,12 +214,23 @@ unsigned char KeyCatch(unsigned char Sec ,uint8_t Num, ...){
         Press_Key = (Key_Name_Def)0x00;
         
         for(unsigned char i = 0 ; i < 7; i++){
-            HAL_GPIO_WritePin( Key_GPIO_Array[i]  , Key_Pin_Array[i] , GPIO_PIN_RESET); 
+            
             for(unsigned char j = 0; j < 7; j++ ){
                 if(j != i){
                     HAL_GPIO_WritePin( Key_GPIO_Array[j]  , Key_Pin_Array[j] , GPIO_PIN_SET); 
                 }
             }
+            
+            //----------------------------------------------------------------
+            for(int i = 0;i<50;i++){
+                __asm("NOP");
+            }
+            HAL_GPIO_WritePin( Key_GPIO_Array[i]  , Key_Pin_Array[i] , GPIO_PIN_RESET); 
+            for(int i = 0;i<50;i++){
+                __asm("NOP");
+            }
+            //---------------------------------------------------------------- 
+            
             //------------------紀錄當下按了那些鍵 並存到--KeyPressDetect_Array-----------------------
             
             for(unsigned char k = 0; k < 7 ; k++){
@@ -222,6 +242,7 @@ unsigned char KeyCatch(unsigned char Sec ,uint8_t Num, ...){
                     KeyPressArray_Cnt++;   
                 }
             }   
+            
         }
       //--------------------確認當下按的  和  欲偵測的是否相同--------------------------
         for(unsigned char i = 0; i < Num ; i++ ){
@@ -233,7 +254,13 @@ unsigned char KeyCatch(unsigned char Sec ,uint8_t Num, ...){
         }
         
         if(KeyConfirm_Cnt == Num){    //確認正確
-            Buzzer_ON();
+            
+            if(ContuineBeepFlag!=1){   //防止蜂鳴器錯誤動作
+                if(KeyConfirm_Cnt==1){
+                    Buzzer_ON();
+                }
+            }
+    
             memcpy(KeyPressRelease_Array, KeyPressCheck_Array,10);
             KeyDelaying_Flag = 1;      //除彈跳
             KeyDelaying_Cnt  = KDC_Value;
@@ -253,11 +280,19 @@ void KeyOpenCheck(){
     
     for(unsigned char i = 0 ; i < 7; i++){
         
-        HAL_GPIO_WritePin( Key_GPIO_Array[i]  , Key_Pin_Array[i] , GPIO_PIN_RESET); 
+         
         for(unsigned char j = 0; j < 7; j++ ){
             if(j != i){
                 HAL_GPIO_WritePin( Key_GPIO_Array[j]  , Key_Pin_Array[j] , GPIO_PIN_SET); 
             }
+        }
+       //--------------------------------------------------
+        for(int i = 0;i<50;i++){
+            __asm("NOP");
+        }
+        HAL_GPIO_WritePin( Key_GPIO_Array[i]  , Key_Pin_Array[i] , GPIO_PIN_RESET);
+        for(int i = 0;i<50;i++){
+            __asm("NOP");
         }
         //--------------------------------------------------
         for(unsigned char k = 0; k < 7 ; k++){

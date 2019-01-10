@@ -11,10 +11,7 @@ const unsigned char SegmentOderTable[27] = {  24, 25, 26,
                                                0,  1,  2 };
 
 unsigned char SevenSegmentBuffer[27];
-
 unsigned char numbers[]={0xFC,0x60,0xDA,0xF2,0x66,0xB6,0xBE,0xE4,0xFE,0xE6,0xEE,0x3E,0x9C,0x7A,0x9E,0x8E };
-
-
 
 void SET_Seg_Display(Seg_Display_ITEM_Def Item , unsigned short Value ,DOT_Def dot ,Format_Def format ){
     
@@ -1057,7 +1054,7 @@ void SET_Seg_TIME_Display( Seg_Display_ITEM_Def Item  , unsigned int Value){
         
         if(Value >= 3600){
             
-            if(System_Mode == Program_Setting){   //設定模式裡  大於1小時直接顯示尾巴小數點
+            if(System_Mode == Prog_Set){   //設定模式裡  大於1小時直接顯示尾巴小數點
                  SevenSegmentBuffer[BIT_0/4] = numbers[BYTE_1] + 1;
             }else{
                 if(T500ms_Time_Colon_Blink_Flag){
@@ -1101,12 +1098,17 @@ void TIME_SET_Display( Seg_Display_ITEM_Def Item  , unsigned int Value , unsigne
     
     if(Item == PACE_SPD){
         
-        //if(Value < 3600){       //      步速> (一小時 ) ==> 一樣顯示 XX分鐘: XX秒
+        if(Value < 3600){       //      步速> (一小時 ) ==> 一樣顯示 XX分鐘: XX秒
             BYTE_4 = (Value / 60) / 10;
             BYTE_3 = (Value / 60) % 10;
             BYTE_2 = (Value % 60) / 10;
             BYTE_1 = (Value % 60) % 10;
-        //}
+        }else{
+            BYTE_4 = (Value / 3600) / 10;
+            BYTE_3 = (Value / 3600) % 10;
+            BYTE_2 = ((Value % 3600) / 60) / 10;
+            BYTE_1 = ((Value % 3600) / 60) % 10;
+        }
         
     }else{
         
@@ -1170,7 +1172,7 @@ void TIME_SET_Display( Seg_Display_ITEM_Def Item  , unsigned int Value , unsigne
             if(Value >= 3600){
                 
                 if(Item == PACE_SPD){
-                    SevenSegmentBuffer[BIT_0/4] = numbers[BYTE_1];
+                    SevenSegmentBuffer[BIT_0/4] = numbers[BYTE_1] + 1;
                 }else{
                     SevenSegmentBuffer[BIT_0/4] = numbers[BYTE_1] + 1;
                 }
@@ -1288,34 +1290,43 @@ unsigned char R_Mode = 'N';
 
 
 extern unsigned int Holding_Cnt;    //偵測按住多久用的Counter  >8 判定為按住
+extern unsigned char HoldingCnt;
 extern unsigned char Hold_Key_Flag;
 extern KeyName_Def  Holding_Key_Name;
 
 void Workout_Value_DisplayProcess(){
 
-    if(System_Mode != StartUP){
+    if(System_Mode != StartUp){
         if(Linked_HR_info.usHR_bpm || (Linked_HR_info.Link_state == Linked)){
-            
-            SET_Seg_Display(HEARTRATE  , Linked_HR_info.usHR_bpm , ND , DEC );
+            //------藍芽 或 ANT 心跳  最優先
+            //SET_Seg_Display(HEARTRATE  , Linked_HR_info.usHR_bpm , ND , DEC );
             usNowHeartRate = Linked_HR_info.usHR_bpm;
         }else{
             
             if(HR5KPairOkFlag){
-                SET_Seg_Display(HEARTRATE  , ucWhr , ND , DEC );
+                //5K 無限心跳  第2優先
+                //SET_Seg_Display(HEARTRATE  , ucWhr , ND , DEC );
                 usNowHeartRate = ucWhr;
             }else{
                 
                 if(ucHhr){
-                    SET_Seg_Display(HEARTRATE  , ucHhr , ND , DEC );
+                    //手握心跳
                     usNowHeartRate = ucHhr;
                 }else{
-                    SET_Seg_Display(HEARTRATE  , 0 , ND , DEC );
+                    //SET_Seg_Display(HEARTRATE  , 0 , ND , DEC );
                     usNowHeartRate = 0;
                 }
             }    
         }
         
-        if(Holding_Cnt > 8){ //按鈕按住
+        if(HeartRate_Display_Type == HR){
+           SET_Seg_Display(HEARTRATE  , usNowHeartRate , ND , DEC );
+        }else if(HeartRate_Display_Type == METS){
+           SET_Seg_Display(HEARTRATE  , usMET , ND , DEC );
+        }
+        
+        //--------------外部按鍵----------------------------
+        if(Holding_Cnt >0){ //按鈕按住
             if( (Holding_Key_Name == Inc_Up) || (Holding_Key_Name == Inc_Down) ){
                 INCL_Moveing_Flag = 0;
             }
@@ -1323,6 +1334,17 @@ void Workout_Value_DisplayProcess(){
                  SPEED_Changing_Flag = 0;
             }
         }
+ 
+        //--------------薄膜按鍵-------------------------------------------
+        if(HoldingCnt > 0){
+            if(  (Press_Key == Key_IncUp) || (Press_Key == Key_IncDwn)){
+                INCL_Moveing_Flag = 0;
+            }
+            if(  (Press_Key == Key_SpdUp) || (Press_Key == Key_SpdDwn) ){
+                 SPEED_Changing_Flag = 0;
+            }
+        }
+        //-----------------------------------------------------------------
         
         SET_INCLINE_Blink( System_INCLINE ,D2 ,DEC  , INCL_Moveing_Flag);
         SET_SPEED_Blink(    System_SPEED  ,D2 ,DEC  , SPEED_Changing_Flag);
@@ -1347,18 +1369,40 @@ void Workout_Value_DisplayProcess(){
         
         
         if(Calories_Display_Type == Cal_){
-            SET_Seg_Display(CALORIES  , Program_Data.Calories/100 , D2 , DEC );  // 0.1 kcal
+            if(Program_Data.Calories/100>=1000){ //消耗超過1000kcal時 不顯示小數點
+                SET_Seg_Display(CALORIES  , Program_Data.Calories/1000 , ND , DEC );  // 1 kcal
+            }else{
+                SET_Seg_Display(CALORIES  , Program_Data.Calories/100 , D2 , DEC );  // 0.1 kcal
+            }
+                   
         }else if(Calories_Display_Type == Cal_HR){
             SET_Seg_Display(CALORIES  , Program_Data.Calories_HR , ND , DEC );  //每小時消耗cal
         }
         
-        if(Program_Data.Distance >= 10000000){ //  >=100 km 顯示整數就好
-            SET_Seg_Display(DISTANCE  , Program_Data.Distance/100000 , ND , DEC );
-        }else if((Program_Data.Distance >= 1000000) && (Program_Data.Distance < 10000000) ){ // >= 10 km 顯示 小數點後一位
-            SET_Seg_Display(DISTANCE  , Program_Data.Distance/10000 , D2 , DEC );
-        }else if(Program_Data.Distance < 1000000){ // <10 km 顯示後兩位
-            SET_Seg_Display(DISTANCE  , Program_Data.Distance/1000 , D3 , DEC );
+        
+        if(Dist_Display_Type == DIST){
+            if(Program_Data.Distance >= 10000000){ //  >=100 km 顯示整數就好
+                SET_Seg_Display(DISTANCE  , Program_Data.Distance/100000 , ND , DEC );
+            }else if((Program_Data.Distance >= 1000000) && (Program_Data.Distance < 10000000) ){ // >= 10 km 顯示 小數點後一位
+                SET_Seg_Display(DISTANCE  , Program_Data.Distance/10000 , D2 , DEC );
+            }else if(Program_Data.Distance < 1000000){ // <10 km 顯示後兩位
+                SET_Seg_Display(DISTANCE  , Program_Data.Distance/1000 , D3 , DEC );
+            }
+        }else if(Dist_Display_Type == ALTI){
+            
+            unsigned long ulAltitude_Display;
+            ulAltitude_Display = ulAltitude/10;   //0.1公尺
+            
+            
+            if(ulAltitude_Display>=10 && ulAltitude_Display<10000){
+                SET_Seg_Display(DISTANCE  , ulAltitude_Display, D3 , DEC );
+            }else if(ulAltitude_Display>=10000 && ulAltitude_Display<100000){
+                SET_Seg_Display(DISTANCE  , ulAltitude_Display/10 , D2 , DEC );
+            }else if(ulAltitude_Display>=100000 && ulAltitude_Display<1000000){
+                SET_Seg_Display(DISTANCE  , ulAltitude_Display/100 , ND , DEC );
+            }   
         }
+
         
         //--------------Pace 相關計算 --------------------------
         Pace_Freq = (RM6T6_state.Foot_cnt_10s * 6);
@@ -1420,8 +1464,6 @@ void Turn_ON_All_Segment(){
     }
   
 }
-
-
 void Turn_OFF_All_Segment(){
     
     memset(SevenSegmentBuffer,0x00,27);
@@ -1455,18 +1497,3 @@ void Test7_Segment(unsigned char data){
     }
   
 }
-
-
-/*
-for(unsigned short i = 0; i <  1000;i++){
-
-SET_Seg_Display(INCLINE, i , ND , DEC );
-SET_Seg_TIME_Display( TIME  , i);
-SET_Seg_TIME_Display( CALORIES  , i);
-SET_Seg_TIME_Display( PACE  , i);
-
-writeSegmentBuffer();
-HAL_Delay(10);
-    }
-*/
-

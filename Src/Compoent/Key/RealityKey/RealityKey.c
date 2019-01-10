@@ -31,9 +31,6 @@ void Reality_Key_Init(){
 
 }
 
-
-
-
 KeyName_Def  Catch_Key_Name;    //第一次按下 捕捉到的按鍵名稱    因為是偵測用 馬上會被清掉
 KeyName_Def  Catch_Key_Save;      //按下去之後 直到放開前   (記錄"目前"按住) 按鈕名稱
 
@@ -125,9 +122,9 @@ void RealityKey_PressDetect(){
             Catch_Key_Save = Catch_Key_Name;   //先把目前按的按鍵存起來 
             
             //清掉 GPIO狀態      當有按鍵按下時   Debounce_Time ! =  0 不會再去確認HAL_GPIO_ReadPin  所以要先清掉狀態
-            PB_1_spdUP       = GPIO_PIN_RESET; 
-            PB_2_spdDown = GPIO_PIN_RESET;
-            PE_7_incUP         = GPIO_PIN_RESET;  
+            PB_1_spdUP    = GPIO_PIN_RESET; 
+            PB_2_spdDown  = GPIO_PIN_RESET;
+            PE_7_incUP    = GPIO_PIN_RESET;  
             PE_8_inc_Down = GPIO_PIN_RESET;
             
             //設定除彈跳時間

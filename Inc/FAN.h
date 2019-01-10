@@ -1,7 +1,7 @@
 #ifndef FAN_H_
 #define FAN_H_
 
-#define Use_FAN 0
+
 
 extern TIM_HandleTypeDef htim2;
 

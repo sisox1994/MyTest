@@ -11,7 +11,7 @@ unsigned char ucSecondCnt = 0;
 extern unsigned char EngineerTestItem;
 //兩秒全顯期間  按鍵判斷  進入工程模式?
 void EnterEngineerMode_Key(){
-    if(KeyCatch(0 ,2, Spd_9 , Spd_12)){
+    if(KeyCatch(0 ,2, Stop , cool)){
         System_Mode = Engineer;
         EngineerTestItem = 0;
     }
@@ -97,7 +97,7 @@ void StartUp_Func(){
         if(T_Marquee_Flag){
             T_Marquee_Flag = 0;      
             //if(F_String_buffer_Auto( Left, "ATTACUS       FITNESS  " ,50 ,0) == 1){
-            if(F_String_buffer_Auto( Left, "WELLCOME" ,50 ,0) == 1){
+            if((F_String_buffer_Auto( Left, "WELLCOME" ,50 ,0) == 1 )|| (KeyCatch(0,1 , Start)) ){
                 SET_Seg_Display(INCLINE  , 0 , D2 , DEC );
                 SET_Seg_Display(SPEED    , 0 , D2 , DEC );
                 SET_Seg_Display(DISTANCE , Program_Data.Distance , D2 , DEC );
@@ -113,11 +113,11 @@ void StartUp_Func(){
         break;
         
       case 4:
-        System_Mode = Menu;
+        System_Mode = Idle;
         break;
     }
     
-    EnterEngineerMode_Key();
+    EnterEngineerMode_Key();  //偵測 組合按鈕進入工程模式
  
 
 }

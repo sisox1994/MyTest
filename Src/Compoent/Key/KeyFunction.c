@@ -8,13 +8,13 @@ void KeyTest(){
         HAL_Delay(20);
     }
     
-    if(KeyCatch(0,1,Inc_10) ){
+    if(KeyCatch(0,1,Inc_9) ){
         INCL_CMD( Write , InclineADTable[20] );   
         HAL_Delay(20);
         
     }
     
-    if(KeyCatch(0,1,Inc_5) ){
+    if(KeyCatch(0,1,Inc_6) ){
         INCL_CMD( Write , InclineADTable[10] );   
         HAL_Delay(20);
         

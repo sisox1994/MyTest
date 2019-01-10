@@ -21,7 +21,7 @@ void Buzzer_ON(){
         BuzzerON_Flag = 1;
         
         if(Press_Key == Start){
-            if( (System_Mode == Menu) || (System_Mode == Program_Setting)){
+            if( (System_Mode == Idle) || (System_Mode == Prog_Set)){
                 BuzzerCnt = 0;
                 BuzzerON_Flag = 0;
             }else{

@@ -1,13 +1,13 @@
 #include "stm32f4xx_hal.h"
 
-
+#if Use_FAN
 
 TIM_HandleTypeDef htim2;
 void HAL_TIM_MspPostInit(TIM_HandleTypeDef *htim);
-      
+     
 void FAN_PWM_Init(){
     
-#if Use_FAN
+
     TIM_MasterConfigTypeDef sMasterConfig;
     TIM_OC_InitTypeDef sConfigOC;
     
@@ -39,12 +39,12 @@ void FAN_PWM_Init(){
     
     HAL_TIM_MspPostInit(&htim2);
     HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_3);
-#endif
+
 }
 
 void FAN_SET_PWM_DUTY(unsigned char duty){
     
-#if Use_FAN
+
     unsigned int PWM_Value;
     
     if(duty>100){
@@ -54,5 +54,6 @@ void FAN_SET_PWM_DUTY(unsigned char duty){
     PWM_Value =  duty * 10;
     
     TIM2->CCR3 = PWM_Value;
-#endif
+
 }
+#endif

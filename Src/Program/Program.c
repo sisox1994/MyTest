@@ -193,13 +193,13 @@ unsigned int AltitudeTemp;
 unsigned int Altitudekm;
 unsigned short Data16;
 
-
+//ulAltitude  算出來的單位是公尺0.1公尺
 void ALTI_Calculate(){
    
     /* Altitude */
     if(System_Unit == Metric){     // 公制
         
-        AltitudeTemp = Program_Data.Distance/100;
+        AltitudeTemp = Program_Data.Distance/100;                                                               //公尺     //Program_Data.Distance/100000  = KM    
 
         if(AltitudeTemp!=Altitudekm){
             
@@ -234,4 +234,59 @@ void ALTI_Calculate(){
         if((ulAltitude/10)>99999)
             ulAltitude-=1000000;
     }
+}
+
+void Template_To_Table_96(unsigned char* Template_Table){
+    
+    for(unsigned char i = 0;i < Program_Data.Template_Table_Num; i++){
+        Program_Data.INCLINE_Template_Table[i] = Template_Table[i];
+    }
+    for(unsigned char i = 0 ; i < 96; i++){
+        Program_Data.INCLINE_Table_96[i] = Template_Table[ i % Program_Data.Template_Table_Num]; 
+    }
+
+}
+
+
+void Table_96_To_BarArray(){
+    
+    for(unsigned char i = 0 ; i < 32; i++){
+        
+        if(Program_Data.INCLINE_Table_96[i] >= 0x00 ){
+            
+            if(Program_Data.INCLINE_Table_96[i] > 30){
+                Program_Data.BarArray_Display[i] = Index_To_Bar[30];
+            }else{
+                Program_Data.BarArray_Display[i] = Index_To_Bar[ Program_Data.INCLINE_Table_96[i] ];
+            }
+            
+        }else if(Program_Data.INCLINE_Table_96[i] < 0){
+            Program_Data.BarArray_Display[i] = Index_To_Bar[0];          //小於0 就顯示1顆
+        } 
+        
+    } 
+    
+}
+
+void Peroid_Mapping_Common(){
+    
+    if(Program_Data.Goal_Time >= 1920){     //>32分鐘
+        
+        Program_Data.PeriodWidth  = 60;                              //一格區間大於60  就=60
+        Program_Data.PeriodNumber = Program_Data.Goal_Time / 60;     //算總共有幾個區間
+        Program_Data.NextPeriodValue = Program_Data.Goal_Time - Program_Data.PeriodWidth;
+        
+    }else if(Program_Data.Goal_Time < 1920){     //<32分鐘
+        
+        Program_Data.PeriodWidth  = Program_Data.Goal_Time / 32;
+        Program_Data.PeriodNumber = 32;
+        Program_Data.NextPeriodValue =  Program_Data.Goal_Time - Program_Data.PeriodWidth;   
+    }
+    
+}
+
+void Table_96_To_BarArray_Mapping(){
+
+    Table_96_To_BarArray();
+    Peroid_Mapping_Common();
 }

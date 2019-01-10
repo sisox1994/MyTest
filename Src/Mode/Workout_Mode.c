@@ -1,9 +1,24 @@
 #include "system.h"
 
+#define CANCEL_TIME_SEC 10
+
 unsigned int Shift_Times;
 unsigned char No_HR_Value_Cnt; //判斷運動中  60秒沒有心跳 就進入summary 的cnt
 void BarArray_Shift_Process();
+
 unsigned char TimePeroid_Process();
+
+unsigned char Time_Set_Flag;
+unsigned int  Set_TimeVal_Temp; //運動中設定時間的暫時存放值
+int           TimeVal_Diff;     //時間增減數值
+unsigned char Cancel_SetTime_Cnt;
+
+
+
+extern unsigned char  Number_Digit_Tmp;
+extern unsigned char  Time_KeyPad_Iput_Flag;  //-------時間設定  keypad輸入模式
+extern unsigned char  NumberKeyProcess();
+extern void NumberInsert_Time(unsigned int* Time_Modify);
 
 void IntoWorkoutModeProcess(){
     
@@ -12,13 +27,25 @@ void IntoWorkoutModeProcess(){
         RM6_Task_Adder(Set_INCLINE);
     }
     
+    
+    if(Program_Select == APP_Train_Dist_Run || Program_Select == APP_Train_Time_Run){
+        System_INCLINE = Program_Data.INCLINE_Table_96[0] * 5;
+        System_SPEED   = CloudRun_Init_INFO.CloudRun_Spd_Buffer[0];
+            
+        RM6_Task_Adder(Set_INCLINE);
+        RM6_Task_Adder(Set_SPEED);
+    }
+      
     WarmUp_3_Minute_Cnt = 0;
     System_Mode = Workout;
+    F_SetFEC_State(IN_USE);
     ClearStd_1_Sec_Cnt(); 
 
 }
 
 short Now_INCLINE_Oringin_Value;
+short Now_SPEED_Oringin_Value;
+
 void Update_BarArray_Data_Ex(){
     
     //距離目標模式 依Diffculty_Level 去限制可調整的揚聲範圍值
@@ -37,6 +64,9 @@ void Update_BarArray_Data_Ex(){
     Now_INCLINE_Oringin_Value = Program_Data.INCLINE_Table_96[(Program_Data.NowPeriodIndex % 96)]; 
     Program_Data.INCLINE_ValueDiff = (System_INCLINE/5) - Now_INCLINE_Oringin_Value;
 
+    Now_SPEED_Oringin_Value  = Program_Data.SPEED_Table_96[(Program_Data.NowPeriodIndex % 96)]; 
+    Program_Data.SPEED_ValueDiff = System_SPEED - Now_SPEED_Oringin_Value;
+     
     //--樣本也要跟著變----
     for(unsigned char i = 0; i < Program_Data.Template_Table_Num; i++){
         Program_Data.INCLINE_Template_Table[i] += Program_Data.INCLINE_ValueDiff;
@@ -46,7 +76,10 @@ void Update_BarArray_Data_Ex(){
         for(unsigned char i = 0 ; i < 96 ; i++){
             
             if(i >= Program_Data.NowPeriodIndex % 96 ){
-                Program_Data.INCLINE_Table_96[i] += Program_Data.INCLINE_ValueDiff;
+                if(i < Program_Data.PeriodNumber){
+                    Program_Data.INCLINE_Table_96[i] += Program_Data.INCLINE_ValueDiff;
+                    Program_Data.SPEED_Table_96[i]   += Program_Data.SPEED_ValueDiff;
+                }
             }
         }
         
@@ -54,17 +87,20 @@ void Update_BarArray_Data_Ex(){
         for(unsigned char i = 32 ; i < 96 ; i++){
             if(i >= Program_Data.NowPeriodIndex % 96 ){
                 Program_Data.INCLINE_Table_96[i] += Program_Data.INCLINE_ValueDiff;   
+                Program_Data.SPEED_Table_96[i]   += Program_Data.SPEED_ValueDiff;
             } 
         }
         for(unsigned char i = 0 ; i < 32 ; i++){
             Program_Data.INCLINE_Table_96[i] += Program_Data.INCLINE_ValueDiff;
+            Program_Data.SPEED_Table_96[i]   += Program_Data.SPEED_ValueDiff;
         }
         
     }else if(Program_Data.MasterPage == 2){
         if( (Program_Data.NowPeriodIndex % 96 >= 64) && (Program_Data.NowPeriodIndex % 96 < 96) ){
             for(unsigned char i = 64 ; i < 128 ; i++){
                 if(i >= Program_Data.NowPeriodIndex % 96 ){
-                    Program_Data.INCLINE_Table_96[i%96] += Program_Data.INCLINE_ValueDiff;   
+                    Program_Data.INCLINE_Table_96[i%96] += Program_Data.INCLINE_ValueDiff;  
+                    Program_Data.SPEED_Table_96[i%96]   += Program_Data.SPEED_ValueDiff;
                 }
             }
         }
@@ -72,11 +108,13 @@ void Update_BarArray_Data_Ex(){
             for(unsigned char i = 0 ; i < 32 ; i++){
                 if(i >= Program_Data.NowPeriodIndex % 96 ){
                     Program_Data.INCLINE_Table_96[i%96] += Program_Data.INCLINE_ValueDiff; 
+                    Program_Data.SPEED_Table_96[i%96]   += Program_Data.SPEED_ValueDiff;
                 }
             }
         }
         for(unsigned char i = 32 ; i < 64 ; i++){
             Program_Data.INCLINE_Table_96[i] += Program_Data.INCLINE_ValueDiff;
+            Program_Data.SPEED_Table_96[i]   += Program_Data.SPEED_ValueDiff;
         }
         
     }
@@ -101,19 +139,25 @@ unsigned char Quick_INCLINE__Key(){
       case Extreme_Heart_Rate:  
       case EZ_INCLINE: 
       case APP_Cloud_Run:
+      //case APP_Train_Dist_Run:
+      //case APP_Train_Time_Run:  
         //---鎖揚升--//
         return 0;
         break;
         
     }
  
-    if(R_KeyCatch( Inc_Up) || R_KeyContinueProcess(Inc_Up)){
+    if(R_KeyCatch(Inc_Up)      || R_KeyContinueProcess(Inc_Up) ||
+       KeyCatch(0,1,Key_IncUp) || KeyForContinueProcess(Key_IncUp) ){ 
+           
         if(System_INCLINE<Machine_Data.System_INCLINE_Max) System_INCLINE+=5;
         __asm("NOP");
          return 1;
     }
     
-    if(R_KeyCatch( Inc_Down) || R_KeyContinueProcess(Inc_Down)){
+    if(R_KeyCatch( Inc_Down)   || R_KeyContinueProcess(Inc_Down) ||
+       KeyCatch(0,1,Key_IncDwn) || KeyForContinueProcess(Key_IncDwn) ){ 
+           
         if(System_INCLINE>Machine_Data.System_INCLINE_Min)System_INCLINE-=5;
         __asm("NOP");
          return 1;
@@ -124,14 +168,22 @@ unsigned char Quick_INCLINE__Key(){
         System_INCLINE = 150;
         return 1;
     }
-    if( KeyCatch(0,1 , Inc_10) ){
-        System_INCLINE = 100;
+    if( KeyCatch(0,1 , Inc_12) ){
+        System_INCLINE = 120;
+        return 1;
+    } 
+    if( KeyCatch(0,1 , Inc_9) ){
+        System_INCLINE = 90;
         return 1;
     }
-    if( KeyCatch(0,1 , Inc_5) ){
-        System_INCLINE = 50;
+    if( KeyCatch(0,1 , Inc_6) ){
+        System_INCLINE = 60;
         return 1;
     }
+    if( KeyCatch(0,1 , Inc_3) ){
+        System_INCLINE = 30;
+        return 1;
+    } 
     if( KeyCatch(0,1 , Inc_0) ){
         System_INCLINE = 0;
         return 1;
@@ -143,100 +195,299 @@ unsigned char Quick_INCLINE__Key(){
 unsigned char Quick_SPEED__Key(){
 
     
-    if(R_KeyCatch( Spd_Up) || R_KeyContinueProcess(Spd_Up)){
+    if( R_KeyCatch( Spd_Up)       || R_KeyContinueProcess(Spd_Up) ||
+        KeyCatch(0,1 , Key_SpdUp) || KeyForContinueProcess(Key_SpdUp) ){
+            
         if(System_SPEED < Machine_Data.System_SPEED_Max){
             System_SPEED += 1;
         }
           return 1;
     }
     
-    if(R_KeyCatch( Spd_Down) || R_KeyContinueProcess(Spd_Down)){
+    if(R_KeyCatch( Spd_Down)      || R_KeyContinueProcess(Spd_Down) ||
+       KeyCatch(0,1 , Key_SpdDwn) || KeyForContinueProcess(Key_SpdDwn) ){
+           
         if(System_SPEED > Machine_Data.System_SPEED_Min){
             System_SPEED -=1;
         }
         return 1;
     }
     
-      /*f( KeyCatch(0,1 , Key_Manual) || KeyForContinueProcess(Key_Manual)){    //最左邊
-        
-        if(System_SPEED < Machine_Data.System_SPEED_Max){
-            System_SPEED += 1;
-        }
+    
+    if( KeyCatch(0,1 , Spd_18) ){
+        System_SPEED = 180;
         return 1;
     }
-    if( KeyCatch(0,1 , Key_HRC) ||  KeyForContinueProcess(Key_HRC)){      // 左2
-        
-        if(System_SPEED > Machine_Data.System_SPEED_Min){
-            System_SPEED -=1;
-        }
+    
+    if( KeyCatch(0,1 , Spd_15) ){
+        System_SPEED = 150;
         return 1;
-    }*/
+    } 
+    if( KeyCatch(0,1 , Spd_12) ){
+        System_SPEED = 120;
+        return 1;
+    }
+    if( KeyCatch(0,1 , Spd_9) ){
+        System_SPEED = 90;
+        return 1;
+    }
+    if( KeyCatch(0,1 , Spd_6) ){
+        System_SPEED = 60;
+        return 1;
+    } 
+    if( KeyCatch(0,1 , Spd_3) ){
+        System_SPEED = 30;
+        return 1;
+    }  
   
     return 0;
 }
 
+unsigned int Time_Chage_InWorkout_Temp;
+
 void Workout_Key(){
 
-    if( KeyCatch(0,1 , Key_Manual)){    //最左邊
+    
+    if(Time_Set_Flag == 0){
         
-        //-------------------- 切換 步數 步幅 步頻 步距-----
-        Pace_Display_Switch ++;
-        Pace_Display_Switch = Pace_Display_Switch % 4;
-        //-------------------------------------------------
-    }
-    
-    if( KeyCatch(0,1 , Enter) ){
-        Btm_Task_Adder(Scan_ANT_HRC_Sensor);
-        __asm("NOP");
-    }   
-    
-    if( KeyCatch(0,1 , BLE) ){
-        Btm_Task_Adder(Scan_BLE_HRC_Sensor);
-        __asm("NOP");
-    }    
-
-    if( KeyCatch(0,1 , Key_Advance) ){
-   
-        //消耗卡路里    每小時消耗卡路里 顯示切換
-        if(Calories_Display_Type == Cal_){
-            Calories_Display_Type = Cal_HR;
-        }else if(Calories_Display_Type == Cal_HR){
-            Calories_Display_Type = Cal_;
+        //-----------------顯示切換-----------------------------------------------
+        SCREEN_OPTION_Key();
+        
+        if(KeyCatch(0,1 , cool)){
+            System_INCLINE = 0;
+            RM6_Task_Adder(Set_INCLINE);
+            
+            Set_SPEED_Value((System_SPEED * 3)/10 );
+            RM6_Task_Adder(Set_SPEED);
+            IntoCoolDownModeProcess(); 
+        }
+        //----------------------------------------------------------
+        if( KeyCatch(0,1 , Stop)){
+            IntoPauseMode_Process(); 
+            Btm_Task_Adder(FTMS_Data_Broadcast); //Page 0 //廣播運動資料 歸零
+            Btm_Task_Adder(FTMS_Data_Broadcast); //Page 1
+            Set_SPEED_Value(0);
+            RM6_Task_Adder(Set_SPEED);
+            RM6_Task_Adder(Motor_STOP);
+            Buzzer_BeeBee(Time_Set, Cnt_Set);
         }
 
-        __asm("NOP");
-    }    
-    
-    if( KeyCatch(0,1 , Start) ){
-        
-        //-------- (經過)(剩下) 時間顯示切換 ------        
-        if(Time_Display_Type == Remaining){
-            Time_Display_Type = Elspsed;
-        }else if(Time_Display_Type == Elspsed){
-            Time_Display_Type = Remaining;
+        //-------------------------------------------------------
+        if(Quick_SPEED__Key() == 1){
+            
+            switch(Program_Select){
+                
+              case APP_Train_Dist_Run:
+              case APP_Train_Time_Run: 
+                Update_BarArray_Data_Ex();
+              default:
+                //---圖形不做改變--//
+                break;
+            }
+            
+            Rst_Speed_Blink();
+            RM6_Task_Adder(Set_SPEED);
         }
         
-        __asm("NOP");
-    }  
-    
-    if( KeyCatch(0,1 , Stop) ||  PauseKey() ){
-        
-        IntoPauseMode_Process(); 
-        
-        Btm_Task_Adder(FTMS_Data_Broadcast); //Page 0 //廣播運動資料 歸零
-        Btm_Task_Adder(FTMS_Data_Broadcast); //Page 1
+        if(Quick_INCLINE__Key() == 1){
+            RM6_Task_Adder(Set_INCLINE);
+            
+            switch(Program_Select){
+              case Quick_start:
+              case Manual:
+              case Random: 
+              case CrossCountry: 
+              case WeightLoss:   
+              case Interval_1_1: 
+              case Interval_1_2:
+              case Hill:   
+              case Hill_Climb: 
+              case Aerobic:     
+              case Interval_1_4: 
+              case Interval_2_1:  
+              case MARATHON_Mode:
+              case Calorie_Goal:
+              case Distance_Goal_160M:
+              case Distance_Goal_5K:
+              case Distance_Goal_10K:
+              case Custom_1: 
+              case Custom_2:
+              case APP_Train_Dist_Run:
+              case APP_Train_Time_Run: 
+                Update_BarArray_Data_Ex();
+                break;
+                
+              case Target_HeartRate_Goal: 
+              case Fat_Burn:            
+              case Cardio:    
+              case Heart_Rate_Hill:     
+              case Heart_Rate_Interval: 
+              case Extreme_Heart_Rate: 
+              case EZ_INCLINE: 
+              case APP_Cloud_Run:
+                
+                //---鎖揚升--//
+                break; 
+            }
+        }
      
-        Set_SPEED_Value(0);
-        RM6_Task_Adder(Set_SPEED);
-        RM6_Task_Adder(Motor_STOP);
-        
-        Buzzer_BeeBee(Time_Set, Cnt_Set);
     }
+
+    //---------------------BLE ANT+ 心跳  連接---------------
+    HR_SENSOR_LINK_Key(); 
     
-    if( KeyCatch(0,1 , Spd_12) ){  //(++   時間)
+
+    if(System_Mode == Workout){
+        if( KeyCatch(0,1 , Enter)){
+            Cancel_SetTime_Cnt = CANCEL_TIME_SEC;
+            //-----------------------------非時間設定模式
+            if(Time_Set_Flag == 0){
+                
+                //----------某些上數模式不能調整時間------
+                switch(Program_Select){
+                  case Heart_Rate_Hill:     
+                  case Heart_Rate_Interval: 
+                  case Extreme_Heart_Rate:  
+                    Time_Set_Flag = 1;
+                    break;
+                  case Quick_start:   
+                  case EZ_INCLINE:  
+                  case MARATHON_Mode:
+                  case WeightLoss: 
+                  case APP_Cloud_Run:
+                  case APP_Train_Dist_Run:
+                  case APP_Train_Time_Run:  
+                    //---鎖時間--//
+                    Time_Set_Flag = 0;
+                    break;
+                  default:
+                    Time_Set_Flag = 1;
+                    break;
+                }
+                
+                 
+                Time_Display_Type = Remaining; //先改成顯示剩餘時間
+                
+            }else if(Time_Set_Flag == 1){  ///------------時間設定完畢  案確定
+
+                if(Time_KeyPad_Iput_Flag == 0){   ///--
+                    //----------------------------------------------------
+                    if( ((Set_TimeVal_Temp + TimeVal_Diff) >60)  &&  (Program_Data.Goal_Counter > 60) ){
+                        
+                        switch(Program_Select){
+                          case Heart_Rate_Hill:     
+                          case Heart_Rate_Interval: 
+                          case Extreme_Heart_Rate:  
+                            Time_Change_Process_HRC_Hill_In_WorkOut(TimeVal_Diff);
+                            break;
+                          case EZ_INCLINE:  
+                          case MARATHON_Mode:
+                          case WeightLoss: 
+                            //---鎖時間--//
+                            break;
+                          default:
+                            Time_Change_Process_InWorkout(TimeVal_Diff);
+                            break;
+                        }
+                        BarArray_Shift_Process();   
+                        Time_Set_Flag = 0;
+                        TimeVal_Diff  = 0;
+                        
+                    }else{  //輸入數值不符合範圍內
+                        TimeVal_Diff = 0;
+                        Time_Set_Flag = 1;
+                    }
+                    //---------------------------------------------------------
+                }else if(Time_KeyPad_Iput_Flag == 1){  //-----KeyPad 輸入案確定
+                
+                    
+                    //輸入剩餘時間至少要1分鐘
+                    if(Time_Chage_InWorkout_Temp>60){
+                        TimeVal_Diff = Time_Chage_InWorkout_Temp - (Program_Data.Goal_Counter/60)*60;
+                    }else{
+                        TimeVal_Diff = 0;
+                    }
+                    
+                    
+                    /*if(Time_Chage_InWorkout_Temp < (Program_Data.Goal_Time-Program_Data.Goal_Counter) +240){
+                        TimeVal_Diff = 0;
+                    }else{
+                        TimeVal_Diff = Time_Chage_InWorkout_Temp - Program_Data.Goal_Time; //先算出差值
+                    }*/
+       
+                    Number_Digit_Tmp = 0;
+                    Time_KeyPad_Iput_Flag = 0;
+                }
+            }
+            
+            
+        }
+        
+        if(Time_Set_Flag == 1){
+                        
+            if( KeyCatch(0,1 , Stop)){
+                Time_Set_Flag = 0;
+                Time_KeyPad_Iput_Flag = 0;
+                Number_Digit_Tmp =0;
+            }
+            
+            
+            if(Time_KeyPad_Iput_Flag == 0){
+                    //--------------  (+)  (-) 按鍵----------------------------------------
+                    if( R_KeyCatch( Spd_Up)    || R_KeyContinueProcess(Spd_Up)    ||
+                    KeyCatch(0,1 , Key_SpdUp)  || KeyForContinueProcess(Key_SpdUp)|| 
+                    R_KeyCatch(Inc_Up)         || R_KeyContinueProcess(Inc_Up)    ||
+                    KeyCatch(0,1,Key_IncUp)    || KeyForContinueProcess(Key_IncUp) ){
+                        
+                        Cancel_SetTime_Cnt = CANCEL_TIME_SEC;
+                        //----------------------------------------
+                        //if(Set_TimeVal_Temp + TimeVal_Diff >240){
+                            //if(Program_Data.Goal_Counter > 60){
+                                TimeVal_Diff+=60;   
+                            //}   
+                        //}//----------------------------------------
+                    }
+                        
+                      
+                    if(R_KeyCatch( Spd_Down)   || R_KeyContinueProcess(Spd_Down)   ||
+                    KeyCatch(0,1 , Key_SpdDwn) || KeyForContinueProcess(Key_SpdDwn)|| 
+                    R_KeyCatch( Inc_Down)      || R_KeyContinueProcess(Inc_Down)   ||    
+                    KeyCatch(0,1,Key_IncDwn)   || KeyForContinueProcess(Key_IncDwn) ){
+                        
+                        Cancel_SetTime_Cnt = CANCEL_TIME_SEC;
+                        //----------------------------------------
+                        if(Set_TimeVal_Temp + TimeVal_Diff >120){
+                            if(Program_Data.Goal_Counter > 60){
+                                TimeVal_Diff-=60; 
+                            }   
+                        }//----------------------------------------
+                    }
+                    
+                    if( KeyCatch(0,1 , Cancel)){
+
+                        Cancel_SetTime_Cnt = CANCEL_TIME_SEC;
+                        
+                          TimeVal_Diff = 0;
+                          Time_Set_Flag = 0;
+                    }
+                    //------------------------------------------------------------------------
+            }
+            
+            NumberInsert_Time(&Time_Chage_InWorkout_Temp);
+               
+
+            
+ 
+        }
+        
+    }
+
+    
+
+    /*
+    if( KeyCatch(0,1,Key_Goal) ){  //(++   時間)
 
         switch(Program_Select){
-            
           case Heart_Rate_Hill:     
           case Heart_Rate_Interval: 
           case Extreme_Heart_Rate:  
@@ -246,6 +497,8 @@ void Workout_Key(){
           case MARATHON_Mode:
           case WeightLoss: 
           case APP_Cloud_Run:
+          case APP_Train_Dist_Run:
+          case APP_Train_Time_Run:  
             //---鎖時間--//
             break;
           default:
@@ -255,7 +508,7 @@ void Workout_Key(){
         BarArray_Shift_Process();
     }
     
-    if( KeyCatch(0,1 , Spd_3) ){   // (-- 時間)
+    if( KeyCatch(0,1 ,Key_Manual)){   // (-- 時間)
         
         if(Program_Data.Goal_Time >240){
             if(Program_Data.Goal_Counter > 60){
@@ -279,59 +532,9 @@ void Workout_Key(){
                 BarArray_Shift_Process();    
             }   
         }
-    }
+    }*/
     
-    if(Quick_SPEED__Key() == 1){
-    
-        Rst_Speed_Blink();
-        //SPEED_Changing_Flag = 0;
-       
-        RM6_Task_Adder(Set_SPEED);
-    
-    }
-    
-    if(Quick_INCLINE__Key() == 1){
-        
-        //Rst_Incline_Blink();
-        //INCL_Moveing_Flag = 0;
-        RM6_Task_Adder(Set_INCLINE);
-        
-        switch(Program_Select){
 
-          case Quick_start:
-          case Manual:
-          case Random: 
-          case CrossCountry: 
-          case WeightLoss:   
-          case Interval_1_1: 
-          case Interval_1_2:
-          case Hill:   
-          case Hill_Climb: 
-          case Aerobic:     
-          case Interval_1_4: 
-          case Interval_2_1:  
-          case MARATHON_Mode:
-          case Calorie_Goal:
-          case Distance_Goal_160M:
-          case Distance_Goal_5K:
-          case Distance_Goal_10K:
-          case Custom_1: 
-          case Custom_2:
-            Update_BarArray_Data_Ex();
-            break;
-            
-          case Target_HeartRate_Goal: 
-          case Fat_Burn:            
-          case Cardio:    
-          case Heart_Rate_Hill:     
-          case Heart_Rate_Interval: 
-          case Extreme_Heart_Rate: 
-          case EZ_INCLINE: 
-          case APP_Cloud_Run:
-            //---鎖揚升--//
-            break; 
-        }
-    }
 }
 
 
@@ -372,7 +575,8 @@ void TimeProcess(){
         if(Cloud_0x39_Info.c_Distance >= uiAppTotalDistTmp){  //距離達標了
             
             IntoSummaryMode_Process();
-             
+            
+            
             Set_SPEED_Value(0);
             RM6_Task_Adder(Set_SPEED);
             RM6_Task_Adder(Motor_STOP);
@@ -383,6 +587,32 @@ void TimeProcess(){
             Buzzer_BeeBee(Time_Set, Cnt_Set);
         }
     }
+    
+    if(Program_Select == APP_Train_Dist_Run){   //訓練計畫  (距離)
+    
+        unsigned int uiAppTotalDistTmp;
+        
+        if(System_Unit == Metric){  
+           uiAppTotalDistTmp = uiAppTotalDist;
+        }else if(System_Unit == Imperial){
+           uiAppTotalDistTmp = (uiAppTotalDist * 10)/16;
+        }
+       
+        if(Cloud_0x39_Info.c_Distance >= uiAppTotalDistTmp){  //距離達標了
+            
+            IntoSummaryMode_Process();
+             
+            
+            Set_SPEED_Value(0);
+            RM6_Task_Adder(Set_SPEED);
+            RM6_Task_Adder(Motor_STOP);
+            
+            System_INCLINE = 0;
+            RM6_Task_Adder(Set_INCLINE);
+            
+            Buzzer_BeeBee(Time_Set, Cnt_Set);
+        }
+    }   
     
     //------如果是心跳模式   心跳突然斷線了  超過 60秒沒有重新連線  就進入workout summary
     switch(Program_Select){
@@ -458,10 +688,16 @@ void TimeProcess(){
         
         switch(Program_Select){            
           case Quick_start:
+          case APP_Train_Time_Run:       //訓練計畫  (時間)  
             IntoSummaryMode_Process();
+            
             break;
           default:
             Set_SPEED_Value((System_SPEED * 3)/10 );
+            
+            if( System_SPEED < Machine_Data.System_SPEED_Min){
+                System_SPEED = Machine_Data.System_SPEED_Min;
+            }
             RM6_Task_Adder(Set_SPEED);
             IntoCoolDownModeProcess();
             break;
@@ -486,16 +722,51 @@ unsigned char TimePeroid_Process(){
             Program_Data.NextPeriodValue -= Program_Data.PeriodWidth;
         }
         
-        if( (Program_Data.NowPeriodIndex - 30) % 32 == 0 && (Program_Data.NowPeriodIndex > 32)){
+        if(Program_Select == APP_Train_Time_Run){
+    
             
-            Program_Data.MasterPage = ((Program_Data.NowPeriodIndex - 30) /32) % 3;
-            GenNewBarDataIndexofStart  = (Program_Data.NowPeriodIndex - 30) + 64;
             
-            for(unsigned int i = GenNewBarDataIndexofStart; i < GenNewBarDataIndexofStart + 32 ; i++){
-                Program_Data.INCLINE_Table_96[i%96] = Program_Data.INCLINE_Template_Table[(i - Program_Data.Template_Loop_Start_Index) % Program_Data.Template_Table_Num]; 
+            if( (Program_Data.NowPeriodIndex - 30) % 32 == 0 && (Program_Data.NowPeriodIndex > 32)){
+            
+                Program_Data.MasterPage = ((Program_Data.NowPeriodIndex - 30) /32) % 3;
+                GenNewBarDataIndexofStart  = (Program_Data.NowPeriodIndex - 30) + 64;
+                
+                //--------------------------------------------------------------
+                
+                short Incline_Diff;
+                short Speed_Diff;
+                
+                Speed_Diff   = Program_Data.SPEED_Table_96[Program_Data.NowPeriodIndex%96]   - CloudRun_Init_INFO.CloudRun_Spd_Buffer[Program_Data.NowPeriodIndex];
+                Incline_Diff = Program_Data.INCLINE_Table_96[Program_Data.NowPeriodIndex%96] - CloudRun_Init_INFO.CloudRun_Inc_Buffer[Program_Data.NowPeriodIndex];
+                
+                
+                //----------揚升------------Table96 重新產生
+                for(unsigned int i = GenNewBarDataIndexofStart; i < GenNewBarDataIndexofStart + 32 ; i++){
+                    Program_Data.INCLINE_Table_96[i%96] = CloudRun_Init_INFO.CloudRun_Inc_Buffer[i] + Incline_Diff; 
+                }
+                //----------速度------------Table96 重新產生
+                for(unsigned int i = GenNewBarDataIndexofStart; i < GenNewBarDataIndexofStart + 32 ; i++){
+                    Program_Data.SPEED_Table_96[i%96] = CloudRun_Init_INFO.CloudRun_Spd_Buffer[i] + Speed_Diff;
+                } 
+                
             }
+            
+            
+            
+            
+        }else{
+            if( (Program_Data.NowPeriodIndex - 30) % 32 == 0 && (Program_Data.NowPeriodIndex > 32)){
+            
+                Program_Data.MasterPage = ((Program_Data.NowPeriodIndex - 30) /32) % 3;
+                GenNewBarDataIndexofStart  = (Program_Data.NowPeriodIndex - 30) + 64;
+            
+                for(unsigned int i = GenNewBarDataIndexofStart; i < GenNewBarDataIndexofStart + 32 ; i++){
+                    Program_Data.INCLINE_Table_96[i%96] = Program_Data.INCLINE_Template_Table[(i - Program_Data.Template_Loop_Start_Index) % Program_Data.Template_Table_Num]; 
+                }
+            } 
         }
-        
+    
+
         switch(Program_Select){
           case Target_HeartRate_Goal:
           case Fat_Burn: 
@@ -508,13 +779,52 @@ unsigned char TimePeroid_Process(){
           default:
             //--------------------------------------------------------------------------------//
             System_INCLINE = Program_Data.INCLINE_Table_96[Program_Data.NowPeriodIndex%96] * 5;
+       
+            if(Program_Data.INCLINE_Table_96[Program_Data.NowPeriodIndex%96] < 0){
+                System_INCLINE = 0;
+            }else if(System_INCLINE > 150){
+                System_INCLINE = 150;
+            }
+            
+            /*
             if(System_INCLINE > 150){
                 System_INCLINE = 150;
             }else if(Program_Data.INCLINE_Table_96[Program_Data.NowPeriodIndex%96] < 0){
                 System_INCLINE = 0;
-            } 
+            } */
             RM6_Task_Adder(Set_INCLINE);
             //--------------------------------------------------------------------------------//
+            
+            //----(速度不變)使用這個----設定速度----------訓練模式(時間)----------------------
+            /*if(Program_Select == APP_Train_Time_Run){
+                System_SPEED  = CloudRun_Init_INFO.CloudRun_Spd_Buffer[Program_Data.NowPeriodIndex];
+                if(System_SPEED>Machine_Data.System_SPEED_Max){
+                    System_SPEED = Machine_Data.System_SPEED_Max;
+                }else if(System_SPEED<Machine_Data.System_SPEED_Min){
+                    System_SPEED = Machine_Data.System_SPEED_Min;
+                }
+                RM6_Task_Adder(Set_SPEED);
+            }*/
+            
+            //--(速度會變)-------設定速度----------訓練模式(時間)---------------------
+            if(Program_Select == APP_Train_Time_Run){
+            
+                System_SPEED = Program_Data.SPEED_Table_96[Program_Data.NowPeriodIndex%96];
+             
+                //-------如果是負的就調整為最小速度
+                if(Program_Data.SPEED_Table_96[Program_Data.NowPeriodIndex%96]<0){
+                    System_SPEED = Machine_Data.System_SPEED_Min;
+                } 
+                
+                if(System_SPEED < Machine_Data.System_SPEED_Min){
+                    System_SPEED = Machine_Data.System_SPEED_Min;
+                }else if(System_SPEED > Machine_Data.System_SPEED_Max){
+                    System_SPEED = Machine_Data.System_SPEED_Max;
+                }
+                RM6_Task_Adder(Set_SPEED);
+            }
+            
+            
             break;
         }
         return 1; 
@@ -538,14 +848,28 @@ unsigned char DistancePeroid_Process(){
             Program_Data.NextPeriodValue -= Program_Data.PeriodWidth;   //設定下一個門檻
         }
      
+        //---------------------INC Table Shift 處理--------------------------------
         if( (Program_Data.NowPeriodIndex - 30) % 32 == 0 && (Program_Data.NowPeriodIndex > 32)){
             
             Program_Data.MasterPage = ((Program_Data.NowPeriodIndex - 30) /32) % 3;
             GenNewBarDataIndexofStart  = (Program_Data.NowPeriodIndex - 30) + 64;
            
+            short Incline_Diff;
+            short Speed_Diff;
+            
+            Speed_Diff   = Program_Data.SPEED_Table_96[Program_Data.NowPeriodIndex%96]   - CloudRun_Init_INFO.CloudRun_Spd_Buffer[Program_Data.NowPeriodIndex];
+            Incline_Diff = Program_Data.INCLINE_Table_96[Program_Data.NowPeriodIndex%96] - CloudRun_Init_INFO.CloudRun_Inc_Buffer[Program_Data.NowPeriodIndex];
+            
+            
+            //----------揚升------------Table96 重新產生
             for(unsigned int i = GenNewBarDataIndexofStart; i < GenNewBarDataIndexofStart + 32 ; i++){
-                Program_Data.INCLINE_Table_96[i%96] = ucAppINCBuffer[i]; 
+                Program_Data.INCLINE_Table_96[i%96] = CloudRun_Init_INFO.CloudRun_Inc_Buffer[i] + Incline_Diff;
             }
+            //----------速度------------Table96 重新產生
+            for(unsigned int i = GenNewBarDataIndexofStart; i < GenNewBarDataIndexofStart + 32 ; i++){
+                Program_Data.SPEED_Table_96[i%96] = CloudRun_Init_INFO.CloudRun_Spd_Buffer[i] + Speed_Diff; 
+            } 
+            
         }
 
         switch(Program_Select){
@@ -558,13 +882,55 @@ unsigned char DistancePeroid_Process(){
             break;
             
           default:
+            //-------------設定揚升--------------------------------------
+            
+            
             System_INCLINE = Program_Data.INCLINE_Table_96[Program_Data.NowPeriodIndex%96] * 5;
+            
+            if(Program_Data.INCLINE_Table_96[Program_Data.NowPeriodIndex%96] < 0){
+                System_INCLINE = 0;
+            }else if(System_INCLINE > 150){
+                System_INCLINE = 150;
+            }
+            
+            /*
             if(System_INCLINE > 150){
                 System_INCLINE = 150;
             }else if(Program_Data.INCLINE_Table_96[Program_Data.NowPeriodIndex%96] < 0){
                 System_INCLINE = 0;
-            } 
+            } */
+            
             RM6_Task_Adder(Set_INCLINE);
+            
+            //-----(速度不變)使用這個---設定速度----------訓練模式(距離) Only-------------------------
+            /*if(Program_Select == APP_Train_Dist_Run){
+                System_SPEED  = CloudRun_Init_INFO.CloudRun_Spd_Buffer[Program_Data.NowPeriodIndex];
+                if(System_SPEED>Machine_Data.System_SPEED_Max){
+                    System_SPEED = Machine_Data.System_SPEED_Max;
+                }else if(System_SPEED<Machine_Data.System_SPEED_Min){
+                    System_SPEED = Machine_Data.System_SPEED_Min;
+                }
+                RM6_Task_Adder(Set_SPEED);
+            }*/
+            //--(速度會變)-------設定速度----------訓練模式(時間)---------------------
+            if(Program_Select == APP_Train_Dist_Run){
+            
+                System_SPEED = Program_Data.SPEED_Table_96[Program_Data.NowPeriodIndex%96];
+                 
+                //-------如果是負的就調整為最小速度
+                if(Program_Data.SPEED_Table_96[Program_Data.NowPeriodIndex%96]<0){
+                    System_SPEED = Machine_Data.System_SPEED_Min;
+                }                
+                if(System_SPEED < Machine_Data.System_SPEED_Min){
+                    System_SPEED = Machine_Data.System_SPEED_Min;
+                }else if(System_SPEED > Machine_Data.System_SPEED_Max){
+                    System_SPEED = Machine_Data.System_SPEED_Max;
+                }
+                RM6_Task_Adder(Set_SPEED);
+            } 
+            
+            
+ 
             break;
         }
         return 1;   
@@ -574,6 +940,7 @@ unsigned char DistancePeroid_Process(){
 }
 
 //楊升值超過上限 或下限    將數值做調整
+//把 0~~ 30 轉成  1~8 
 short Fix_INCLINE_Limit(short INCLINE_Value){
 
     if(INCLINE_Value>= 0x00 ){
@@ -592,10 +959,31 @@ short Fix_INCLINE_Limit(short INCLINE_Value){
 }
 
 
+
+unsigned char Fix_SPEED_Limit(short Speed_Value){
+
+    if(Speed_Value < Machine_Data.System_SPEED_Min){
+         return 1;          //小於0 就顯示1顆
+    }else if(Speed_Value >= Machine_Data.System_SPEED_Min &&  Speed_Value < Machine_Data.System_SPEED_Max ){
+        return Speed_Value/30 + 1;
+    }else if(Speed_Value >= Machine_Data.System_SPEED_Max){
+        return 8;
+    }else{
+        return 1;
+    }
+       
+}
+
+
 unsigned short offsetValue;
 void BarArray_Shift_Process(){
     
-    Shift_Times = Program_Data.PeriodNumber - 32; //算需要位移的格數
+    if(Program_Data.PeriodNumber>32){
+        Shift_Times = Program_Data.PeriodNumber - 32; //算需要位移的格數
+    }else{
+        Shift_Times = 0;
+    }
+    
 
     if(Shift_Times == 0){  //如果 時間小於 32分鐘  顯示不需要位移  inddex 也不用處理
         
@@ -603,7 +991,10 @@ void BarArray_Shift_Process(){
         Program_Data.PeriodIndex_After_Shift = Program_Data.NowPeriodIndex; //直接丟原本值
         //BarArray  (1)
         for(unsigned char i = 0;  i < 32; i++){
+            //把 0~~ 30 轉成  1~8 
             Program_Data.BarArray_Display[i] =  Index_To_Bar[ Fix_INCLINE_Limit(Program_Data.INCLINE_Table_96[i%96])] ;  
+            //把0.5~~ 24.0 轉成  1~8 
+            Program_Data.BarArray_Display_Speed[i] = Fix_SPEED_Limit(Program_Data.SPEED_Table_96[i%96]); 
         }
           
     }else if(Shift_Times > 0){     //需要位移的情形
@@ -615,7 +1006,11 @@ void BarArray_Shift_Process(){
             
             //BarArray (1)
             for(unsigned char i = 0;  i < 32; i++){
+                //把 0~~ 30 轉成  1~8 
                 Program_Data.BarArray_Display[i] =  Index_To_Bar[ Fix_INCLINE_Limit(Program_Data.INCLINE_Table_96[i%96])] ;  
+                //把0.5~~ 24.0 轉成  1~8 
+                Program_Data.BarArray_Display_Speed[i] = Fix_SPEED_Limit(Program_Data.SPEED_Table_96[i%96]); 
+                
             }
             
         }else if( (Program_Data.NowPeriodIndex > 15)&&(Program_Data.NowPeriodIndex < (16 + Shift_Times) ) ){  //圖動 index 不動
@@ -629,7 +1024,11 @@ void BarArray_Shift_Process(){
             //**********************************************************************
 
             for(unsigned int i = offsetValue;  i < (32 + offsetValue) ; i++){
+                //把 0~~ 30 轉成  1~8 
                 Program_Data.BarArray_Display[i - offsetValue] =Index_To_Bar[Fix_INCLINE_Limit(Program_Data.INCLINE_Table_96[i%96])];
+                //把0.5~~ 24.0 轉成  1~8 
+                Program_Data.BarArray_Display_Speed[i - offsetValue] = Fix_SPEED_Limit(Program_Data.SPEED_Table_96[i%96]); 
+                
             }
             
         }else if( Program_Data.NowPeriodIndex > (15 + Shift_Times) ){  //圖形固定偏移  index 開始往後走
@@ -639,7 +1038,10 @@ void BarArray_Shift_Process(){
             
             //BarArray (3)
             for(unsigned int i = Shift_Times;  i < (32 + Shift_Times) ; i++){
-                Program_Data.BarArray_Display[i - Shift_Times] = Index_To_Bar[Fix_INCLINE_Limit(Program_Data.INCLINE_Table_96[i%96])];
+                //把 0~~ 30 轉成  1~8 
+                Program_Data.BarArray_Display[i - Shift_Times]       = Index_To_Bar[Fix_INCLINE_Limit(Program_Data.INCLINE_Table_96[i%96])];
+                //把0.5~~ 24.0 轉成  1~8 
+                Program_Data.BarArray_Display_Speed[i - Shift_Times] = Fix_SPEED_Limit(Program_Data.SPEED_Table_96[i%96]); 
             }
         } 
     } 
@@ -770,10 +1172,11 @@ void HRC_Rate_INCLINE_Process(){
     Program_Data.HeartRatePeroidCnt++;
 }
 
+unsigned char Incline_Speed_BarArrayDisplay_Switch;
+
 void Workout_Func(){
     
-    ucSubSystemMode = C_App_RunningVal;
-    
+
     Workout_Key();
     
     if(T5ms_Workout_Display_Flag){
@@ -807,6 +1210,14 @@ void Workout_Func(){
           case APP_Cloud_Run:
             DrawBarArray_Workout(Program_Data.BarArray_Display ,Program_Data.PeriodIndex_After_Shift , 1 );
             break;
+          case APP_Train_Dist_Run:
+          case APP_Train_Time_Run:
+            if(Incline_Speed_BarArrayDisplay_Switch == 0){
+                DrawBarArray_Workout(Program_Data.BarArray_Display_Speed ,Program_Data.PeriodIndex_After_Shift , 1 );
+            }else{
+                DrawBarArray_Workout(Program_Data.BarArray_Display ,Program_Data.PeriodIndex_After_Shift , 1 );
+            }
+            break;
             
           case Target_HeartRate_Goal:
           case Fat_Burn:
@@ -826,12 +1237,34 @@ void Workout_Func(){
           case Distance_Goal_5K:
           case Distance_Goal_10K:
           case APP_Cloud_Run:
+          case APP_Train_Dist_Run:
+          case APP_Train_Time_Run:  
             SET_Seg_TIME_Display( TIME  ,Program_Data.Goal_Time - Program_Data.Goal_Counter);
             break;
             
           default:   //預設下數顯示
             if(Time_Display_Type == Remaining){
-                SET_Seg_TIME_Display( TIME  , Program_Data.Goal_Counter);                           //剩下多少時間  下數
+                
+                if(Time_Set_Flag == 1){
+                    Set_TimeVal_Temp = Program_Data.Goal_Counter;
+                      
+                    if(Time_KeyPad_Iput_Flag == 0){ //一般+- 顯示
+                        if((Set_TimeVal_Temp + TimeVal_Diff) < 3600){        //小於1小時
+                            TIME_SET_Display( TIME  , Set_TimeVal_Temp + TimeVal_Diff ,0x0C , 0);
+                        }else if((Set_TimeVal_Temp + TimeVal_Diff) >= 3600){ //大於1小時
+                            TIME_SET_Display( TIME  , Set_TimeVal_Temp + TimeVal_Diff,0x03 , 0); 
+                        }
+                    }else if(Time_KeyPad_Iput_Flag == 1){  //--KeyPad輸入顯示
+                        SET_Seg_Display(TIME , Time_Chage_InWorkout_Temp/60 , ND , DEC );  
+                    }
+
+                    
+                    
+ 
+                }else{
+                    SET_Seg_TIME_Display( TIME  , Program_Data.Goal_Counter);    //剩下多少時間  下數
+                }
+                                        
             }else if(Time_Display_Type == Elspsed){
                 SET_Seg_TIME_Display( TIME  ,Program_Data.Goal_Time - Program_Data.Goal_Counter);    //經過多少時間 上數
             }
@@ -847,13 +1280,26 @@ void Workout_Func(){
          Btm_Task_Adder(FTMS_Data_Broadcast);   
         
          
+         if(Cancel_SetTime_Cnt>0){
+             Cancel_SetTime_Cnt--;
+         }
+         
+         if(Time_Set_Flag == 1){
+             if(Cancel_SetTime_Cnt == 0){
+                 Time_Set_Flag = 0;
+                 Time_KeyPad_Iput_Flag = 0;
+                 Number_Digit_Tmp =0;
+             }
+         }
+         
          
         //Check 目前到達哪一個 Period     //在抵達下一個 period 時去判斷要怎麼位移陣列
-        if(Program_Select == APP_Cloud_Run){
+         //競賽模式 和   訓練計畫(距離)
+        if(Program_Select == APP_Cloud_Run || Program_Select == APP_Train_Dist_Run){
             if(DistancePeroid_Process() == 1){  //用距離衡量
                 BarArray_Shift_Process();
             }
-        }else{
+        }else{    //case APP_Train_Time_Run:
             
             if(TimePeroid_Process() == 1){      //用時間衡量
                 BarArray_Shift_Process();

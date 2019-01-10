@@ -1,12 +1,14 @@
 #include "stm32f4xx_hal.h"
 #include "system.h"
 
-char ucProductionSerialNumber[30];
+char ucProductionSerialNumber[14];
 System_Mode_Def System_Mode;
 SafeKey_State_def safekey;
 
 Time_Display_Def       Time_Display_Type;
 Calories_Display_Def   Calories_Display_Type;
+Dist_Display_Def       Dist_Display_Type;
+HeartRate_Display_Def  HeartRate_Display_Type;
 unsigned char str_cNt = 0;
 
 unsigned short System_INCLINE; //0~150   => 0.0~15.0 %   =>0~30
@@ -22,7 +24,6 @@ unsigned char HeartRate_Is_Exist_Flag = 0;
 
 ///主要功能   判斷心跳裝置是否有數值   有數值 FTMS 心跳Flag = 1  數值變0  或斷線  Flag = 0
 // Zwift 特殊情況  FTMS 心跳送0bpm 或將Flag取消 Zwift心跳數值都會停留在最後大於0的整數值
-
 void F_HeartRate_Supervisor(){
 
     if(T1s_HR_Monitor_Flag){
@@ -31,15 +32,13 @@ void F_HeartRate_Supervisor(){
         if(HeartRate_Is_Exist_Flag == 0){
             
             if(usNowHeartRate > 0){
-                HeartRate_Is_Exist_Flag = 1;
-                //Btm_Task_Adder(FTMS_HR_Connect);
+                HeartRate_Is_Exist_Flag = 1; 
             } 
         }
         else if(HeartRate_Is_Exist_Flag == 1){
             
             if(usNowHeartRate == 0){
                 HeartRate_Is_Exist_Flag = 0;
-                //Btm_Task_Adder(FTMS_HR_Disconnect);
             } 
         }
     }

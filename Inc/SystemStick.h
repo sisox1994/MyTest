@@ -11,7 +11,7 @@ extern Flags_32bit TimeFlag;
 #define T300ms_Flag  TimeFlag.B4
 #define T5ms_Flag       TimeFlag.B5
 #define T100ms_R_KeyHold_Flag       TimeFlag.B6
-#define T_Marquee_Flag                       TimeFlag.B7
+#define T_Marquee_Flag              TimeFlag.B7
 #define  T500ms_BTSPK_Det_Flag      TimeFlag.B8
 #define T1s_Key_Hold_Flag              TimeFlag.B10
 #define T500ms_Blink_Flag               TimeFlag.B11
@@ -27,7 +27,7 @@ extern Flags_32bit TimeFlag;
 
 #define T500ms_Blink_INCL_Flag         TimeFlag.B17
 #define T500ms_Blink_SPEED_Flag        TimeFlag.B18
-#define T1s_Menu_Idle                  TimeFlag.B19
+#define T1s_Idle                  TimeFlag.B19
 #define T5s_cmd39_Flag                 TimeFlag.B20
 #define T500ms_Time_Colon_Blink_Flag   TimeFlag.B21
 #define T1s_HR_Monitor_Flag            TimeFlag.B23
@@ -37,10 +37,31 @@ extern Flags_32bit TimeFlag;
 
 
 extern unsigned short Ble_wait_disconnect_Time_out_Cnt;
+
 extern unsigned short Ble_Icon_Display_Cnt;
 extern unsigned short ANT_Icon_Display_Cnt;
+
+extern unsigned char APP_Connected_Display_Cnt;
+
+extern unsigned char DIST_Icon_Display_Cnt;
+extern unsigned char ALTI_Icon_Display_Cnt;
+
+extern unsigned char CAL_Icon_Display_Cnt;
+extern unsigned char CALH_Icon_Display_Cnt;
+
+extern unsigned char ELAPSED_Icon_Display_Cnt;
+extern unsigned char REMAINNING_Icon_Display_Cnt;
+
+extern unsigned char PACE_Icon_Display_Cnt;
+extern unsigned char STEP_Icon_Display_Cnt;
+
+extern unsigned char MET_Icon_Display_Cnt;
+extern unsigned char HR_Icon_Display_Cnt;
+
+
 extern unsigned short BTSPK_Icon_Display_Cnt;
 extern unsigned short BTSPK_OFF_Icon_Display_Cnt;
+
 extern unsigned short MarqueeCnt;
 
 void time();

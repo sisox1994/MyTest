@@ -3,6 +3,27 @@
 Program_Type_Def Program_Select = Quick_start;
 Program_Data_Def Program_Data;
 
+
+void IntoIdleMode_Process(){
+
+    Pace_Display_Switch    = 0;
+    Calories_Display_Type  = Cal_;
+    Dist_Display_Type      = DIST;
+    HeartRate_Display_Type = HR;
+    
+    System_Mode = Idle;
+    F_BtmReply39Cmd();//立馬告訴APP 進入Idle了 
+    
+    F_SetFEC_State(READY);
+    
+    Program_Select = Quick_start;
+    Cloud_Run_Initial_Busy_Flag = 0;
+    Program_Init();
+    ClearStd_1_Sec_Cnt();
+    
+    
+}
+
 void Program_Init(){
 
     switch(Program_Select){
@@ -193,7 +214,7 @@ void User_Like_Program_Init(){
 
 
 
-void Menu_Display(){
+void Idle_Display(){
     
     if(T_Marquee_Flag){
         T_Marquee_Flag = 0;
@@ -204,7 +225,7 @@ void Menu_Display(){
             
           case Quick_start:
             //F_String_buffer_Auto( Left, "ATTACUS       FITNESS  " ,50 ,0);
-            F_String_buffer_Auto( Left, "WELCOME" ,50 ,0);
+            F_String_buffer_Auto( Left, "WELCOME" ,60 ,0);
             break;
           case Manual:
           case Random: 
@@ -383,7 +404,12 @@ void KeyChangeDetect(Key_Name_Def key){
 
     if(Key_Name_Temp != key){
         Key_Name_Temp = key;
-        Program_Select = Quick_start;
+        
+        if((Program_Select != User_1)&&(Program_Select != User_2)){
+            Program_Select = Quick_start;
+        }
+        
+        
         ClassCnt = 0;
     }
     
@@ -397,31 +423,16 @@ extern void Enter_STOPMode_Process();
 
 extern UART_HandleTypeDef huart2;
 
-void Menu_Key(){
+void Idle_Key(){
      
  
     
-    if( KeyCatch(0,1 , Inc_15) ){
-        
-        Btm_Task_Adder(Scan_ANT_HRC_Sensor);
-         
-        __asm("NOP");
-        
+    if( KeyCatch(0,1 , Key_FitTest) ){
     }   
-    
-    if( KeyCatch(0,1 , Inc_10) ){
         
-        if(Ble_wait_HR_value_First_IN_Flag == 0){
-            Btm_Task_Adder(Scan_BLE_HRC_Sensor);
-        }
-       
-        
-        __asm("NOP");
-        
-    }    
+    HR_SENSOR_LINK_Key(); 
     
     if( KeyCatch(0,1 , Key_Manual) ){ 
-        
         KeyChangeDetect(Key_Manual);
         Program_Select = (Program_Type_Def)(1 + (ClassCnt % 7));
         ClassCnt++;
@@ -429,65 +440,64 @@ void Menu_Key(){
         str_cNt = 0;
         //writeLEDMatrix();
     } 
+    
     if( KeyCatch(0,1 , Key_HRC) ){ 
-        
         KeyChangeDetect(Key_HRC);
         Program_Select = (Program_Type_Def)(11 + (ClassCnt % 6));
         ClassCnt++;
         Program_Init();
         str_cNt = 0;
-        //writeLEDMatrix();
-        
+        //writeLEDMatrix(); 
     }
+    
     if( KeyCatch(0,1 , Key_Advance) ){ 
-
         KeyChangeDetect(Key_Advance);
         Program_Select = (Program_Type_Def)(22 + (ClassCnt % 6)  );
         ClassCnt++;
         Program_Init();
         str_cNt = 0;
         //writeLEDMatrix();
-        
     }
-    
-    if( KeyCatch(0,1 , BLE) ){ 
-        
-        KeyChangeDetect(BLE);
-        Program_Select = (Program_Type_Def)(31 + (ClassCnt % 8)  );
+
+    if( KeyCatch(0,1 , Key_Goal) ){ 
+        KeyChangeDetect(Key_Goal);
+        Program_Select = (Program_Type_Def)(31 + (ClassCnt % 4)  );
         ClassCnt++;
         Program_Init();
-        str_cNt = 0;
-        
+        str_cNt = 0; 
     }
     
+    if( KeyCatch(0,1 , Key_Custom) ){
+        KeyChangeDetect(Key_Custom);
+        Program_Select = (Program_Type_Def)(41 + (ClassCnt % 4)  );
+        ClassCnt++;
+        Program_Init();
+        str_cNt = 0; 
+    } 
+    
     if( KeyCatch(0,1 , Enter) ){
-        
-        
-        
         if(Program_Select){
-            
             switch(Program_Select){
-                
               case Quick_start:
               case Manual:
               case Random: 
               case CrossCountry: 
-                System_Mode = Program_Setting; 
+                System_Mode = Prog_Set; 
                 Setting_item_Index = SET_Time;
                 str_cNt = 0;
                 break;
+                
               case WeightLoss: 
-                System_Mode = Program_Setting; 
+                System_Mode = Prog_Set; 
                 Setting_item_Index = SET_Age;
                 str_cNt = 0;
                 break;
               case Interval_1_1: 
               case Interval_1_2:
               case Hill:  
-                System_Mode = Program_Setting; 
+                System_Mode = Prog_Set; 
                 Setting_item_Index = SET_Time;
                 str_cNt = 0;
-                
                 break;
                 
               case Target_HeartRate_Goal:
@@ -496,7 +506,7 @@ void Menu_Key(){
               case Heart_Rate_Hill:   
               case Heart_Rate_Interval: 
               case Extreme_Heart_Rate: 
-                System_Mode = Program_Setting; 
+                System_Mode = Prog_Set; 
                 Setting_item_Index = SET_Time;
                 str_cNt = 0;
                 break;
@@ -506,12 +516,12 @@ void Menu_Key(){
               case Interval_1_4: 
               case Interval_2_1: 
               case EZ_INCLINE: 
-                System_Mode = Program_Setting; 
+                System_Mode = Prog_Set; 
                 Setting_item_Index = SET_Time;
                 str_cNt = 0;
                 break;
               case MARATHON_Mode: 
-                System_Mode = Program_Setting; 
+                System_Mode = Prog_Set; 
                 Setting_item_Index = SET_Age;
                 str_cNt = 0;
                 break;
@@ -520,43 +530,38 @@ void Menu_Key(){
               case Distance_Goal_160M:
               case Distance_Goal_5K:
               case Distance_Goal_10K:
-                System_Mode = Program_Setting; 
+                System_Mode = Prog_Set; 
                 Setting_item_Index = SET_Age;
                 str_cNt = 0;
                 break;
                 
               case Custom_1: 
               case Custom_2:
-                System_Mode = Program_Setting; 
+                System_Mode = Prog_Set; 
                 Setting_item_Index = SET_Time;
                 str_cNt = 0;
                 break; 
               case User_1: 
               case User_2:
-                System_Mode = Program_Setting; 
+                System_Mode = Prog_Set; 
                 Setting_item_Index = SET_LIKE_Prog;
                 str_cNt = 0;
                 break; 
           
             }
-
         }else{
-            
             if(Program_Select == Quick_start){  //快速啟動模式按下Enter 就變成Manual Mode
                 Program_Select = Manual;
                 Program_Init();
-                System_Mode = Program_Setting; 
+                System_Mode = Prog_Set; 
                 Setting_item_Index = SET_Time;
                 str_cNt = 0; 
             }
         }
-        
         ClearBlinkCnt2();
-        
     }
     
     if( KeyCatch(0,1 , Stop) ){
-
         if(Program_Select){
             Program_Select = Quick_start;
             str_cNt = 0;
@@ -564,12 +569,10 @@ void Menu_Key(){
         } 
     }
     
-    if( KeyCatch(0,1 , Start)  ||   PauseKey() ){  //  PauseKey 暫時當開始
+    if( KeyCatch(0,1 , Start)){
         
         if(Program_Select == User_1 || Program_Select == User_2){
-            
             Program_Select = Program_Data.Like_Program; 
-            
         }else if(Program_Select == Quick_start){
             Quick_Start_Init();
         }
@@ -584,7 +587,7 @@ void Menu_Key(){
           case Heart_Rate_Interval: 
           case Extreme_Heart_Rate: 
             if(!usNowHeartRate){
-                System_Mode = Menu;
+                System_Mode = Idle;
             }
             break;
             
@@ -593,36 +596,16 @@ void Menu_Key(){
     }    
 }
 
-unsigned char ret_Idle_cnt;
+extern void Idel_detect();
+void Idle_Func(){
 
-void Menu_Idle_Detect(){
-
-    if(T1s_Menu_Idle == 1){
-        T1s_Menu_Idle = 0;
+    Idle_Key();
+    Idle_Display();
+    Idel_detect();
+    
+    if(T1s_Flag){     //時間計數  單位:秒
+        T1s_Flag = 0;
         
-        
-        if(ret_Idle_cnt == 30){
-            ClassCnt = 0;
-            ret_Idle_cnt = 0;
-            Program_Select = Quick_start;
-        }
-        
-        if(Program_Select != Quick_start){
-            ret_Idle_cnt++;
-        }else{
-            
-            ret_Idle_cnt = 0;
-        }
+        Btm_Task_Adder(FTMS_Data_Broadcast);
     }
-
-}
-
-void Menu_Func(){
-    
-    ucSubSystemMode = C_App_IdleVal; 
-    
-    Menu_Key();
-    Menu_Display();
-    Menu_Idle_Detect();
-    
 }

@@ -98,10 +98,12 @@ void SysTick_Handler(void)
 /**
 * @brief This function handles TIM2 global interrupt.
 */
+#if Use_FAN
 void TIM2_IRQHandler(void)
 {
   HAL_TIM_IRQHandler(&htim2);
 }
+#endif
 
 void I2C1_EV_IRQHandler(void)
 {

@@ -3,10 +3,10 @@
 
 typedef enum{
 
-    Spd_Up      = 1,
+    Spd_Up   = 1,
     Spd_Down = 2,
     
-    Inc_Up       = 3,
+    Inc_Up   = 3,
     Inc_Down = 4,
     
 }KeyName_Def;

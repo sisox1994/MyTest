@@ -1,31 +1,54 @@
 #ifndef __BTM_H__
 #define __BTM_H__
 
+
 typedef enum{
-    
-    C_App_IdleVal     = 0,
-    C_App_SetupVal    = 1, 
-    C_App_toRunGoVal  = 2,
-    C_App_WarmUpVal   = 3,
-    C_App_RunningVal  = 4,
-    C_App_CoolDownVal = 5,
-    C_App_PauseVal    = 6,
-    C_App_StopVal     = 7,
-    C_App_UserVal     = 9,
-    C_App_Dist1Val    = 10,
-    C_App_Dist2Val    = 11,
-    C_App_toRun321GoVal =12,
-    
-}ucSubSystemMode_Def;
+
+
+  ASLEEP   = 1,
+  READY    = 2,
+  IN_USE   = 3,
+  FINISHED = 4
+
+}FEC_State_Def;
+
+typedef enum{
+
+    others = 0,
+    IDLE   = 1, 
+    Warming_up = 2, 
+    Low_intensity_interval = 3,
+    High_intensity_interval = 4,
+    Recovery_interval = 5,
+    Isometric = 6,
+    Heart_rate_control = 7,
+    Fitness_test = 8,
+    Speed_outside_of_control_region_Low = 9,
+    Speed_outside_of_control_region_High = 10,
+    Cool_down = 11,
+    Watt_control = 12,
+    Manual_mode = 13,
+    Pre_workout = 14,
+    Post_workout = 15,
+
+}Training_status_Def;
 
 
 typedef enum{
     
-    Digital_Watch = 0,
-    App                  = 1, 
+    Digital_Watch  = 0,
+    App            = 1, 
     Cloud_Run      = 2,
-    void_Run         = 3
-
+    void_Run       = 3,
+    Train_Run_Dist = 4,
+    Train_Run_Time = 5,
+    
+    
+    C_App_UserVal      = 9,
+    C_App_Dist1Val     = 10,
+    C_App_Dist2Val     = 11,
+    C_App_Training_Val = 13,
+        
 }ucAppTypeModeDef;
 
 
@@ -94,7 +117,7 @@ typedef enum{
 
 typedef struct{
 
-    ucSubSystemMode_Def c_System_Mode;
+    System_Mode_Def c_System_Mode;
     unsigned int   c_Times;
     unsigned short c_HeartRate;
     unsigned short c_Stage;
@@ -164,17 +187,17 @@ typedef enum{
 
 typedef struct{
     
-    Trans_Dir_Def TransDir;
-    Sensor_UUID_Type_Def ScanType;    
-    Scan_State_Def Scan_State;
+    Trans_Dir_Def         TransDir;
+    Sensor_UUID_Type_Def  ScanType;    
+    Scan_State_Def        Scan_State;
     
     //--------------------ANT+
     unsigned short ANT_ID;
     //-------------------BLE
-    unsigned char DeviceNumber;
-    unsigned char RSSI;
-    unsigned short       UUID;
-    Sensor_UUID_Type_Def  Type_Check;
+    unsigned char  DeviceNumber;
+    unsigned char  RSSI;
+    unsigned short UUID;
+    Sensor_UUID_Type_Def Type_Check;
     char DeviceName[13];
     
     
@@ -200,9 +223,8 @@ typedef struct{
 
 typedef struct{
     
-    unsigned char Device_Cnt;
-    Scan_Meseseage_def messeage_List[24];
-    
+    unsigned char       Device_Cnt;
+    Scan_Meseseage_def  messeage_List[10];
     
 }BLE_Device_List_def;
 
@@ -225,6 +247,8 @@ typedef struct{
     unsigned short  Stage;
     Switch_def       AutoPause;
     unsigned char CloudRun_Inc_Buffer[432];
+    unsigned char CloudRun_Spd_Buffer[432];
+    
     unsigned short C_Time;
     unsigned char  C_Age;
     unsigned short C_Weight;
@@ -256,8 +280,8 @@ typedef struct{
 
 #define Task_Amount  6
 
+extern CloudRun_Init_INFO_Def CloudRun_Init_INFO;
 extern unsigned char FW_Transmiting_03_Flag;
-extern unsigned char ucAppINCBuffer[432];
 extern unsigned int uiAppTotalDist;
 extern unsigned int uiAppStageDist;
 extern unsigned int uiAppTotalDist;
@@ -327,6 +351,8 @@ void F_Btm_FTMS_B0_HR_Switch(unsigned char SW);
 //FEC
 void F_Btm_FEC_B5_SET_ANT_ID(void);
 void F_Btm_FEC_B4_SET_Data(unsigned char page);
+
+void F_SetFEC_State(FEC_State_Def FEC_State);
 
 
 //0xB3 SpinDown

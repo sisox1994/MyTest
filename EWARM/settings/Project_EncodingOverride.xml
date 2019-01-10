@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<userOverrides>
+    <override>
+        <path>C:\Users\bill_lin\Desktop\22-18-00200_VBT6\22-18-00200\Src\Display\DisplayFunctions\LED_Matrix.c</path>
+        <encoding>UTF-8</encoding>
+    </override>
+    <override>
+        <path>C:\Users\bill_lin\Desktop\22-18-00200_VBT6\22-18-00200\Src\Inverter\RM6T6.c</path>
+        <encoding>UTF-8</encoding>
+    </override>
+</userOverrides>

@@ -1,7 +1,7 @@
 #ifndef __BUZZER_H__
 #define __BUZZER_H__
 
-#define Use_Buzzer  1     //1 ¶}   0Ãö
+
 
 #define Buzzer_GPIO GPIOB
 #define Buzzer_Pin  GPIO_PIN_5

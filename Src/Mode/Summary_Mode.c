@@ -7,7 +7,13 @@ void IntoSummaryMode_Process(){
     Machine_Data_Update();
     
     System_Mode = Summary;
+    F_SetFEC_State(FINISHED);
+    
     ClearStd_1_Sec_Cnt(); 
+    
+    F_BtmReply39Cmd();//立馬告訴APP 進入summary了 
+    
+    __asm("NOP");
     
 }
 
@@ -16,42 +22,26 @@ void Summary_Key(){
 
  
     if( KeyCatch(0,1 , Stop) ){
-        
-        Pace_Display_Switch = 0;
-        Calories_Display_Type = Cal_;
-        
-        
-        ucSubSystemMode = C_App_IdleVal;
-        
-        System_Mode = Menu;
-       
-        Program_Select = Quick_start;
-        Cloud_Run_Initial_Busy_Flag = 0;
-        Program_Init();
-        ClearStd_1_Sec_Cnt(); 
+        IntoIdleMode_Process();
     }
+    SCREEN_OPTION_Key();
+    HR_SENSOR_LINK_Key(); 
     
 }
 
-extern unsigned char ret_Idle_cnt;
+
 
 void Summary_Idel_detect(){
     
-    if(T1s_Menu_Idle == 1){
-        T1s_Menu_Idle = 0;
+    if(T1s_Idle == 1){
+        T1s_Idle = 0;
         
         if(ret_Idle_cnt == 120){
             
-            Pace_Display_Switch = 0;
-            Calories_Display_Type = Cal_;
+            IntoIdleMode_Process();
             
             ClassCnt = 0;
             ret_Idle_cnt = 0;
-            Program_Select = Quick_start;
-            System_Mode = Menu;
-            ucSubSystemMode = C_App_IdleVal;
-            Cloud_Run_Initial_Busy_Flag = 0;
-            Program_Init();
         }else{
             ret_Idle_cnt++;
         }
@@ -65,12 +55,10 @@ unsigned char Summary_blink_flag;
 
 void Summary_Func(){
 
-    ucSubSystemMode = C_App_StopVal;
-   
     if(T_Marquee_Flag){
         T_Marquee_Flag = 0;
 
-        F_String_buffer_Auto( Left, "WORKOUT   SUMMARY" ,40 ,0);
+        F_String_buffer_Auto( Left, "WORKOUT   SUMMARY" ,55 ,0);
         
         SET_Seg_TIME_Display( TIME  , Program_Data.Goal_Time - Program_Data.Goal_Counter);
         

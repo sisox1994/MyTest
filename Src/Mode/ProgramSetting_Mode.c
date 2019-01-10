@@ -9,6 +9,31 @@ unsigned char LIKE_Flag;
 
 Setting_Class_Def  Setting_Class;
 
+unsigned short Number_Digits_Index;
+unsigned short Number_Buffer = 0;
+
+unsigned char  Time_KeyPad_Iput_Flag;  //-------時間設定  keypad輸入模式
+unsigned short NumberTemp;
+unsigned char  Number_Digit_Tmp = 0;
+
+#define CANCEL_TIME_SEC 10
+extern unsigned char Cancel_SetTime_Cnt;
+
+void Back_Idle_Process(){
+
+    
+    Time_KeyPad_Iput_Flag = 0;
+    Number_Digit_Tmp      = 0;
+    
+    ClassCnt = 0;
+    Program_Select = Quick_start;
+    Clear_DataCheckBuffer();
+    Program_Init();
+    StringCnt = 0;
+    Number_Digits_Index = 0;
+    System_Mode = Idle;
+
+}
 
 void Program_Like_Display(){
     
@@ -31,39 +56,10 @@ void Program_Like_Display(){
       case Fat_Burn:
         Draw(21 ,0 ,Heart_Solid ,35);
         F_String_buffer_Auto(Stay,"     65" ,35 ,0);
-        
-        /*switch(str_cNt){
-          case 0:
-            Draw(21 ,0 ,Heart_Empty ,500);
-            F_String_buffer_Auto(Stay,"     65" ,500 ,0);
-            str_cNt++;
-            str_cNt = str_cNt%2;
-            break; 
-          case 1:
-            Draw(21 ,0 ,Heart_Solid ,500);
-            F_String_buffer_Auto(Stay,"     65" ,500 ,0);
-            str_cNt++;
-            str_cNt = str_cNt%2;
-            break; 
-        }*/
         break;
       case Cardio: 
         Draw(21 ,0 ,Heart_Solid ,35);
-        F_String_buffer_Auto(Stay,"     80" ,35 ,0);\
-        /*switch(str_cNt){
-          case 0:
-            Draw(21 ,0 ,Heart_Empty ,500);
-            F_String_buffer_Auto(Stay,"     80" ,500 ,0);
-            str_cNt++;
-            str_cNt = str_cNt%2;
-            break; 
-          case 1:
-            Draw(21 ,0 ,Heart_Solid ,500);
-            F_String_buffer_Auto(Stay,"     80" ,500 ,0);
-            str_cNt++;
-            str_cNt = str_cNt%2;
-            break; 
-        }*/
+        F_String_buffer_Auto(Stay,"     80" ,35 ,0);
         break;
         
       case Heart_Rate_Hill:
@@ -98,10 +94,8 @@ void Program_Like_Display(){
         }else if(System_Unit == Imperial){
             F_String_buffer_Auto_Middle(Stay,"1M" ,30 ,0);
         }
-        
         break;
-        
-        
+
       case Distance_Goal_5K:
         if(System_Unit == Metric){  
             F_String_buffer_Auto_Middle(Stay,"5K" ,30 ,0);
@@ -117,12 +111,9 @@ void Program_Like_Display(){
         }else if(System_Unit == Imperial){
             F_String_buffer_Auto_Middle(Stay,"6M" ,30 ,0);
         }
-        
         break;
-        
     }
-    
-    
+
     //--------------------時間顯示----------------------
     switch(Program_Data.Like_Program){
         
@@ -157,24 +148,27 @@ void TimeIncreaseProcess(){
 //當按 -  或按住 --   的動作
 void TimeDecreaseProcess(){
     
-    
-    
     if(Program_Data.Goal_Time > 600){  
         Program_Data.Goal_Time-=60;
     }
     TIME_SET_Display( TIME  , Program_Data.Goal_Time ,0x0F , 1);
     writeSegmentBuffer();
-    
 }
 
-unsigned short NumberTemp;
-unsigned char  Number_Digit_Tmp = 0;
 
 
-void NumberInsert_Time(){
+void TimekeyPadMode_Detect(){
 
-    //----------------------------------------------
-    if(KeyCatch(0,1 , Inc_15)){     // 1
+    if(Time_KeyPad_Iput_Flag ==0){
+        Time_KeyPad_Iput_Flag = 1;
+    }
+}
+
+void NumberInsert_Time(unsigned int* Time_Modify){
+
+    //----------------------------------------------mmm
+    if(KeyCatch(0,1 , Num_1)){     // 1
+        TimekeyPadMode_Detect();
         
         if(Number_Digit_Tmp == 0){
             NumberTemp = 1;
@@ -183,12 +177,14 @@ void NumberInsert_Time(){
         }else if(Number_Digit_Tmp == 2){
             NumberTemp = NumberTemp * 10 + 1;
         }
-        
         Number_Digit_Tmp++;
-        Program_Data.Goal_Time = NumberTemp * 60;
+        *Time_Modify = NumberTemp * 60;
+        
+        Cancel_SetTime_Cnt = CANCEL_TIME_SEC;
     }
     
-    if(KeyCatch(0,1 , Inc_10)){     //2
+    if(KeyCatch(0,1 , Num_2)){     //2
+        TimekeyPadMode_Detect();
         
         if(Number_Digit_Tmp == 0){
             NumberTemp = 2;
@@ -197,13 +193,14 @@ void NumberInsert_Time(){
         }else if(Number_Digit_Tmp == 2){
             NumberTemp = NumberTemp * 10 + 2;
         }
-        
         Number_Digit_Tmp++;
-        Program_Data.Goal_Time = NumberTemp * 60;
+        *Time_Modify = NumberTemp * 60; 
         
+        Cancel_SetTime_Cnt = CANCEL_TIME_SEC;
     }   
     
-    if(KeyCatch(0,1 , Inc_5)){     //3
+    if(KeyCatch(0,1 , Num_3)){     //3
+        TimekeyPadMode_Detect();
         
         if(Number_Digit_Tmp == 0){
             NumberTemp = 3;
@@ -212,15 +209,111 @@ void NumberInsert_Time(){
         }else if(Number_Digit_Tmp == 2){
             NumberTemp = NumberTemp * 10 + 3;
         }
-        
         Number_Digit_Tmp++;
-        Program_Data.Goal_Time = NumberTemp * 60;
+        *Time_Modify = NumberTemp * 60;
         
+        Cancel_SetTime_Cnt = CANCEL_TIME_SEC;
     }
     
-    if(KeyCatch(0,1 , Inc_0)){      //0
+    //----------------------------------------------
+    if(KeyCatch(0,1 , Num_4)){     // 4
+        TimekeyPadMode_Detect();
         
+        if(Number_Digit_Tmp == 0){
+            NumberTemp = 4;
+        }else if(Number_Digit_Tmp == 1){
+            NumberTemp = NumberTemp * 10 + 4;
+        }else if(Number_Digit_Tmp == 2){
+            NumberTemp = NumberTemp * 10 + 4;
+        }
+        Number_Digit_Tmp++;
+        *Time_Modify = NumberTemp * 60;
         
+        Cancel_SetTime_Cnt = CANCEL_TIME_SEC;
+    }
+    
+    if(KeyCatch(0,1 , Num_5)){     //5
+        TimekeyPadMode_Detect();
+        
+        if(Number_Digit_Tmp == 0){
+            NumberTemp = 5;
+        }else if(Number_Digit_Tmp == 1){
+            NumberTemp = NumberTemp * 10 + 5;
+        }else if(Number_Digit_Tmp == 2){
+            NumberTemp = NumberTemp * 10 + 5;
+        }
+        Number_Digit_Tmp++;
+        *Time_Modify = NumberTemp * 60; 
+        
+        Cancel_SetTime_Cnt = CANCEL_TIME_SEC;
+    }   
+    
+    if(KeyCatch(0,1 , Num_6)){     //6
+        TimekeyPadMode_Detect();
+        
+        if(Number_Digit_Tmp == 0){
+            NumberTemp = 6;
+        }else if(Number_Digit_Tmp == 1){
+            NumberTemp = NumberTemp * 10 + 6;
+        }else if(Number_Digit_Tmp == 2){
+            NumberTemp = NumberTemp * 10 + 6;
+        }
+        
+        Number_Digit_Tmp++;
+        *Time_Modify = NumberTemp * 60; 
+        
+        Cancel_SetTime_Cnt = CANCEL_TIME_SEC;
+    } 
+    if(KeyCatch(0,1 , Num_7)){     //7
+        TimekeyPadMode_Detect();
+        
+        if(Number_Digit_Tmp == 0){
+            NumberTemp = 7;
+        }else if(Number_Digit_Tmp == 1){
+            NumberTemp = NumberTemp * 10 + 7;
+        }else if(Number_Digit_Tmp == 2){
+            NumberTemp = NumberTemp * 10 + 7;
+        }
+        Number_Digit_Tmp++;
+        *Time_Modify = NumberTemp * 60; 
+        
+        Cancel_SetTime_Cnt = CANCEL_TIME_SEC;
+    } 
+    if(KeyCatch(0,1 , Num_8)){     //8
+        TimekeyPadMode_Detect();
+        
+        if(Number_Digit_Tmp == 0){
+            NumberTemp = 8;
+        }else if(Number_Digit_Tmp == 1){
+            NumberTemp = NumberTemp * 10 + 8;
+        }else if(Number_Digit_Tmp == 2){
+            NumberTemp = NumberTemp * 10 + 8;
+        }
+        Number_Digit_Tmp++;
+       *Time_Modify = NumberTemp * 60;   
+       
+       Cancel_SetTime_Cnt = CANCEL_TIME_SEC;
+    } 
+    if(KeyCatch(0,1 , Num_9)){     //9
+        TimekeyPadMode_Detect();
+        
+        if(Number_Digit_Tmp == 0){
+            NumberTemp = 9;
+        }else if(Number_Digit_Tmp == 1){
+            NumberTemp = NumberTemp * 10 + 9;
+        }else if(Number_Digit_Tmp == 2){
+            NumberTemp = NumberTemp * 10 + 9;
+        }
+        Number_Digit_Tmp++;
+        *Time_Modify = NumberTemp * 60;   
+        
+        Cancel_SetTime_Cnt = CANCEL_TIME_SEC;
+    }  
+    
+    
+    if(KeyCatch(0,1 , Num_0)){      //0
+        TimekeyPadMode_Detect();
+
         if(Number_Digit_Tmp == 0){
             NumberTemp = 0;
         }else if(Number_Digit_Tmp == 1){
@@ -230,18 +323,36 @@ void NumberInsert_Time(){
             NumberTemp = NumberTemp * 10;
             Number_Digit_Tmp++;
         }     
-        Program_Data.Goal_Time = NumberTemp * 60;
+        *Time_Modify = NumberTemp * 60;
+        
+        Cancel_SetTime_Cnt = CANCEL_TIME_SEC;
     }
     
+    if(Time_KeyPad_Iput_Flag == 1){
+        if(KeyCatch(0,1 , Cancel)){  //取消
+            
+            if(NumberTemp >= 100){
+                NumberTemp = NumberTemp / 10;
+                Number_Digit_Tmp=2;
+            }else if(Number_Digit_Tmp == 2){
+                NumberTemp = NumberTemp / 10;
+                Number_Digit_Tmp = 1;
+            }else if(Number_Digit_Tmp == 0 || Number_Digit_Tmp == 1){
+                NumberTemp = 0;
+                Number_Digit_Tmp = 0;
+            }
+            
+            *Time_Modify = NumberTemp * 60;
+            
+            Cancel_SetTime_Cnt = CANCEL_TIME_SEC;
+        }
+    }
+
     Number_Digit_Tmp = Number_Digit_Tmp % 3;
-    
     
     //---------------------------------------------
 }
 
-
-unsigned short Number_Digits_Index;
-unsigned short Number_Buffer = 0;
 
 
 void Setting_item_Display(){
@@ -294,14 +405,12 @@ void Setting_item_Display(){
         
     }
     
-
 }
 
-void NumberKeyboard(){
+unsigned char NumberKeyboard(){
 
     
-    if(KeyCatch(0,1 , Inc_15)){     // 1
-        
+    if(KeyCatch(0,1 , Num_1)){     // 1
         if(Number_Digits_Index == 0){
             Number_Buffer = 1;
         }else if(Number_Digits_Index == 1){
@@ -309,15 +418,14 @@ void NumberKeyboard(){
         }else if(Number_Digits_Index == 2){
             Number_Buffer = Number_Buffer * 10 + 1;
         }
-        
         Number_Digits_Index++;
         Setting_item_Display();
         writeLEDMatrix(); 
-        
+        Number_Digits_Index = Number_Digits_Index % 3;
+        __asm("NOP");
+        return 1;
     }
-    
-    if(KeyCatch(0,1 , Inc_10)){     //2
-        
+    if(KeyCatch(0,1 , Num_2)){     //2
         if(Number_Digits_Index == 0){
             Number_Buffer = 2;
         }else if(Number_Digits_Index == 1){
@@ -325,14 +433,13 @@ void NumberKeyboard(){
         }else if(Number_Digits_Index == 2){
             Number_Buffer = Number_Buffer * 10 + 2;
         }
-        
         Number_Digits_Index++;
         Setting_item_Display();
         writeLEDMatrix(); 
+        Number_Digits_Index = Number_Digits_Index % 3;
+        return 1;
     }   
-    
-    if(KeyCatch(0,1 , Inc_5)){     //3
-        
+    if(KeyCatch(0,1 , Num_3)){     //3
         if(Number_Digits_Index == 0){
             Number_Buffer = 3;
         }else if(Number_Digits_Index == 1){
@@ -340,16 +447,104 @@ void NumberKeyboard(){
         }else if(Number_Digits_Index == 2){
             Number_Buffer = Number_Buffer * 10 + 3;
         }
-        
         Number_Digits_Index++;
         Setting_item_Display();
         writeLEDMatrix(); 
-        
+        Number_Digits_Index = Number_Digits_Index % 3;
+         return 1;  
     }
+    if(KeyCatch(0,1 , Num_4)){     //4
+        if(Number_Digits_Index == 0){
+            Number_Buffer = 4;
+        }else if(Number_Digits_Index == 1){
+            Number_Buffer = Number_Buffer * 10 + 4;
+        }else if(Number_Digits_Index == 2){
+            Number_Buffer = Number_Buffer * 10 + 4;
+        }
+        
+        Number_Digits_Index++;
+        Setting_item_Display();
+        writeLEDMatrix();  
+        Number_Digits_Index = Number_Digits_Index % 3;
+        return 1;
+    }
+    if(KeyCatch(0,1 , Num_5)){     //5
+        if(Number_Digits_Index == 0){
+            Number_Buffer = 5;
+        }else if(Number_Digits_Index == 1){
+            Number_Buffer = Number_Buffer * 10 + 5;
+        }else if(Number_Digits_Index == 2){
+            Number_Buffer = Number_Buffer * 10 + 5;
+        }
+        
+        Number_Digits_Index++;
+        Setting_item_Display();
+        writeLEDMatrix();  
+        Number_Digits_Index = Number_Digits_Index % 3;
+        return 1;
+    }
+    if(KeyCatch(0,1 , Num_6)){     //6
+        if(Number_Digits_Index == 0){
+            Number_Buffer = 6;
+        }else if(Number_Digits_Index == 1){
+            Number_Buffer = Number_Buffer * 10 + 6;
+        }else if(Number_Digits_Index == 2){
+            Number_Buffer = Number_Buffer * 10 + 6;
+        }
+        
+        Number_Digits_Index++;
+        Setting_item_Display();
+        writeLEDMatrix();  
+        Number_Digits_Index = Number_Digits_Index % 3;
+        return 1;
+    }  
+    if(KeyCatch(0,1 , Num_7)){     //7
+        if(Number_Digits_Index == 0){
+            Number_Buffer = 7;
+        }else if(Number_Digits_Index == 1){
+            Number_Buffer = Number_Buffer * 10 + 7;
+        }else if(Number_Digits_Index == 2){
+            Number_Buffer = Number_Buffer * 10 + 7;
+        }
+        
+        Number_Digits_Index++;
+        Setting_item_Display();
+        writeLEDMatrix();  
+        Number_Digits_Index = Number_Digits_Index % 3;
+        return 1;
+    } 
+    if(KeyCatch(0,1 , Num_8)){     //8
+        if(Number_Digits_Index == 0){
+            Number_Buffer = 8;
+        }else if(Number_Digits_Index == 1){
+            Number_Buffer = Number_Buffer * 10 + 8;
+        }else if(Number_Digits_Index == 2){
+            Number_Buffer = Number_Buffer * 10 + 8;
+        }
+        
+        Number_Digits_Index++;
+        Setting_item_Display();
+        writeLEDMatrix();  
+        Number_Digits_Index = Number_Digits_Index % 3;
+        return 1;
+    } 
+    if(KeyCatch(0,1 , Num_9)){     //9
+        if(Number_Digits_Index == 0){
+            Number_Buffer = 9;
+        }else if(Number_Digits_Index == 1){
+            Number_Buffer = Number_Buffer * 10 + 9;
+        }else if(Number_Digits_Index == 2){
+            Number_Buffer = Number_Buffer * 10 + 9;
+        }
+        Number_Digits_Index++;
+        Setting_item_Display();
+        writeLEDMatrix();  
+        Number_Digits_Index = Number_Digits_Index % 3;
+        return 1;
+    } 
     
-    if(KeyCatch(0,1 , Inc_0)){      //0
-        
-        
+    
+    if(KeyCatch(0,1 , Num_0)){      //0
         if(Number_Digits_Index == 0){
             Number_Buffer = 0;
         }else if(Number_Digits_Index == 1){
@@ -362,22 +557,78 @@ void NumberKeyboard(){
         
         Setting_item_Display();
         writeLEDMatrix(); 
+        Number_Digits_Index = Number_Digits_Index % 3;
+        return 1;
         
     }
     
-    Number_Digits_Index = Number_Digits_Index % 3;
-    //-----------------------------------------------------------
+    if(KeyCatch(0,1 , Cancel)){      //取消
+        if(Number_Digits_Index == 0){
+            if(Number_Buffer>100){
+                Number_Buffer = Number_Buffer /10;
+            }else{
+                Number_Buffer = 0;
+            }
+            
+        }else if(Number_Digits_Index == 1){
+            Number_Buffer = Number_Buffer /10;
+            Number_Digits_Index--;
+        }else if(Number_Digits_Index == 2){
+            Number_Buffer = Number_Buffer /10;
+            Number_Digits_Index--;
+        } 
+        
+        Setting_item_Display();
+        writeLEDMatrix(); 
+        Number_Digits_Index = Number_Digits_Index % 3;
+        return 1;
+    }
     
+    //-----------------------------------------------------------
+     return 0;
 }
 
+unsigned char NumberKey_Press(){
+    
+    if(KeyCatch(0,1,Num_1)){     //1
+        return 1;
+    }
+    if(KeyCatch(0,1,Num_2)){     //2
+        return 1; 
+    }   
+    if(KeyCatch(0,1,Num_3)){     //3
+        return 1;
+    }
+    if(KeyCatch(0,1,Num_4)){     //4
+        return 1;   
+    }
+    if(KeyCatch(0,1,Num_5)){     //5
+        return 1;   
+    }
+    if(KeyCatch(0,1,Num_6)){     //6
+        return 1; 
+    }  
+    if(KeyCatch(0,1,Num_7)){     //7
+        return 1; 
+    } 
+    if(KeyCatch(0,1,Num_8)){     //8
+        return 1;
+    } 
+    if(KeyCatch(0,1,Num_9)){     //9
+        return 1;
+    } 
+    if(KeyCatch(0,1,Num_0)){     //0
+        return 1;
+    }
+    return 0;
+}
 
-
-void NumberKeyProcess(){
+unsigned char  NumberKeyProcess(){
 
     switch(Setting_item_Index){
         
       case SET_Time:
-        NumberInsert_Time();
+        NumberInsert_Time(&Program_Data.Goal_Time);
         break;
       case SET_Age:
       case SET_Weight:
@@ -387,10 +638,11 @@ void NumberKeyProcess(){
       case SET_Dif_LEVEL:
       case SET_WORK_Time:
       case SET_REST_Time:
-        NumberKeyboard();
+        return NumberKeyboard();
         break;
     
     }
+    return 0;
     
 }
 
@@ -406,63 +658,96 @@ void KeyChangeDetect_User(Key_Name_Def key){
     
 }
 
+unsigned char Key_Increase(){
+    
+    if(KeyCatch(0,1 , Key_SpdUp) || KeyForContinueProcess(Key_SpdUp) 
+    || KeyCatch(0,1 , Key_IncUp) || KeyForContinueProcess(Key_IncUp)
+    || R_KeyCatch( Inc_Up)       || R_KeyContinueProcess(Inc_Up)
+    || R_KeyCatch( Spd_Up)       || R_KeyContinueProcess(Spd_Up) ){
+        
+         return 1;
+    }
+    return 0;
+}
+
+unsigned char Key_Decrease(){
+    
+    if(KeyCatch(0,1 , Key_IncDwn) || KeyForContinueProcess(Key_IncDwn) 
+    || KeyCatch(0,1 , Key_SpdDwn) || KeyForContinueProcess(Key_SpdDwn)
+    || R_KeyCatch( Inc_Down)      || R_KeyContinueProcess(Inc_Down)
+    || R_KeyCatch( Spd_Down)      || R_KeyContinueProcess(Spd_Down) ){
+        
+        return 1; 
+    }
+    return 0;
+}
+
 void Key_Profile_Setting(){
+    
+    //設定中也可以配對心跳
+    HR_SENSOR_LINK_Key();
+    
     
     switch(Setting_item_Index){
         
       case SET_Time:
-       
-        //  ++   單點                      按住 連續+
-        if(KeyCatch(0,1 , Spd_12) || KeyForContinueProcess(Spd_12)){
+        //  ++   單點  按住 連續+
+        if(Key_Increase()){
             TimeIncreaseProcess();
         }
-      
-        //  --   單點                      按住 連續-
-        if(KeyCatch(0,1 , Spd_9) || KeyForContinueProcess(Spd_9) ){            
-            TimeDecreaseProcess();             
+        //  --   單點  按住 連續-
+        if(Key_Decrease()){
+             TimeDecreaseProcess();  
         }
-        
-        NumberKeyProcess();
+
+        NumberKeyProcess();//--------------------mmm
        
         if(KeyCatch(0,1 , Enter)){
-            TIME_SET_Display( TIME  , Program_Data.Goal_Time ,0x0F , 1);
-            writeSegmentBuffer();
-            StringCnt = 0;
-            Setting_item_Index = SET_Age;
-            ClearBlinkCnt2();
+            
+            if(Time_KeyPad_Iput_Flag ==0){
+                
+                TIME_SET_Display( TIME  , Program_Data.Goal_Time ,0x0F , 1);
+                writeSegmentBuffer();
+                StringCnt = 0;
+                Setting_item_Index = SET_Age;
+                ClearBlinkCnt2();
+                
+                Time_KeyPad_Iput_Flag = 1;
+            }
+            
+            if(Time_KeyPad_Iput_Flag ==1){
+                
+                if(Program_Data.Goal_Time<300){ //至少5分鐘才允許開始運動
+                    Program_Data.Goal_Time = 300;
+                }
+                
+                TIME_SET_Display( TIME  , Program_Data.Goal_Time ,0x0F , 1);
+                writeSegmentBuffer();
+                Number_Digit_Tmp = 0;
+                Time_KeyPad_Iput_Flag = 0;
+            }
+
         }
-        if(KeyCatch(0,1 , Stop)){
-            ClassCnt = 0;
-            Program_Select = Quick_start;
-            Clear_DataCheckBuffer();
-            Program_Init();
-            StringCnt = 0;
-            System_Mode = Menu;
+        if(KeyCatch(0,1 , Stop)){    //-----mmm
+            
+            Back_Idle_Process();
         }
         break;
       case SET_Age:
         if(StringCnt < 2){
-            //++
-            if(KeyCatch(0,1 , Spd_12)){
-                StringCnt = 2;
-                F_Number_buffer_Auto( Stay, Program_Data.Age , 10 ,DEC ,0);
-                writeLEDMatrix(); 
-            }
-            //--
-            if(KeyCatch(0,1 , Spd_9)){
-                StringCnt = 2;
-                F_Number_buffer_Auto( Stay, Program_Data.Age , 10 ,DEC ,0);
-                writeLEDMatrix(); 
-            }
+            
             //------- 顯示 設定"年齡"時按 (Enter) ,(+) ,(-) 鍵進入下一個flow    --------
-            if(KeyCatch(0,1 , Enter)){
+            if( Key_Increase() || Key_Decrease() || NumberKeyProcess() || KeyCatch(0,1 , Enter)){
                 StringCnt = 2;
                 F_Number_buffer_Auto( Stay, Program_Data.Age , 10 ,DEC ,0);
-                writeLEDMatrix();
+                writeLEDMatrix(); 
                 ClearBlinkCnt2();
             }
+
+            
             if(KeyCatch(0,1 , Stop)){
                 StringCnt = 0;
+                Number_Digits_Index = 0;
                 switch(Setting_Class){
                   case Time_Age_Weight:
                   case Time_Age_Weight_THR:
@@ -478,7 +763,7 @@ void Key_Profile_Setting(){
                     Program_Select = Quick_start;
                     Clear_DataCheckBuffer();
                     Program_Init();
-                    System_Mode = Menu;
+                    System_Mode = Idle;
                     break;
                 }
                 ClearBlinkCnt2();
@@ -486,26 +771,26 @@ void Key_Profile_Setting(){
             
         }else if(StringCnt == 2){           //設定年齡
             
-            //++
-            if(KeyCatch(0,1 , Spd_12) || KeyForContinueProcess(Spd_12)){
+            //  ++   單點  按住 連續+
+            if(Key_Increase()){
                 Number_Digits_Index = 0;
                 if(Program_Data.Age < 100){
                     Program_Data.Age++;
                 }
                 F_Number_buffer_Auto( Stay, Program_Data.Age , 10 ,DEC ,0);
                 writeLEDMatrix(); 
+                __asm("NOP");
             }
-              
-            //--
-            if(KeyCatch(0,1 , Spd_9) || KeyForContinueProcess(Spd_9)){
+            //  --   單點  按住 連續-
+            if(Key_Decrease()){
                 Number_Digits_Index = 0;
                 if(Program_Data.Age > 10){
                     Program_Data.Age--;
                 }
                 F_Number_buffer_Auto( Stay, Program_Data.Age , 10 ,DEC ,0);
-                writeLEDMatrix(); 
+                writeLEDMatrix();    
             }
-            
+               
             NumberKeyProcess();
             
             if(KeyCatch(0,1 , Enter)){
@@ -518,10 +803,14 @@ void Key_Profile_Setting(){
                     StringCnt = 2;
                     Setting_item_Index = SET_Age;
                     Program_Data.Age = 100;
+                    Number_Buffer = 100;
+                    //Number_Digits_Index = 2;
                 }else if(Program_Data.Age < 10){
                     StringCnt = 2;
                     Setting_item_Index = SET_Age;
                     Program_Data.Age = 10;
+                    Number_Buffer = 10;
+                    //Number_Digits_Index = 1;
                 }
                 F_Number_buffer_Auto( Stay, Program_Data.Age , 10 ,DEC ,0);
                 writeLEDMatrix(); 
@@ -529,6 +818,7 @@ void Key_Profile_Setting(){
             }
             if(KeyCatch(0,1 , Stop)){
                 StringCnt = 0;
+                Number_Digits_Index = 0;
                 switch(Setting_Class){
                   case Time_Age_Weight:
                   case Time_Age_Weight_THR:
@@ -544,7 +834,7 @@ void Key_Profile_Setting(){
                     Program_Select = Quick_start;
                     Clear_DataCheckBuffer();
                     Program_Init();
-                    System_Mode = Menu;
+                    System_Mode = Idle;
                     break;
                 }
                 ClearBlinkCnt2();
@@ -554,36 +844,23 @@ void Key_Profile_Setting(){
       case SET_Weight:
         if(StringCnt < 2){
             //------- 顯示 設定"體重"時按 (Enter) ,(+) ,(-) 鍵進入下一個flow    --------
-            if(KeyCatch(0,1 , Enter)){
+            if( Key_Increase() || Key_Decrease() || NumberKeyProcess()|| KeyCatch(0,1 , Enter)){
                 StringCnt = 2;
                 F_Number_buffer_Auto( Stay, Program_Data.Weight , 10 ,DEC ,0);
                 writeLEDMatrix(); 
                 ClearBlinkCnt2();
             }
             if(KeyCatch(0,1 , Stop)){
-                
+                Number_Digits_Index = 0;
                 StringCnt = 0;
                 Setting_item_Index = SET_Age;
-                
                 ClearBlinkCnt2();
-            }
-            //++
-            if(KeyCatch(0,1 , Spd_12)){
-                StringCnt = 2;
-                F_Number_buffer_Auto( Stay, Program_Data.Weight , 10 ,DEC ,0);
-                writeLEDMatrix(); 
-            }
-            //--
-            if(KeyCatch(0,1 , Spd_9)){
-                StringCnt = 2;
-                F_Number_buffer_Auto( Stay, Program_Data.Weight , 10 ,DEC ,0);
-                writeLEDMatrix(); 
             }
             
         }else if(StringCnt == 2){           //設定 體重
-            //++
-            if(KeyCatch(0,1 , Spd_12) || KeyForContinueProcess(Spd_12)){
-                
+            
+            //  ++   單點  按住 連續+
+            if(Key_Increase()){
                 if(System_Unit == Metric ){
                     if(Program_Data.Weight < 200){   //公制最大體重上限 200 KG
                         Program_Data.Weight++;
@@ -593,12 +870,12 @@ void Key_Profile_Setting(){
                         Program_Data.Weight++;
                     }
                 } 
-  
                 F_Number_buffer_Auto( Stay, Program_Data.Weight , 10 ,DEC ,0);
                 writeLEDMatrix(); 
+                
             }
-            //--
-            if(KeyCatch(0,1 , Spd_9) || KeyForContinueProcess(Spd_9)){
+            //  --   單點  按住 連續-
+            if(Key_Decrease()){
                 if(System_Unit == Metric ){
                     if(Program_Data.Weight > 40){
                         Program_Data.Weight--;
@@ -609,13 +886,14 @@ void Key_Profile_Setting(){
                     }
                 }       
                 F_Number_buffer_Auto( Stay, Program_Data.Weight , 10 ,DEC ,0);
-                writeLEDMatrix(); 
+                writeLEDMatrix();   
             }
             
             NumberKeyProcess();
             
             if(KeyCatch(0,1 , Enter)){
                 StringCnt = 0;
+                Number_Digits_Index = 0;
                 switch(Setting_Class){
                   case Time_Age_Weight:
                     Setting_item_Index = SET_END;
@@ -646,10 +924,12 @@ void Key_Profile_Setting(){
                         StringCnt = 2;
                         Setting_item_Index = SET_Weight;
                         Program_Data.Weight = 200;
+                        Number_Buffer = 200;
                     }else if(Program_Data.Weight < 40){
                         StringCnt = 2;
                         Setting_item_Index = SET_Weight;
                         Program_Data.Weight = 40;
+                        Number_Buffer = 40;
                     }  
                 }else if(System_Unit == Imperial){
                     
@@ -657,10 +937,12 @@ void Key_Profile_Setting(){
                         StringCnt = 2;
                         Setting_item_Index = SET_Weight;
                         Program_Data.Weight = 440;
+                        Number_Buffer = 440;
                     }else if(Program_Data.Weight < 88){
                         StringCnt = 2;
                         Setting_item_Index = SET_Weight;
                         Program_Data.Weight = 88;
+                        Number_Buffer = 88;
                     }  
                 }      
                 //跑馬燈 防止鬼影                
@@ -675,10 +957,9 @@ void Key_Profile_Setting(){
             }
             
             if(KeyCatch(0,1 , Stop)){
-                
+                Number_Digits_Index = 0;
                 StringCnt = 0;
                 Setting_item_Index = SET_Age;
-                
                 ClearBlinkCnt2();
             }
         }
@@ -686,60 +967,56 @@ void Key_Profile_Setting(){
       case SET_THR:
         if(StringCnt < 2){
             //------- 顯示 設定"目標心率"時按 (Enter) ,(+) ,(-) 鍵進入下一個flow    --------
-            if(KeyCatch(0,1 , Enter)){
+            if( Key_Increase() || Key_Decrease() || NumberKeyProcess() || KeyCatch(0,1 , Enter)){
                 StringCnt = 2;
                 F_Number_buffer_Auto( Stay, Program_Data.TargetHeartRate , 10 ,DEC ,0);
                 writeLEDMatrix(); 
                 ClearBlinkCnt2();
             }
             if(KeyCatch(0,1 , Stop)){
+                Number_Digits_Index = 0;
                 StringCnt = 0;
                 Setting_item_Index = SET_Weight;
                 ClearBlinkCnt2();
             }
-            //++
-            if(KeyCatch(0,1 , Spd_12) ){
-                StringCnt = 2;
-                F_Number_buffer_Auto( Stay, Program_Data.TargetHeartRate , 10 ,DEC ,0);
-                writeLEDMatrix(); 
-            }
-            //--
-            if(KeyCatch(0,1 , Spd_9)){
-                StringCnt = 2;
-                F_Number_buffer_Auto( Stay, Program_Data.TargetHeartRate , 10 ,DEC ,0);
-                writeLEDMatrix(); 
-            }
             
         }else if(StringCnt == 2){           //設定"目標心率"
-            //++
-            if(KeyCatch(0,1 , Spd_12) || KeyForContinueProcess(Spd_12)){
+            
+            
+            //  ++   單點  按住 連續+
+            if(Key_Increase()){ 
                 if(Program_Data.TargetHeartRate < Program_Data.MaxHeartRate){
                     Program_Data.TargetHeartRate++;
                 }
                 F_Number_buffer_Auto( Stay, Program_Data.TargetHeartRate , 10 ,DEC ,0);
                 writeLEDMatrix(); 
             }
-            //--
-            if(KeyCatch(0,1 , Spd_9) || KeyForContinueProcess(Spd_9)){
+            //  --   單點  按住 連續-
+            if(Key_Decrease()){
                 if(Program_Data.TargetHeartRate > 80){
                     Program_Data.TargetHeartRate--;
                 }
                 F_Number_buffer_Auto( Stay, Program_Data.TargetHeartRate , 10 ,DEC ,0);
                 writeLEDMatrix(); 
-            }
+            }   
+            
             NumberKeyProcess();
-            if(KeyCatch(0,1 , Enter)){
-                StringCnt = 0;
+            
+            if(KeyCatch(0,1 , Enter)){  
+                 StringCnt = 0;
+                 Number_Digits_Index = 0;
                 Setting_item_Index = SET_END;
                 //輸入數值超出範圍
                 if( (Program_Data.TargetHeartRate > Program_Data.MaxHeartRate) ){
                     StringCnt = 2;
                     Setting_item_Index = SET_THR;
                     Program_Data.TargetHeartRate = Program_Data.MaxHeartRate;
+                    Number_Buffer = Program_Data.MaxHeartRate;
                 }else if(Program_Data.TargetHeartRate < 80){
                     StringCnt = 2;
                     Setting_item_Index = SET_THR;
                     Program_Data.TargetHeartRate = 80;
+                    Number_Buffer = 80;
                 }
                 F_Number_buffer_Auto( Stay, Program_Data.TargetHeartRate , 10 ,DEC ,0);
                 writeLEDMatrix(); 
@@ -747,6 +1024,7 @@ void Key_Profile_Setting(){
             }
             if(KeyCatch(0,1 , Stop)){
                 StringCnt = 0;
+                Number_Digits_Index = 0;
                 Setting_item_Index = SET_Weight;
                 ClearBlinkCnt2();
             }
@@ -755,7 +1033,7 @@ void Key_Profile_Setting(){
       case SET_MAX_INC:
         if(StringCnt < 2){
             //------- 顯示 設定"最大揚升"時按 (Enter) ,(+) ,(-) 鍵進入下一個flow    --------
-            if(KeyCatch(0,1 , Enter)){
+            if( Key_Increase() || Key_Decrease() || KeyCatch(0,1 , Enter)){
                 StringCnt = 2;
                 F_Number_buffer_Auto( Stay, Program_Data.Ez_MaxINCLINE , 10 ,DEC ,0);
                 writeLEDMatrix(); 
@@ -763,45 +1041,36 @@ void Key_Profile_Setting(){
             }
             if(KeyCatch(0,1 , Stop)){
                 StringCnt = 0;
+                Number_Digits_Index = 0;
                 Setting_item_Index = SET_Weight;
                 ClearBlinkCnt2();
             }
-            //++
-            if(KeyCatch(0,1 , Spd_12) ){
-                StringCnt = 2;
-                F_Number_buffer_Auto( Stay, Program_Data.Ez_MaxINCLINE , 10 ,DEC ,0);
-                writeLEDMatrix(); 
-            }
-            //--
-            if(KeyCatch(0,1 , Spd_9)){
-                StringCnt = 2;
-                F_Number_buffer_Auto( Stay, Program_Data.Ez_MaxINCLINE , 10 ,DEC ,0);
-                writeLEDMatrix(); 
-            }
-            
         }else if(StringCnt == 2){           //設定""
             
-            //++
-            if(KeyCatch(0,1 , Spd_12) || KeyForContinueProcess(Spd_12)){
+            //  ++   單點  按住 連續+
+            if(Key_Increase()){ 
                 if(Program_Data.Ez_MaxINCLINE < Machine_Data.System_INCLINE_Max ){
                     Program_Data.Ez_MaxINCLINE+=5;
                 }
                 F_Number_buffer_Auto( Stay, Program_Data.Ez_MaxINCLINE , 10 ,DEC ,0);
                 writeLEDMatrix(); 
             }
-            //--
-            if(KeyCatch(0,1 , Spd_9) || KeyForContinueProcess(Spd_9)){
+            //  --   單點  按住 連續-
+            if(Key_Decrease()){
                 if(Program_Data.Ez_MaxINCLINE > 0){
                     Program_Data.Ez_MaxINCLINE-=5;
                 }
                 F_Number_buffer_Auto( Stay, Program_Data.Ez_MaxINCLINE , 10 ,DEC ,0);
                 writeLEDMatrix(); 
-            }
-            NumberKeyProcess();
+            }  
+            
+            //NumberKeyProcess();
             
             if(KeyCatch(0,1 , Enter)){
                 StringCnt = 0;
-                Setting_item_Index = SET_END;
+                Number_Digits_Index = 0;  
+                
+                Setting_item_Index = SET_END;        
                 
                 if(Program_Data.Ez_MaxINCLINE % 5 != 0){
                     Program_Data.Ez_MaxINCLINE = (Program_Data.Ez_MaxINCLINE / 5) * 5;
@@ -811,6 +1080,7 @@ void Key_Profile_Setting(){
                     StringCnt = 2;
                     Setting_item_Index = SET_MAX_INC;
                     Program_Data.Ez_MaxINCLINE = Machine_Data.System_INCLINE_Max;
+                    Number_Buffer = Machine_Data.System_INCLINE_Max;
                 }
                 F_Number_buffer_Auto( Stay, Program_Data.Ez_MaxINCLINE , 10 ,DEC ,0);
                 writeLEDMatrix(); 
@@ -818,6 +1088,7 @@ void Key_Profile_Setting(){
             }
             if(KeyCatch(0,1 , Stop)){
                 StringCnt = 0;
+                Number_Digits_Index = 0;
                 Setting_item_Index = SET_Weight;
                 ClearBlinkCnt2();
             }
@@ -826,7 +1097,7 @@ void Key_Profile_Setting(){
       case SET_CAL_GOAL:
         if(StringCnt < 2){
             //------- 顯示 設定"目標卡路里"時按 (Enter) ,(+) ,(-) 鍵進入下一個flow    --------
-            if(KeyCatch(0,1 , Enter)){
+            if( Key_Increase() || Key_Decrease() || NumberKeyProcess() || KeyCatch(0,1 , Enter)){
                 StringCnt = 2;
                 F_Number_buffer_Auto( Stay, Program_Data.Calories_Goal , 10 ,DEC ,0);
                 writeLEDMatrix(); 
@@ -834,53 +1105,47 @@ void Key_Profile_Setting(){
             }
             if(KeyCatch(0,1 , Stop)){
                 StringCnt = 0;
+                Number_Digits_Index = 0;
                 Setting_item_Index = SET_Weight;
                 ClearBlinkCnt2();
             }
-            //++
-            if(KeyCatch(0,1 , Spd_12) ){
-                StringCnt = 2;
-                F_Number_buffer_Auto( Stay, Program_Data.Calories_Goal , 10 ,DEC ,0);
-                writeLEDMatrix(); 
-            }
-            //--
-            if(KeyCatch(0,1 , Spd_9)){
-                StringCnt = 2;
-                F_Number_buffer_Auto( Stay, Program_Data.Calories_Goal , 10 ,DEC ,0);
-                writeLEDMatrix(); 
-            }
             
         }else if(StringCnt == 2){           //設定""
-            //++
-            if(KeyCatch(0,1 , Spd_12) || KeyForContinueProcess(Spd_12)){
+            
+            //  ++   單點  按住 連續+
+            if(Key_Increase()){ 
                 if(Program_Data.Calories_Goal < 10000){
                     Program_Data.Calories_Goal++;
                 }
                 F_Number_buffer_Auto( Stay, Program_Data.Calories_Goal , 10 ,DEC ,0);
                 writeLEDMatrix(); 
             }
-            //--
-            if(KeyCatch(0,1 , Spd_9) || KeyForContinueProcess(Spd_9)){
+            //  --   單點  按住 連續-
+            if(Key_Decrease()){
                 if(Program_Data.Calories_Goal > 0){
                     Program_Data.Calories_Goal--;
                 }
                 F_Number_buffer_Auto( Stay, Program_Data.Calories_Goal , 10 ,DEC ,0);
                 writeLEDMatrix(); 
-                
-            }
+            }  
+
             NumberKeyProcess();
+            
             if(KeyCatch(0,1 , Enter)){
                 StringCnt = 0;
+                Number_Digits_Index = 0;   
                 Setting_item_Index = SET_END;
                 //輸入數值超出範圍
                 if( (Program_Data.Calories_Goal <100) ){
                     StringCnt = 2;
                     Setting_item_Index = SET_CAL_GOAL;
                     Program_Data.Calories_Goal = 100;
+                    Number_Buffer = 100;
                 }else if((Program_Data.Calories_Goal >9999) ){
                     StringCnt = 2;
                     Setting_item_Index = SET_CAL_GOAL;
                     Program_Data.Calories_Goal = 9999;
+                    Number_Buffer = 9999;
                 }
                 F_Number_buffer_Auto( Stay, Program_Data.Calories_Goal , 10 ,DEC ,0);
                 writeLEDMatrix(); 
@@ -888,6 +1153,7 @@ void Key_Profile_Setting(){
             }
             if(KeyCatch(0,1 , Stop)){
                 StringCnt = 0;
+                Number_Digits_Index = 0;
                 Setting_item_Index = SET_Weight;
                 ClearBlinkCnt2();
             }
@@ -896,7 +1162,7 @@ void Key_Profile_Setting(){
       case SET_Dif_LEVEL:
         if(StringCnt < 2){
             //------- 顯示 設定"困難度"時按 (Enter) ,(+) ,(-) 鍵進入下一個flow    --------
-            if(KeyCatch(0,1 , Enter)){
+            if( Key_Increase() || Key_Decrease() || NumberKeyProcess() || KeyCatch(0,1 , Enter)){
                 StringCnt = 2;
                 F_Number_buffer_Auto( Stay, Program_Data.Diffculty_Level , 10 ,DEC ,0);
                 writeLEDMatrix(); 
@@ -904,42 +1170,35 @@ void Key_Profile_Setting(){
             }
             if(KeyCatch(0,1 , Stop)){
                 StringCnt = 0;
+                Number_Digits_Index = 0;
                 Setting_item_Index = SET_Weight;
                 ClearBlinkCnt2();
             }
-            //++
-            if(KeyCatch(0,1 , Spd_12) ){
-                StringCnt = 2;
-                F_Number_buffer_Auto( Stay, Program_Data.Diffculty_Level , 10 ,DEC ,0);
-                writeLEDMatrix(); 
-            }
-            //--
-            if(KeyCatch(0,1 , Spd_9)){
-                StringCnt = 2;
-                F_Number_buffer_Auto( Stay, Program_Data.Diffculty_Level , 10 ,DEC ,0);
-                writeLEDMatrix(); 
-            }
-            
+
         }else if(StringCnt == 2){           //設定""
-            //++
-            if(KeyCatch(0,1 , Spd_12) || KeyForContinueProcess(Spd_12)){
+            
+            //  ++   單點  按住 連續+
+            if(Key_Increase()){ 
                 if(Program_Data.Diffculty_Level < 20){
                     Program_Data.Diffculty_Level++;
                 }
                 F_Number_buffer_Auto( Stay, Program_Data.Diffculty_Level , 10 ,DEC ,0);
-                writeLEDMatrix(); 
+                writeLEDMatrix();
             }
-            //--
-            if(KeyCatch(0,1 , Spd_9) || KeyForContinueProcess(Spd_9)){
+            //  --   單點  按住 連續-
+            if(Key_Decrease()){
                 if(Program_Data.Diffculty_Level > 1){
                     Program_Data.Diffculty_Level--;
                 }
                 F_Number_buffer_Auto( Stay, Program_Data.Diffculty_Level , 10 ,DEC ,0);
                 writeLEDMatrix(); 
-            }
+            }  
+            
             NumberKeyProcess();
+            
             if(KeyCatch(0,1 , Enter)){
                 StringCnt = 0;
+                Number_Digits_Index = 0;    
                 Setting_item_Index = SET_END;
                 
                 //輸入數值超出範圍
@@ -947,10 +1206,12 @@ void Key_Profile_Setting(){
                     StringCnt = 2;
                     Setting_item_Index = SET_Dif_LEVEL;
                     Program_Data.Diffculty_Level = 1;
+                    Number_Buffer = 1;
                 }else if((Program_Data.Diffculty_Level > 20) ){
                     StringCnt = 2;
                     Setting_item_Index = SET_Dif_LEVEL;
                     Program_Data.Diffculty_Level = 20;
+                    Number_Buffer = 20;
                 }
                 
                 F_Number_buffer_Auto( Stay, Program_Data.Diffculty_Level , 10 ,DEC ,0);
@@ -959,6 +1220,7 @@ void Key_Profile_Setting(){
             }
             if(KeyCatch(0,1 , Stop)){
                 StringCnt = 0;
+                Number_Digits_Index = 0;
                 Setting_item_Index = SET_Weight;
                 ClearBlinkCnt2();
             }
@@ -967,60 +1229,54 @@ void Key_Profile_Setting(){
       case SET_WORK_Time:
         if(StringCnt < 2){
             //------- 顯示 設定"WorkTime"時按 (Enter) ,(+) ,(-) 鍵進入下一個flow    --------
-            if(KeyCatch(0,1 , Enter)){
+            if( Key_Increase() || Key_Decrease() || NumberKeyProcess() || KeyCatch(0,1 , Enter)){
                 StringCnt = 2;
                 F_Number_buffer_Auto( Stay, Program_Data.WorkTime , 10 ,DEC ,0);
                 writeLEDMatrix(); 
                 ClearBlinkCnt2();
             }
             if(KeyCatch(0,1 , Stop)){
+                Number_Digits_Index = 0;
                 StringCnt = 0;
                 Setting_item_Index = SET_Weight;
                 ClearBlinkCnt2();
             }
-            //++
-            if(KeyCatch(0,1 , Spd_12) ){
-                StringCnt = 2;
-                F_Number_buffer_Auto( Stay, Program_Data.WorkTime , 10 ,DEC ,0);
-                writeLEDMatrix(); 
-            }
-            //--
-            if(KeyCatch(0,1 , Spd_9)){
-                StringCnt = 2;
-                F_Number_buffer_Auto( Stay, Program_Data.WorkTime , 10 ,DEC ,0);
-                writeLEDMatrix(); 
-            }
         }else if(StringCnt == 2){           //設定""
             
-            //++
-            if(KeyCatch(0,1 , Spd_12) || KeyForContinueProcess(Spd_12)){
+            //  ++   單點  按住 連續+
+            if(Key_Increase()){ 
                 if(Program_Data.WorkTime < 20){
                     Program_Data.WorkTime++;
                 }
                 F_Number_buffer_Auto( Stay, Program_Data.WorkTime , 10 ,DEC ,0);
                 writeLEDMatrix(); 
             }
-            //--
-            if(KeyCatch(0,1 , Spd_9) || KeyForContinueProcess(Spd_9)){
+            //  --   單點  按住 連續-
+            if(Key_Decrease()){
                 if(Program_Data.WorkTime > 1){
                     Program_Data.WorkTime--;
                 }
                 F_Number_buffer_Auto( Stay, Program_Data.WorkTime , 10 ,DEC ,0);
                 writeLEDMatrix(); 
-            }
+            }  
+            
             NumberKeyProcess();
+            
             if(KeyCatch(0,1 , Enter)){
                 StringCnt = 0;
+                Number_Digits_Index = 0;  
                 Setting_item_Index = SET_REST_Time;
                 //輸入數值超出範圍
                 if( (Program_Data.WorkTime < 1) ){
                     StringCnt = 2;
                     Setting_item_Index = SET_WORK_Time;
                     Program_Data.WorkTime = 1;
+                    Number_Buffer = 1;
                 }else if((Program_Data.WorkTime > 20) ){
                     StringCnt = 2;
                     Setting_item_Index = SET_WORK_Time;
                     Program_Data.WorkTime = 20;
+                    Number_Buffer = 20;
                 }
                 if(Program_Select == Custom_1){
                      MyCustom_1.Custom_Time = Program_Data.Goal_Time;
@@ -1042,6 +1298,7 @@ void Key_Profile_Setting(){
                 ClearBlinkCnt2();
             }   
             if(KeyCatch(0,1 , Stop)){
+                Number_Digits_Index = 0;
                 StringCnt = 0;
                 Setting_item_Index = SET_Weight;
                 ClearBlinkCnt2();
@@ -1051,64 +1308,55 @@ void Key_Profile_Setting(){
       case SET_REST_Time:
         if(StringCnt < 2){
             //------- 顯示 設定"RESTTime"時按 (Enter) ,(+) ,(-) 鍵進入下一個flow    --------
-            if(KeyCatch(0,1 , Enter)){
+            if( Key_Increase() || Key_Decrease() || NumberKeyProcess() || KeyCatch(0,1 , Enter)){
                 StringCnt = 2;
-                //F_Number_buffer_Auto( Stay, Program_Data.RestTime , 10 ,DEC ,0);
-                //writeLEDMatrix(); 
+                F_Number_buffer_Auto( Stay, Program_Data.RestTime , 10 ,DEC ,0);
+                writeLEDMatrix(); 
                 ClearBlinkCnt2();
             }
-            //++
-            if(KeyCatch(0,1 , Spd_12) ){
-                StringCnt = 2;
-                F_Number_buffer_Auto( Stay, Program_Data.RestTime , 10 ,DEC ,0);
-                writeLEDMatrix(); 
-            }
-            //--
-            if(KeyCatch(0,1 , Spd_9)){
-                StringCnt = 2;
-                F_Number_buffer_Auto( Stay, Program_Data.RestTime , 10 ,DEC ,0);
-                writeLEDMatrix(); 
-            }
             if(KeyCatch(0,1 , Stop)){
-                
+                Number_Digits_Index = 0;
                 StringCnt = 0;
                 Setting_item_Index = SET_WORK_Time;
  
                 ClearBlinkCnt2();
             }
         }else if(StringCnt == 2){           //設定""
-            //++
-            if(KeyCatch(0,1 , Spd_12) || KeyForContinueProcess(Spd_12)){
-                
+            //  ++   單點  按住 連續+
+            if(Key_Increase()){ 
                 if(Program_Data.RestTime < (20 - Program_Data.WorkTime)){
                     Program_Data.RestTime++;
                 }
                 F_Number_buffer_Auto( Stay, Program_Data.RestTime , 10 ,DEC ,0);
                 writeLEDMatrix(); 
             }
-            //--
-            if(KeyCatch(0,1 , Spd_9) || KeyForContinueProcess(Spd_9)){
-                
+            //  --   單點  按住 連續-
+            if(Key_Decrease()){
                 if(Program_Data.RestTime > 1){
                     Program_Data.RestTime--;
                 }
                 F_Number_buffer_Auto( Stay, Program_Data.RestTime , 10 ,DEC ,0);
                 writeLEDMatrix(); 
-            }
+            }  
+
             NumberKeyProcess();
             
             if(KeyCatch(0,1 , Enter)){
                 StringCnt = 0;
+                Number_Digits_Index = 0;
                 Setting_item_Index = SET_END;
                 //輸入數值超出範圍
                 if( (Program_Data.RestTime < 1) ){
                     StringCnt = 2;
                     Setting_item_Index = SET_REST_Time;
-                    Program_Data.WorkTime = 1;
+                    Program_Data.RestTime = 1;
+                    Number_Buffer = 1;
                 }else if(Program_Data.RestTime > (20 - Program_Data.WorkTime) ){
                     StringCnt = 2;
                     Setting_item_Index = SET_REST_Time;
-                    Program_Data.WorkTime = (20 - Program_Data.WorkTime);
+                    Program_Data.RestTime = (20 - Program_Data.WorkTime);
+                    Number_Buffer = (20 - Program_Data.WorkTime);
+                    
                 }
                 F_Number_buffer_Auto( Stay, Program_Data.RestTime , 10 ,DEC ,0);
                 
@@ -1133,6 +1381,7 @@ void Key_Profile_Setting(){
                 ClearBlinkCnt2();
             }
             if(KeyCatch(0,1 , Stop)){
+                Number_Digits_Index = 0;
                 StringCnt = 0;
                 Setting_item_Index = SET_WORK_Time;
                 ClearBlinkCnt2();
@@ -1143,7 +1392,7 @@ void Key_Profile_Setting(){
         
         if(StringCnt < 2){
             //------- 顯示 設定"LIKE_Program"時按 (Enter) ,(+) ,(-) 鍵進入下一個flow    --------
-            if(KeyCatch(0,1 , Enter)){
+            if( Key_Increase() || Key_Decrease() || NumberKeyProcess() || KeyCatch(0,1 , Enter)){
                 //User_Like_Program_Init();
                 Program_Like_Display();
                 StringCnt = 2;
@@ -1152,11 +1401,21 @@ void Key_Profile_Setting(){
                 
                 ClearBlinkCnt2();
             }
-            if( KeyCatch(0,1 , Key_Manual) ){ 
+            
+            /*if(KeyCatch(0,1 , Enter)){
+                //User_Like_Program_Init();
+                Program_Like_Display();
+                StringCnt = 2;
+                writeLEDMatrix();
+                writeSegmentBuffer();
                 
-                KeyChangeDetect_User(Key_Manual);
-                Program_Data.Like_Program = (Program_Type_Def)(1 + (ClassCnt_User % 7));
-                ClassCnt_User++;
+                ClearBlinkCnt2();
+            }*/
+            //-----------------------------------------------------------------------------------
+            if( KeyCatch(0,1 , Key_Manual) ){ 
+                KeyChangeDetect(Key_Manual);
+                Program_Data.Like_Program = (Program_Type_Def)(1 + (ClassCnt % 7));
+                ClassCnt++;
                 User_Like_Program_Init();
                 Program_Like_Display();
                 StringCnt = 2;
@@ -1164,88 +1423,90 @@ void Key_Profile_Setting(){
                 writeSegmentBuffer();
             } 
             if( KeyCatch(0,1 , Key_HRC) ){ 
-                
-                KeyChangeDetect_User(Key_HRC);
-                Program_Data.Like_Program = (Program_Type_Def)(11 + (ClassCnt_User % 6));
-                ClassCnt_User++;
+                KeyChangeDetect(Key_HRC);
+                Program_Data.Like_Program = (Program_Type_Def)(11 + (ClassCnt % 6));
+                ClassCnt++;
                 User_Like_Program_Init();
                 Program_Like_Display();
                 StringCnt = 2;
                 writeLEDMatrix(); 
-                writeSegmentBuffer();
+                writeSegmentBuffer(); 
             }
             if( KeyCatch(0,1 , Key_Advance) ){ 
-                
-                KeyChangeDetect_User(Key_Advance);
-                Program_Data.Like_Program = (Program_Type_Def)(22 + (ClassCnt_User % 6)  );
-                ClassCnt_User++;
+                KeyChangeDetect(Key_Advance);
+                Program_Data.Like_Program = (Program_Type_Def)(22 + (ClassCnt % 6)  );
+                ClassCnt++;
                 User_Like_Program_Init();
                 Program_Like_Display();
                 StringCnt = 2;
                 writeLEDMatrix(); 
                 writeSegmentBuffer();
             }
-            
-            if( KeyCatch(0,1 , BLE) ){ 
-                KeyChangeDetect_User(BLE);
-                Program_Data.Like_Program = (Program_Type_Def)(31 + (ClassCnt_User % 4)  );
-                ClassCnt_User++;
+            if( KeyCatch(0,1 , Key_Goal) ){ 
+                KeyChangeDetect(Key_Goal);
+                Program_Data.Like_Program = (Program_Type_Def)(31 + (ClassCnt % 4)  );
+                ClassCnt++;
                 User_Like_Program_Init();
                 Program_Like_Display();
                 StringCnt = 2;
                 writeLEDMatrix(); 
                 writeSegmentBuffer();
-            }
+            } 
+            //----------------------------------------------------------------------------------
             
             if(KeyCatch(0,1 , Stop)){
+                Number_Digits_Index = 0;
                 ClassCnt = 0;
                 Program_Select = Quick_start;
                 Clear_DataCheckBuffer();
                 Program_Init();
                 StringCnt = 0;
-                System_Mode = Menu;
+                System_Mode = Idle;
             }
             
         }else if(StringCnt == 2){           //設定""
+            //---------------------------------------------------------
             if( KeyCatch(0,1 , Key_Manual) ){ 
-                
-                KeyChangeDetect_User(Key_Manual);
-                Program_Data.Like_Program = (Program_Type_Def)(1 + (ClassCnt_User % 7));
-                ClassCnt_User++;
+                KeyChangeDetect(Key_Manual);
+                Program_Data.Like_Program = (Program_Type_Def)(1 + (ClassCnt % 7));
+                ClassCnt++;
                 User_Like_Program_Init();
                 Program_Like_Display();
-                writeLEDMatrix();  
+                StringCnt = 2;
+                writeLEDMatrix(); 
                 writeSegmentBuffer();
-                
             } 
             if( KeyCatch(0,1 , Key_HRC) ){ 
-                KeyChangeDetect_User(Key_HRC);
-                Program_Data.Like_Program = (Program_Type_Def)(11 + (ClassCnt_User % 6));
-                ClassCnt_User++;
+                KeyChangeDetect(Key_HRC);
+                Program_Data.Like_Program = (Program_Type_Def)(11 + (ClassCnt % 6));
+                ClassCnt++;
                 User_Like_Program_Init();
                 Program_Like_Display();
-                writeLEDMatrix();  
-                writeSegmentBuffer();
+                StringCnt = 2;
+                writeLEDMatrix(); 
+                writeSegmentBuffer(); 
             }
             if( KeyCatch(0,1 , Key_Advance) ){ 
-                KeyChangeDetect_User(Key_Advance);
-                Program_Data.Like_Program = (Program_Type_Def)(22 + (ClassCnt_User % 6)  );
-                ClassCnt_User++;
+                KeyChangeDetect(Key_Advance);
+                Program_Data.Like_Program = (Program_Type_Def)(22 + (ClassCnt % 6)  );
+                ClassCnt++;
                 User_Like_Program_Init();
                 Program_Like_Display();
-                writeLEDMatrix();  
+                StringCnt = 2;
+                writeLEDMatrix(); 
                 writeSegmentBuffer();
             }
-            
-            if( KeyCatch(0,1 , BLE) ){ 
-                KeyChangeDetect_User(BLE);
-                Program_Data.Like_Program = (Program_Type_Def)(31 + (ClassCnt_User % 4)  );
-                ClassCnt_User++;
+            if( KeyCatch(0,1 , Key_Goal) ){ 
+                KeyChangeDetect(Key_Goal);
+                Program_Data.Like_Program = (Program_Type_Def)(31 + (ClassCnt % 4)  );
+                ClassCnt++;
                 User_Like_Program_Init();
                 Program_Like_Display();
-                writeLEDMatrix();  
+                StringCnt = 2;
+                writeLEDMatrix(); 
                 writeSegmentBuffer();
-            }
+            } 
+            //------------------------------------------------------------------
             
             if(KeyCatch(0,1 , Enter)){
                 StringCnt = 0;
@@ -1253,19 +1514,19 @@ void Key_Profile_Setting(){
                   case Manual:
                   case Random: 
                   case CrossCountry: 
-                    System_Mode = Program_Setting; 
+                    System_Mode = Prog_Set; 
                     Setting_item_Index = SET_Time;
                     str_cNt = 0;
                     break;
                   case WeightLoss: 
-                    System_Mode = Program_Setting; 
+                    System_Mode = Prog_Set; 
                     Setting_item_Index = SET_Age;
                     str_cNt = 0;
                     break;
                   case Interval_1_1: 
                   case Interval_1_2:
                   case Hill:  
-                    System_Mode = Program_Setting; 
+                    System_Mode = Prog_Set; 
                     Setting_item_Index = SET_Time;
                     str_cNt = 0;
                     break;
@@ -1275,7 +1536,7 @@ void Key_Profile_Setting(){
                   case Heart_Rate_Hill:   
                   case Heart_Rate_Interval: 
                   case Extreme_Heart_Rate: 
-                    System_Mode = Program_Setting; 
+                    System_Mode = Prog_Set; 
                     Setting_item_Index = SET_Time;
                     str_cNt = 0;
                     break;
@@ -1284,12 +1545,12 @@ void Key_Profile_Setting(){
                   case Interval_1_4: 
                   case Interval_2_1: 
                   case EZ_INCLINE: 
-                    System_Mode = Program_Setting; 
+                    System_Mode = Prog_Set; 
                     Setting_item_Index = SET_Time;
                     str_cNt = 0;
                     break;
                   case MARATHON_Mode: 
-                    System_Mode = Program_Setting; 
+                    System_Mode = Prog_Set; 
                     Setting_item_Index = SET_Age;
                     str_cNt = 0;
                     break;
@@ -1297,7 +1558,7 @@ void Key_Profile_Setting(){
                   case Distance_Goal_160M:
                   case Distance_Goal_5K:
                   case Distance_Goal_10K:
-                    System_Mode = Program_Setting; 
+                    System_Mode = Prog_Set; 
                     Setting_item_Index = SET_Age;
                     str_cNt = 0;
                     break;
@@ -1307,13 +1568,13 @@ void Key_Profile_Setting(){
                 ClearBlinkCnt2();
             } 
             if(KeyCatch(0,1 , Stop)){
-                
+                Number_Digits_Index = 0;
                 ClassCnt = 0;
                 Program_Select = Quick_start;
                 Clear_DataCheckBuffer();
                 Program_Init();
                 StringCnt = 0;
-                System_Mode = Menu;
+                System_Mode = Idle;
             }
         }
         break;
@@ -1477,7 +1738,7 @@ void Key_Profile_Setting(){
           case Heart_Rate_Interval: 
           case Extreme_Heart_Rate: 
             if(!usNowHeartRate){
-                System_Mode = Menu;
+                System_Mode = Idle;
             }
             break;  
         }  
@@ -1603,7 +1864,7 @@ void ProgramSetting_LIKE_Key(){
     Key_Profile_Setting();
 }
 
-void ProgramSetting_Display(){
+void ProgSet_Display(){
     
    // if(T_Marquee_Flag){
         //T_Marquee_Flag = 0;
@@ -1612,15 +1873,24 @@ void ProgramSetting_Display(){
             if( (Program_Select == Custom_1 ) || (Program_Select == Custom_2) ){
                 DrawBarArray(Program_Data.BarArray_Display);
             }else{
-                F_String_buffer(4,1,"TIME" ,4 ,0);
+                F_String_buffer(4,1,"TIME" ,4 ,60);
             }
-            //--------------時間  七段顯示器-----------------------------
+            //--------------時間  七段顯示器-----------------------------mmm
             
-            if(Program_Data.Goal_Time < 3600){
-                TIME_SET_Display( TIME  , Program_Data.Goal_Time ,0x0C , 0);
-            }else if(Program_Data.Goal_Time >= 3600){ 
-                TIME_SET_Display( TIME  , Program_Data.Goal_Time ,0x03 , 0);
+            
+            if(Time_KeyPad_Iput_Flag == 0){
+                if(Program_Data.Goal_Time < 3600){
+                    TIME_SET_Display( TIME  , Program_Data.Goal_Time ,0x0C , 0);
+                }else if(Program_Data.Goal_Time >= 3600){ 
+                    TIME_SET_Display( TIME  , Program_Data.Goal_Time ,0x03 , 0);
+                }
+            }else if(Time_KeyPad_Iput_Flag == 1){
+                SET_Seg_Display(TIME , Program_Data.Goal_Time/60 , ND , DEC );  
             }
+
+            
+            
+            
             //-------------------------------------------------------------
             
             break;
@@ -1753,7 +2023,7 @@ void ProgramSetting_Display(){
             F_String_buffer_Auto_Middle(Stay,"END" ,30 ,0);
             break;
         }
-        if(System_Mode == Program_Setting){
+        if(System_Mode == Prog_Set){
             writeSegmentBuffer();
         }
         if((Setting_item_Index == SET_MAX_INC)&&(StringCnt == 0) ){}
@@ -1763,40 +2033,42 @@ void ProgramSetting_Display(){
 
 }
 
-extern unsigned char ret_Idle_cnt;
-void Program_Idel_detect(){
+//--------------30秒沒有操作回到IDLE--------------
+unsigned char ret_Idle_cnt;
+void Idel_detect(){
     
-        if(T1s_Menu_Idle == 1){
-            T1s_Menu_Idle = 0;
+        if(T1s_Idle == 1){
+            T1s_Idle = 0;
 
-        if(ret_Idle_cnt == 30){
+        if(ret_Idle_cnt == 240){   //--30秒--暫時調成5分鐘
             
-            ClassCnt = 0;
             ret_Idle_cnt = 0;
+            Back_Idle_Process();
+            
+            /*Time_KeyPad_Iput_Flag = 0;
+            Number_Digit_Tmp = 0;
+            ClassCnt = 0;
             Program_Select = Quick_start;
             StringCnt = 0;
-            System_Mode = Menu;
+            System_Mode = Idle;*/
         }
-        
         if(Program_Select != Quick_start){
             ret_Idle_cnt++;
         }else{
-            
             ret_Idle_cnt = 0;
         }
     }
 }
+//---------------------------------------------------
 
-void ProgramSetting_Func(){
-    
-    ucSubSystemMode = C_App_SetupVal;
+void ProgSet_Func(){
     
     if(LIKE_Flag == 0){
         ProgramSetting_Key();
     }else if(LIKE_Flag == 1){
         ProgramSetting_LIKE_Key();
     }
-    ProgramSetting_Display();
-    Program_Idel_detect();
+    ProgSet_Display();
+    Idel_detect();
     
 }

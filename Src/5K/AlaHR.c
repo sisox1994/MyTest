@@ -81,6 +81,7 @@ static unsigned char F_HRCalculate(unsigned char HRValue ,unsigned char HRValueT
   if(HRValue == 0)
   {
     /* 心跳初值設定 */
+      /*
     if(HRValueTemp > 90){
 	 HRValue = 90;
     }else{
@@ -89,7 +90,7 @@ static unsigned char F_HRCalculate(unsigned char HRValue ,unsigned char HRValueT
       }else{
 	 HRValue = HRValueTemp;			
       }
-    }
+    }*/
     HRbuffer[0] = HRValue;
     HRbuffer[1] = HRValue;
     HRbuffer[2] = HRValue;
@@ -100,16 +101,16 @@ static unsigned char F_HRCalculate(unsigned char HRValue ,unsigned char HRValueT
     /* 不讓差距超過六 */
     if(HRValueTemp >= HRValue)
     {
-	 if((HRValueTemp - HRValue) > 6 )
+	 if((HRValueTemp - HRValue) > 10 )
 	 {
-	   HRValueTemp = HRValue + 6;
+	   HRValueTemp = HRValue + 10;
 	 }
     }
     else
     {
-	 if((HRValue - HRValueTemp) > 6 )
+	 if((HRValue - HRValueTemp) > 10 )
 	 {
-	   HRValueTemp = HRValue - 6;
+	   HRValueTemp = HRValue -10;
 	 }
     }
     HRbuffer[0] = HRbuffer[1];

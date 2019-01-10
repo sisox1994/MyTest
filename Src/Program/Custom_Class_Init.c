@@ -34,39 +34,7 @@ void Custom_1_Init(){
         Program_Data.INCLINE_Table_96[i] = Program_Data.INCLINE_Template_Table[ i % Program_Data.Template_Table_Num]; 
     }
     
-    
-    for(unsigned char i = 0 ; i < 32; i++){
-        
-        if(Program_Data.INCLINE_Table_96[i] >= 0x00 ){
-            
-            if(Program_Data.INCLINE_Table_96[i] > 30){
-                Program_Data.BarArray_Display[i] = Index_To_Bar[30];
-            }else{
-                Program_Data.BarArray_Display[i] = Index_To_Bar[ Program_Data.INCLINE_Table_96[i] ];
-            }
-            
-        }else if(Program_Data.INCLINE_Table_96[i] < 0){
-            
-            Program_Data.BarArray_Display[i] = Index_To_Bar[0];          //小於0 就顯示1顆
-        } 
-        
-    }
-    
-    if(Program_Data.Goal_Time >= 1920){     //>32分鐘
-        
-        Program_Data.PeriodWidth  = 60;                              //一格區間大於60  就=60
-        Program_Data.PeriodNumber = Program_Data.Goal_Time / 60;     //算總共有幾個區間
-        
-        Program_Data.NextPeriodValue = Program_Data.Goal_Time - Program_Data.PeriodWidth;
-        
-    }else if(Program_Data.Goal_Time < 1920){     //<32分鐘
-        
-        Program_Data.PeriodWidth  = Program_Data.Goal_Time / 32;
-        Program_Data.PeriodNumber = 32;
-        
-        Program_Data.NextPeriodValue =  Program_Data.Goal_Time - Program_Data.PeriodWidth;
-        
-    }
+    Table_96_To_BarArray_Mapping();
     
 }
 
@@ -103,41 +71,7 @@ void Custom_2_Init(){
         Program_Data.INCLINE_Table_96[i] = Program_Data.INCLINE_Template_Table[ i % Program_Data.Template_Table_Num]; 
     }
     
-    
-    for(unsigned char i = 0 ; i < 32; i++){
-        
-        if(Program_Data.INCLINE_Table_96[i] >= 0x00 ){
-            
-            if(Program_Data.INCLINE_Table_96[i] > 30){
-                Program_Data.BarArray_Display[i] = Index_To_Bar[30];
-            }else{
-                Program_Data.BarArray_Display[i] = Index_To_Bar[ Program_Data.INCLINE_Table_96[i] ];
-            }
-            
-        }else if(Program_Data.INCLINE_Table_96[i] < 0){
-            
-            Program_Data.BarArray_Display[i] = Index_To_Bar[0];          //小於0 就顯示1顆
-        } 
-        
-    }
-    
-    if(Program_Data.Goal_Time >= 1920){     //>32分鐘
-        
-        Program_Data.PeriodWidth  = 60;                              //一格區間大於60  就=60
-        Program_Data.PeriodNumber = Program_Data.Goal_Time / 60;     //算總共有幾個區間
-        
-        Program_Data.NextPeriodValue = Program_Data.Goal_Time - Program_Data.PeriodWidth;
-        
-    }else if(Program_Data.Goal_Time < 1920){     //<32分鐘
-        
-        Program_Data.PeriodWidth  = Program_Data.Goal_Time / 32;
-        Program_Data.PeriodNumber = 32;
-        
-        Program_Data.NextPeriodValue =  Program_Data.Goal_Time - Program_Data.PeriodWidth;
-        
-    }
-    
-    
+    Table_96_To_BarArray_Mapping();
 }
 
 
@@ -269,9 +203,7 @@ void User_1_Init(){
         Program_Data.Goal_Counter = MyUser_1.User_Time;
          break; 
     }*/
-    
-    
-    
+   
 }
 
 

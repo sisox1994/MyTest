@@ -181,7 +181,7 @@ void SET_PWM(unsigned  char sw){
     else if (sw==1) CS2_Low();
     
     HT_SendByte(HT_CMD,3);   
-    HT_SendByte(HT_PWM_CONTROL_5,9);   
+    HT_SendByte(HT_PWM_CONTROL_7,9);   //  HT_PWM_CONTROL_5
     __asm("nop");
     
     if      (sw==0) CS1_High();

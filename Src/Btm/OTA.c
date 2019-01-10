@@ -22,12 +22,9 @@ void OTA_Mode_Func(){
             HAL_NVIC_SystemReset();
             
         }else if(FW.Error_Type == No_Error){
-            
-            
             if(FW_Transmiting_03_Flag == 1){
                 Draw_Auto(  Stay , Download_Icon  ,50 ,0);  //顯示下載圖案
-            }else{
-                
+            }else{ 
                 F_String_buffer_Auto_Middle(Stay,"OTA" ,30 ,0);
             }
         }

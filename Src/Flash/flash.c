@@ -36,6 +36,7 @@ unsigned char Read_Buffer_256Byte[256];
 #define Update_Firmware_Address  0x3D3000
 
 unsigned char FlashBuffer4096[4096];
+
 unsigned char Write_FlashBuffer256[256];
 
 Custom_Program_Data_Def MyCustom_1;
@@ -151,11 +152,12 @@ unsigned char OTA_Mode_Flag = 0;
 unsigned char OTA_Flag[]         = {"OTA_Mode"};
 unsigned char Application_Flag[] = {"Application_Mode"};
 unsigned char Bootloader_Flag[]  = {"Bootloader_Mode"};
-unsigned char FlagCheck[24];
+unsigned char FlagCheck[16];
 
 void OTA_Mode_Check(){
 
-    Read_EE_Flash( OTA_Mode_Flag_Address , 24 , FlagCheck);
+    Read_EE_Flash( OTA_Mode_Flag_Address , 16 , FlagCheck);
+    
     if( str_check( OTA_Flag , FlagCheck , sizeof(OTA_Flag) ) ){
         OTA_Mode_Flag = 1;    
     }
@@ -483,7 +485,7 @@ void Flash_Custom_Data_Loading(){
     //***********************************************************************************************************************//
     //如果DefaultValueChangeFlag 不等於0xAA 代表Flash 還沒初始化過
     if(DefaultValueChangeFlag != 0xAA){  
-        Write_Default_Custom_Program_Data();   
+        Write_Default_Custom_Program_Data();   //寫入預設的Custom Data
     }
     //***********************************************************************************************************************//
     //********************************************************************************************************// 
@@ -594,11 +596,11 @@ void Write_Machine_Data_Init(System_Unit_Def Unit){
     if(Unit == Metric ){
 	Machine_Data.System_UNIT = Metric;
         Machine_Data.System_SPEED_Max = 240;
-        Machine_Data.System_SPEED_Min = 8;
+        Machine_Data.System_SPEED_Min = 5;
     }else if(Unit == Imperial){
         Machine_Data.System_UNIT = Imperial;
         Machine_Data.System_SPEED_Max = 150;
-        Machine_Data.System_SPEED_Min = 5;
+        Machine_Data.System_SPEED_Min = 3;
     }           
     
     MachineData_To_Array();   

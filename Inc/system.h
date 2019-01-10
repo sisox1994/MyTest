@@ -22,9 +22,28 @@
 #define __SYSTEM_H__
 
 
-#define System_Version "V10"
+#define System_Version "V10"        //APP 只判斷這個
+#define Modify_Version "A01"        // AXX 細分版本 V10A01 V10A02 代表都是V10 但是 有稍微修改
 
-extern char ucProductionSerialNumber[30];     //生產序號
+
+
+
+//--------功能開關---------  1 開   0關
+#define Use_BTSPK      0
+#define Use_FAN        0
+
+#define Use_SafeKey    1
+#define Use_Buzzer     1     
+#define RM6T6_IN_USE   1
+
+#define configUSE_WHR   1
+#define configUSE_HHR   1
+
+#define FAKE_RM6T6_Mode   0
+
+//-------------------------------
+
+extern char ucProductionSerialNumber[14];     //生產序號
 
 //----------IWDG ---------
 //#include "stm32f0xx_hal_iwdg.h"
@@ -35,20 +54,15 @@ extern unsigned char Feed_Dog_Flag;
 #define System_INCLINE_Max 150
 #define System_SPEED_Max   120
 */
-
 //App Mode
-extern ucSubSystemMode_Def ucSubSystemMode;
-
 extern unsigned short usAppStageNumber;
-
 
 //Power 5V Control
 extern void Power_5V_ON();
 extern void Power_5V_OFF();
 
 //---  5K WHR  hand HHR-----
-#define configUSE_WHR  1
-#define configUSE_HHR  1
+
 extern unsigned char ucWhr;	
 extern unsigned char HR5KPairOkFlag;
 
@@ -116,12 +130,20 @@ extern void F_HeartRate_Supervisor();
 
 extern Time_Display_Def       Time_Display_Type;
 extern Calories_Display_Def   Calories_Display_Type;
+extern Dist_Display_Def       Dist_Display_Type;
+extern HeartRate_Display_Def  HeartRate_Display_Type;
+
 extern unsigned char         Pace_Display_Switch;
+
+
+extern unsigned char ContuineBeepFlag;  //連續 bb叫
 
 extern System_Mode_Def System_Mode;
 extern System_Unit_Def System_Unit;
 extern unsigned char str_cNt;
 extern short Move_X;
+
+extern unsigned char ret_Idle_cnt;
 
 extern unsigned short System_INCLINE; //0~150   => 0.0~15.0 %   =>0~31
 extern unsigned short System_SPEED;   //0 ~ 120 
@@ -138,21 +160,10 @@ unsigned char charArrayEquals( char A1[], char A2[]);
 //----------------  Bitmap ------------------------------
 extern const unsigned char *CapitalAlphabetArray[];
 extern const unsigned char *NumberArray[];
-extern const unsigned char*Pattern_Array[];
+extern const unsigned char *Pattern_Array[];
 
 extern const unsigned char ATTACUS_Logo[];
 extern const unsigned char Light_Eye[];
-extern const unsigned char Love_Workout[];
-extern const unsigned char Boil_30min[];
-extern const unsigned char ALA_LOGO[];
-extern const unsigned char ATTACUS_String[];
-extern const unsigned char ALATECH_Vertical[];
-extern const unsigned char Buy_Cheese[];
-
-extern const unsigned char P_SetGoalTime[];
-extern const unsigned char P_SetAge[];
-extern const unsigned char P_SetWeight[];
-extern const unsigned char ALA_LOGO_String[];
 
 extern const unsigned char Heart_Empty[];
 extern const unsigned char Heart_Solid[];
@@ -164,6 +175,5 @@ extern const unsigned char SPK_ON_Icon[];
 extern const unsigned char SPK_OFF_Icon[];
 
 //----------------  Debug  ------------------------------
-extern void TimePeriodTest();
 
 #endif

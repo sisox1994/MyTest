@@ -107,22 +107,22 @@ uint16_t F_SpeedToHz(uint16_t Speed)  // dsp_spd change to speed_Hz
 
 const uint16_t InclineADTable[31] = {
     
-    60 , 80,     //0.0     0.5  %
-    105 , 125,     //1.0     1.5  %            
-    147 , 170,     //2.0     2.5  %         
-    191 , 214,     //3.0     3.5  %
-    237 , 260,     //4.0     4.5  %
-    283 , 306,     //5.0     5.5  %   0k
-    329 , 352,     //6.0     6.5  %   ok
-    375 , 402,     //7.0     7.5  %  //ok
-    423 , 444,     //8.0     8.5  %    //ok
-    456 , 481,     //9.0     9.5  %    //OK
-    506 , 527,     //10.0   10.5  %   //ok
-    552 , 566,     //11.0   11.5  %   //ok
-    588 , 614,     //12.0   12.5  %  //ok
-    636 , 659,     //13.0   13.5  %  //OK
-    683,  708,     //14.0   14.5  %
-    731            //15%   
+    65 , 85,     //0.0     0.5  %
+    113 , 138,     //1.0     1.5  %            
+    167 , 189,     //2.0     2.5  %         
+    224 , 248,     //3.0     3.5  %
+    274 , 296,     //4.0     4.5  %
+    325 , 349,     //5.0     5.5  %   0k
+    376 , 402,     //6.0     6.5  %   ok
+    428 , 458,     //7.0     7.5  %  //ok
+    478 , 502,     //8.0     8.5  %    //ok
+    529 , 554,     //9.0     9.5  %    //OK
+    586 , 608,     //10.0   10.5  %   //ok
+    635 , 660,     //11.0   11.5  %   //ok
+    687 , 715,     //12.0   12.5  %  //ok
+    742 , 767,     //13.0   13.5  %  //OK
+    800,  827,     //14.0   14.5  %
+    859            //15%   
 };
 
 // 系統參數設置
@@ -331,7 +331,7 @@ void RM6T6_Init(){
     F_OUT();
     HAL_Delay(20);
     if(Response_Message.Status.Run == YES){
-        OPT_CMD(Write , STOP);   
+        OPT_CMD(Write,STOP);   
         HAL_Delay(20);
         F_OUT();
         HAL_Delay(20);
@@ -623,12 +623,15 @@ void Inveter_UART_IT_Recive(){
                 ucUART_RxData[i] =  ucUART_RxBuf[i];
                 ucUART_RxBuf[i] = 0;
             }
-            //-----------------------------------485 測試模式
+            
+            
+ 
+#if FAKE_RM6T6_Mode
+            //---------------485 測試模式----------------------------------  
             if(System_Mode == RS485_Test_Mode){
                 if(ucUART_RxData[0] == 0xF6){
                     if(ucUART_RxData[1] == 0x90){
-                         
-                        //HAL_Delay(100);
+                        
                         memset(ucUART_TxBuf , 0x00 , UART_TxBufDataLength);
                         TXData_Length = 6;
                         ucUART_TxBuf[0] = 0xF2;
@@ -643,7 +646,9 @@ void Inveter_UART_IT_Recive(){
                     } 
                 }
             }
-            
+            //--------------------------------------------------------   
+#endif
+        
             GetResponseInfo();   
             memset(ucUART_RxData , 0x00 , UART_RxBufDataLength); 
             ucRxAdderss = 0;

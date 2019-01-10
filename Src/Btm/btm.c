@@ -3,56 +3,45 @@
 #include "system.h"
 #include "btm.h"
 
+#define FTMS_Test 0
+
 #define configUSE_SPDRamSize 32
 #define BtmData 20
 
-
 unsigned char FW_Transmiting_03_Flag;
 
-unsigned char ucRFVersion[3];    //FTMS SetFeature B0 cmd 取得RF版本 
+unsigned char ucRFVersion[3];          //FTMS SetFeature B0 cmd 取得RF版本 
 
-unsigned short EepromVer_3 = 10;    // V1.0   //APP 只判斷這個
-unsigned short EepromVer_4 = 1;    // AXX      //細分版本 V10A01 V10A02 代表都是V10 但是 有稍微修改
-
+unsigned short EepromVer_3;       // V1.2  
+unsigned short EepromVer_4;        // A01
 
 UART_HandleTypeDef huart2;
 
-unsigned char btm_is_ready;
-unsigned char btm_Rx_is_busy;
-
-
+unsigned char btm_is_ready;      //等待BTM F1
+unsigned char btm_Rx_is_busy;    
 unsigned char Cloud_Run_Initial_Busy_Flag = 0;
 
 void BtmRst(){
-    
     HAL_GPIO_WritePin(GPIOA,GPIO_PIN_0,GPIO_PIN_RESET);
     HAL_Delay(200);
     HAL_GPIO_WritePin(GPIOA,GPIO_PIN_0,GPIO_PIN_SET);
     HAL_Delay(1300);
-    
 }
 
 void Btm_Recive();
 
-
 //Tx
 unsigned char ucBtmTxBuf[BtmData];
-unsigned char BtmTXDelayFlag;
 
-unsigned char ucRxAddrs;
 //Rx
+unsigned char ucRxAddrs;
 unsigned char ucBtmRxTemp;
 unsigned char ucBtmRxBuf[BtmData];
 unsigned char ucBtmRxData[BtmData];
 
-
-
-Scan_Meseseage_def Scan_Msg;
-
-BLE_Device_List_def BLE_Scan_Device_List;
-
-Pairing_Meseseage_def Pairing_Msg; //當下配對取得的地址資訊
-
+Scan_Meseseage_def    Scan_Msg;
+BLE_Device_List_def   BLE_Scan_Device_List;
+Pairing_Meseseage_def Pairing_Msg;             //當下配對取得的地址資訊
 BLE_Paired_Device_Addr_List_def  BLE_Paired_device_list; // 成功配對 就把資訊加入清單裡
 
 Now_Linked_HR_Sensor_Info_Def Linked_HR_info;
@@ -132,8 +121,9 @@ void F_BtmRead02Cmd(){
 #endif
         
         if(FW_Transmiting_03_Flag != 1){  //0x03 已經在丟資料了 就不用再回了'
-            if(System_Mode != C_Sys_OTAModeVal){
-                System_Mode = C_Sys_OTAModeVal; //如果0x50沒有丟 還是可以更新
+            if(System_Mode != Sys_OTA_Mode){
+                System_Mode = Sys_OTA_Mode; //如果0x50沒有丟 還是可以更新
+                
                 Turn_OFF_All_Segment();
                 Turn_OFF_All_LEDMatrix();
             }
@@ -163,6 +153,11 @@ void F_BtmReply03Cmd(unsigned short page){
     ucBtmTxBuf[19] = ']';
     
     ucBtmTxBuf[1] = 0x03;
+    ucBtmTxBuf[2] = 0x40;
+    
+    ucBtmTxBuf[3] = (unsigned char)page;
+    ucBtmTxBuf[4] = (unsigned char)(page>>8);
+    
     
 
     __HAL_UART_ENABLE_IT(&huart2, UART_IT_RXNE); //----------------
@@ -213,16 +208,24 @@ void F_BtmRead03Cmd(){
         
         if( (FW.Byte_Cnt % 16 == 0) && (FW.Byte_Cnt > 0)){
             Write_EE_Flash_FW_Data_16Byte( (FW.Byte_Cnt/16 - 1) , FW_Buff_16Byte);
+            memset(FW_Buff_16Byte,0x00,16);
         }
+        
         
         FW_Buff_16Byte[FW.Byte_Cnt%16] = ucBtmRxData[i];
         
         FW.Byte_Cnt++;
          
     }
+    //----如果最後size不是16的倍數  ---補最後一包資料-------------
+    if((FW.Byte_Cnt>=FW.total_Size) && (FW.Byte_Cnt%16!=0)){
+       Write_EE_Flash_FW_Data_16Byte( (FW.Byte_Cnt/16) , FW_Buff_16Byte);
+    }
     
+        
     __HAL_UART_ENABLE_IT(&huart2, UART_IT_RXNE); //----------------
     
+    //F_BtmReply03Cmd(FW.Transmit_Page );
     
    
 }
@@ -405,7 +408,7 @@ void Scan_Re_E0(){
             
             Scan_Msg.Scan_State = (Scan_State_Def)ucBtmRxData[2];
             
-            if(Scan_Msg.Scan_State == Scan_Time_Out){             //掃描 15 秒 連訊號最強的那個
+            if(Scan_Msg.Scan_State == Scan_Time_Out){ //掃描 15 秒 連訊號最強的那個
                 //Ask_Link_State_CE();
                 Btm_Task_Adder(BLE_HRC_Pairing);  //連RSSI最強的那一個
             }
@@ -427,7 +430,7 @@ void Scan_Re_E0(){
             char RejectDeviceName[] = {"Chandler_HRM"};
             if(!charArrayEquals(Scan_Msg.DeviceName , RejectDeviceName )){
             
-                //尋找訊號最強的裝置
+                //尋找訊號最強的裝置  Brian 說 RSSI越大 訊號愈強
                 if(BLE_Scan_Device_List.Device_Cnt == 0){
                     NearestDevieNumber = Scan_Msg.DeviceNumber;
                     RSSI_Compare = Scan_Msg.RSSI;
@@ -814,18 +817,17 @@ void LinkStateReceive_CE(){
     }
     
     
+    
+    //---------------------手機 連線----------------------------------------
     if((ucBtmRxData[3] == 0x44) || (ucBtmRxData[3] == 0x46)){  //手機配對成功 丟一個39
         
         if(ucBtmRxData[3] == 0x44){
             
-            if(OTA_Mode_Flag == 0){         //OTA 模式就不要顯示APP
-                //System_Mode = C_APPModeVal;
-            }
+            if(System_Mode != StartUp)
+            APP_Connected_Display_Cnt = 10;
             
         }else if(ucBtmRxData[3] == 0x46){
-            //System_Mode    = Menu;
-            //Program_Select = Quick_start;
-            
+
         }
         
         Btm_Task_Adder(C_39Val);
@@ -879,20 +881,12 @@ unsigned short usAppStageNumber;
 unsigned char  ucAppDataPage = 27;
 unsigned char  ucAppErrflag;
 
-unsigned char b_AppStepCountFlag;
-
-unsigned short usAction1Time;
-
-
-unsigned char ucINCBuffer[16];
-
-ucSubSystemMode_Def ucSubSystemMode = C_App_IdleVal;
 ucAppTypeModeDef    ucAppTypeMode;
 
 CloudRun_Init_INFO_Def CloudRun_Init_INFO;
 
 unsigned char ucSPDBuffer[16];
-unsigned char ucAppSPDBuffer[432];
+
 
 void F_BtmReplyCmd(unsigned char data){
     
@@ -937,30 +931,30 @@ void F_BtmReply35Cmd(void){
     ucBtmTxBuf[1] = 0x35;
     ucBtmTxBuf[2] = ucCmdPage;
     //Type SystemMode Max SPD	Min SPD	Max Inc	MinInc	Inc NO	stageNumbers	stageGrowMode	 UNIT
-    ucBtmTxBuf[3] = 0x01;        // 跑步機有揚升	
+    ucBtmTxBuf[3] = 0x02;        // 跑步機有揚升	
     //------------------
-    if(System_Mode == Menu)
+    if(System_Mode == Idle)
         ucBtmTxBuf[4] = 0;
-    if(ucSubSystemMode == C_App_SetupVal)
+    if(System_Mode == Prog_Set)
         ucBtmTxBuf[4] = 1;
-    if(ucSubSystemMode == C_App_toRunGoVal)
+    if(System_Mode == Ready)
         ucBtmTxBuf[4] = 2;
-    if(ucSubSystemMode == C_App_WarmUpVal)
+    if(System_Mode == WarmUp)
         ucBtmTxBuf[4] = 3;
-    if(ucSubSystemMode == C_App_RunningVal)
+    if(System_Mode == Workout)
         ucBtmTxBuf[4] = 4;
-    if(ucSubSystemMode == C_App_CoolDownVal)
+    if(System_Mode == CooolDown)
         ucBtmTxBuf[4] = 5;
-    if(ucSubSystemMode == C_App_PauseVal)
+    if(System_Mode == Paused)
         ucBtmTxBuf[4] = 6;
-    if(ucSubSystemMode == C_App_StopVal)
+    if(System_Mode == Summary)
         ucBtmTxBuf[4] = 7;
     //------------------
     if(System_Unit == Metric){
         ucBtmTxBuf[5] = Machine_Data.System_SPEED_Max;    //公制 
         ucBtmTxBuf[6] = Machine_Data.System_SPEED_Min;
     }else{
-       ucBtmTxBuf[5] = Machine_Data.System_SPEED_Max;    //英制 
+        ucBtmTxBuf[5] = Machine_Data.System_SPEED_Max;    //英制 
         ucBtmTxBuf[6] = Machine_Data.System_SPEED_Min;
     }
     ucBtmTxBuf[7] = (Machine_Data.System_INCLINE_Max / 5);        // 0.0 % ~ 15.0% 共30階
@@ -969,10 +963,7 @@ void F_BtmReply35Cmd(void){
     ucBtmTxBuf[10] = configUSE_SPDRamSize;
     ucBtmTxBuf[11] = 0;
     ucBtmTxBuf[12] = (unsigned char)System_Unit;
-    ucBtmTxBuf[13] = C_APPModeVal;
-    // 測試問題用,確認是否有正確收到App參數
-    ucBtmTxBuf[14] = usAppStageNumber%256;
-    ucBtmTxBuf[15] = usAppStageNumber/256;
+    //ucBtmTxBuf[13] =  0x00;  appProgrm(目前沒用)
     ucBtmTxBuf[19] = ']';
   
   __HAL_UART_ENABLE_IT(&huart2, UART_IT_RXNE); //----------------
@@ -983,98 +974,55 @@ void F_BtmReply35Cmd(void){
 
 void F_BtmRead35Cmd(void){
     
-    unsigned char uci;
+    //unsigned char uci;
     ucCmdPage = ucBtmRxData[2];
     
-  if(ucSubSystemMode == C_App_IdleVal){
-      
-    ucAppTypeMode = (ucAppTypeModeDef)ucBtmRxData[3];   
-    CloudRun_Init_INFO.TypeMode = (ucAppTypeModeDef)ucBtmRxData[3];  // TypeMode:電子錶0/App1/雲跑2/虛跑3
+    
+    //取得APP模式     電子錶0/App1/雲跑(競賽)2 /虛跑3 訓練計畫4
+    ucAppTypeMode               = (ucAppTypeModeDef)ucBtmRxData[3];   
+    CloudRun_Init_INFO.TypeMode = (ucAppTypeModeDef)ucBtmRxData[3];  // TypeMode:電子錶0/App1/雲跑2/虛跑3/訓練距離)4/訓練時間)5
     
     
-    usAppStageNumber = ucBtmRxData[4]+(256*ucBtmRxData[5]);       // Stage:20 ~ 400
+    //取得Stage Number
+    usAppStageNumber         = ucBtmRxData[4]+(256*ucBtmRxData[5]);       // Stage:20 ~ 400
     CloudRun_Init_INFO.Stage = (unsigned short)(ucBtmRxData[5]<<8) + (unsigned short)ucBtmRxData[4];
     
-    CloudRun_Init_INFO.AutoPause = (Switch_def)ucBtmRxData[6];
+    //--清掉 速度  揚升 TABLE
+    memset(CloudRun_Init_INFO.CloudRun_Spd_Buffer,0x00,432);
+    memset(CloudRun_Init_INFO.CloudRun_Inc_Buffer,0x00,432);
     
-    if(usAppStageNumber<20 || usAppStageNumber>420){
-#if AppErrChk
-      ucAppTypeMode = 0;     // Stage異常取消設定
-#endif
-      usAppStageNumber = 20;
-      ucAppDataPage = 2;
-      ucAppErrflag  = 1;
-    }else{
-      if(usAppStageNumber%16){
-        ucAppDataPage = (usAppStageNumber/16)+1;
-      }else{
-        ucAppDataPage = usAppStageNumber/16;
-      }
-      ucAppErrflag = 0;
-    }
     
-    //-------------------------------------------????
-    if(ucBtmRxData[6]==1){
-      b_AppStepCountFlag = 1;
-    }else{
-      b_AppStepCountFlag = 0;
-    }
-    usAction1Time = 60;
+    Btm_Task_Adder(C_35Val);
+    Cloud_Run_Initial_Busy_Flag = 1;
     
-    //-----------------------------------------------------
-    
-    //---------------先清掉  ucINCBuffer -------------------
-    if(usAppStageNumber<20){
-        
-      for(uci = 0 ;uci < 20;uci++){
-        ucINCBuffer[uci]=0;
-      }
-      
-    }
-    ucSubSystemMode = C_App_IdleVal;
-    //----------------------------------
-  }
-  
-
-  Btm_Task_Adder(C_35Val);
-  Cloud_Run_Initial_Busy_Flag = 1;
-  
 }
 //-------------------------------------------0x35 End-----------------------------------------------------------
 
 
 
 //---------------------------0x36 Start----------------------------------------------
-
 unsigned int uiAppTotalDist;
 unsigned int uiAppStageDist;
-
 unsigned short usSetTimeMin;
 unsigned char  ucSetAge; 
 unsigned short usSetWeight; 
 unsigned short usLapDistance; 
-
-
 unsigned char ucProgramIndex;
 
 void F_BtmRead36Cmd(void){
     
-    unsigned char uci;  
-    
+    //unsigned char uci;  
     ucCmdPage = ucBtmRxData[2];
-    
     Btm_Task_Adder(C_36Val);
     
-    
-    if((ucBtmRxData[3] == 0X02) && (ucSubSystemMode == C_App_IdleVal)&&(usAppStageNumber>=20)){
+    if((ucBtmRxData[3] == 0X02) && (System_Mode == Idle)){
         //--- 雲跑 ---
-        uiAppTotalDist = (ucBtmRxData[11] + (256*ucBtmRxData[12]))*10;        // (10m)
-        uiAppStageDist = ucBtmRxData[13]  + (256*ucBtmRxData[14]);             // (1m)
+        uiAppTotalDist = (ucBtmRxData[11] + (256*ucBtmRxData[12]))*10;   // (10m)
+        uiAppStageDist =  ucBtmRxData[13] + (256*ucBtmRxData[14]);        // (1m)
         
         CloudRun_Init_INFO.Total_Dist = ((unsigned short)ucBtmRxData[11] + (unsigned short)(ucBtmRxData[12]<<8)) *10; 
         CloudRun_Init_INFO.Stage_Dist =  (unsigned short)ucBtmRxData[13] + (unsigned short)(ucBtmRxData[14]<<8);  
-        
-        
+
         //------------
 #if AppErrChk
         temp1 = (uiAppTotalDist*10)/uiAppStageDist;
@@ -1085,38 +1033,42 @@ void F_BtmRead36Cmd(void){
             ucAppErrflag = 0;
         }
 #endif
-        if(ucAppTypeMode>=1 && ucAppTypeMode<=3){
+        if(ucAppTypeMode>=1 && ucAppTypeMode<=5){  //1.App  2.競賽  3.虛跑  4.訓練(距離) 5.訓練(時間)
+            
             if(ucAppTypeMode == 1){
                 ucProgramIndex = C_App_UserVal;
             }
             if(ucAppTypeMode == 2){
-                ucProgramIndex = C_App_Dist1Val;
-                for(uci = 0 ;uci < 20;uci++){
-                    ucINCBuffer[uci] = ucAppINCBuffer[uci];
-                }
-                //F_Flash_Read_AppProgram();      // 讀取Flash
+                
+                ucProgramIndex = C_App_Dist1Val;     // 競賽
+                Program_Select = APP_Cloud_Run;
+                
             }
-            if(ucAppTypeMode == 3){
+            if(ucAppTypeMode == 3){                // 虛跑
                 ucProgramIndex = C_App_Dist2Val;
-                for(uci = 0 ;uci < 20;uci++){
-                    ucSPDBuffer[uci] = ucAppSPDBuffer[uci];
-                    ucINCBuffer[uci] = ucAppINCBuffer[uci];
-                }
+                
+            }
+            if(ucAppTypeMode == 4){                //訓練計畫(距離)
+                ucProgramIndex = C_App_Training_Val;
+                Program_Select = APP_Train_Dist_Run;
+            }
+            if(ucAppTypeMode == 5){                //訓練計畫(時間)
+                ucProgramIndex = C_App_Training_Val;
+                Program_Select = APP_Train_Time_Run;
             }
             
-            CloudRun_Init_INFO.C_Time   = (unsigned short)ucBtmRxData[5] + (unsigned short)(ucBtmRxData[6]<< 8);
-            CloudRun_Init_INFO.C_Age    = ucBtmRxData[7];
-            CloudRun_Init_INFO.C_Weight = (unsigned short)ucBtmRxData[8] + (unsigned short)(ucBtmRxData[9]<<8);
+            
+            CloudRun_Init_INFO.C_Time     = (unsigned short)ucBtmRxData[5] + (unsigned short)(ucBtmRxData[6]<< 8);
+            CloudRun_Init_INFO.C_Age      =  ucBtmRxData[7];
+            CloudRun_Init_INFO.C_Weight   = (unsigned short)ucBtmRxData[8] + (unsigned short)(ucBtmRxData[9]<<8);
             CloudRun_Init_INFO.PlayGround = ucBtmRxData[10];
             
-            usSetTimeMin = (ucBtmRxData[5]+(256*ucBtmRxData[6]))/60;
-            ucSetAge = ucBtmRxData[7];
-            usSetWeight = ucBtmRxData[8] + (256*ucBtmRxData[9]);
-            usLapDistance = ucBtmRxData[10] * 100;
+            usSetTimeMin  = (ucBtmRxData[5] + (256*ucBtmRxData[6]))/60;
+            ucSetAge      =  ucBtmRxData[7];
+            usSetWeight   =  ucBtmRxData[8] + (256*ucBtmRxData[9]);
+            usLapDistance =  ucBtmRxData[10] * 100;
             
-           
-            ucSubSystemMode = C_App_toRunGoVal;        // 321Go
-            System_Mode     =  C_APPModeVal;
+            System_Mode = Ready;    
         }
     }
 }
@@ -1139,41 +1091,16 @@ void F_BtmReply36Cmd(void){
     //06=＞處於Pause模式。
     //07=＞處於summary模式。
     //
-    //00 =＞NONE。
-    //XX => program
-    //255 => 不能操作  System_Mode =  C_APPModeVal
-    switch(System_Mode)
-    {
-      case Menu:
-        ucBtmTxBuf[3] = 0;
-        ucBtmTxBuf[4] = 0;
-        break;
-      case C_APPModeVal:
-        if(ucSubSystemMode == C_App_IdleVal)
-            ucBtmTxBuf[3] = 0;
-        if(ucSubSystemMode == C_App_SetupVal)
-            ucBtmTxBuf[3] = 1;
-        if(ucSubSystemMode == C_App_toRunGoVal)
-            ucBtmTxBuf[3] = 2;
-        if(ucSubSystemMode == C_App_WarmUpVal)
-            ucBtmTxBuf[3] = 3;
-        if(ucSubSystemMode == C_App_RunningVal)
-            ucBtmTxBuf[3] = 4;
-        if(ucSubSystemMode == C_App_CoolDownVal)
-            ucBtmTxBuf[3] = 5;
-        if(ucSubSystemMode == C_App_PauseVal)
-            ucBtmTxBuf[3] = 6;
-        if(ucSubSystemMode == C_App_StopVal)
-            ucBtmTxBuf[3] = 7;
-        
-        ucBtmTxBuf[4] = ucProgramIndex;                    
-        break;
-    }
+    
+    ucBtmTxBuf[3] = System_Mode;
+    ucBtmTxBuf[4] = ucProgramIndex; 
+    
+    
     ucBtmTxBuf[19] = ']';
     
     __HAL_UART_ENABLE_IT(&huart2, UART_IT_RXNE); //----------------
     HAL_UART_Transmit(&huart2,ucBtmTxBuf, BtmData,10);
-    
+
     
     IntoReadyMode_Process(); //r進入運動
     
@@ -1199,7 +1126,18 @@ void F_BtmRead37Cmd(void){
     ucAppErrflag = 0;
     ucCmdPage = ucBtmRxData[2];
     
-    Btm_Task_Adder(C_37Val);
+   /* if(CloudRun_Init_INFO.Stage%16 != 0){
+        if(ucCmdPage == CloudRun_Init_INFO.Stage/16){
+            Btm_Task_Adder(C_37Val);
+        }
+    }else if(CloudRun_Init_INFO.Stage%16 == 0){  //如果是16的倍數就 Page 要-1
+        if(ucCmdPage == CloudRun_Init_INFO.Stage/16 - 1){
+            Btm_Task_Adder(C_37Val);
+        }
+    }*/
+    
+  
+
     
     switch(ucAppTypeMode){
         
@@ -1207,13 +1145,7 @@ void F_BtmRead37Cmd(void){
         // 一般模式不接受APP的Profile
         break;
       case App:     //ALA Fitness
-        if(ucCmdPage < 2){         // 限制<32筆資料(20)
-            temp1 = 16* ucCmdPage;
-            for(uci = 0 ; uci < 16; uci++){
-                F_BtmGetSpd(0,temp1+uci,ucBtmRxData[uci+3]);
-                ucAppSPDBuffer[temp1+uci] = ucSPDBuffer[temp1+uci];
-            }
-        }
+        //暫時不支援
         break;
       case Cloud_Run:   //雲跑
         // ucAppTypeMode = 2
@@ -1221,12 +1153,13 @@ void F_BtmRead37Cmd(void){
         break;
         
       case void_Run:   //虛跑
+      case Train_Run_Dist:  //訓練(距離)
+      case Train_Run_Time:  //訓練(時間)
         if(ucCmdPage < ucAppDataPage){        // 限制<432筆資料(420)
-            
             temp1 = 16 * ucCmdPage;
-            
             for(uci = 0 ;uci < 16;uci++){
                 F_BtmGetSpd( 0 ,temp1 + uci ,ucBtmRxData[uci+3]);
+                CloudRun_Init_INFO.CloudRun_Spd_Buffer[temp1 + uci] = ucBtmRxData[uci+3];
             }
 
 #if AppErrChk
@@ -1237,12 +1170,13 @@ void F_BtmRead37Cmd(void){
         break;
     }
     
+    
+    F_BtmReplyCmd(0x37);
+    
 }
 //-------------------------------------------0x37 End-----------------------------------------------------------
 
 //-------------------------------------------0x38  存揚升  table   Start-----------------------------------------------------------
-unsigned char ucAppINCBuffer[432];
-unsigned char ucTargetIncline;
 
 void F_BtmRead38Cmd(void){
     
@@ -1251,7 +1185,19 @@ void F_BtmRead38Cmd(void){
   
   ucAppErrflag = 0;
   ucCmdPage = ucBtmRxData[2];
-  Btm_Task_Adder(C_38Val);
+  //
+ 
+  /*
+  if(CloudRun_Init_INFO.Stage%16 != 0){
+      if(ucCmdPage == CloudRun_Init_INFO.Stage/16){
+          Btm_Task_Adder(C_38Val);
+      }
+  }else if(CloudRun_Init_INFO.Stage%16 == 0){  //如果是16的倍數就 Page 要-1
+      if(ucCmdPage == CloudRun_Init_INFO.Stage/16 - 1){
+          Btm_Task_Adder(C_38Val);
+      }
+  }*/
+  
   
   
   switch(ucAppTypeMode)
@@ -1260,39 +1206,22 @@ void F_BtmRead38Cmd(void){
       // 一般模式不接受APP的Profile
       break;
     case App:   //ALA Fitness
-      if(ucCmdPage < 2){   // 限制<32筆資料
-          temp1 = 16*ucCmdPage;
-          for(uci = 0 ;uci < 16;uci++){
-              ucINCBuffer[temp1 + uci] = ucBtmRxData[uci+3];
-              ucAppINCBuffer[temp1 + uci] = ucBtmRxData[uci+3];
-          }
-          if(ucCmdPage == 0){
-              ucTargetIncline =  ucBtmRxData[3];
-          }
-      }
+      //暫時不支援
       break;
     case Cloud_Run:   //雲跑
     case void_Run:    //虛跑
-      
+    case Train_Run_Dist:  //訓練(距離)
+    case Train_Run_Time:  //訓練(時間)
       if(ucCmdPage < ucAppDataPage){        // 限制<432筆資料
           temp1 = 16*ucCmdPage;
           for(uci = 0 ;uci < 16;uci++){
-              if(ucBtmRxData[uci+3] <= Machine_Data.System_INCLINE_Max){
-                  
-                  ucAppINCBuffer[temp1 + uci] = ucBtmRxData[uci+3];
+              if(ucBtmRxData[uci+3] <= Machine_Data.System_INCLINE_Max){ 
                   CloudRun_Init_INFO.CloudRun_Inc_Buffer[temp1 + uci] = ucBtmRxData[uci+3];
-                      
               }else{
-                  
-                  ucAppINCBuffer[temp1 + uci] = 0;
                   CloudRun_Init_INFO.CloudRun_Inc_Buffer[temp1 + uci] = 0;
               }
           }
-          
-          
-          if(ucCmdPage == 0){
-              ucTargetIncline =  ucBtmRxData[3];
-          }
+
 
 #if AppErrChk
       }else{
@@ -1301,6 +1230,8 @@ void F_BtmRead38Cmd(void){
       }
       break;
   }
+  
+  F_BtmReplyCmd(0x38);
 }
 
 //---------------------------0x38 END----------------------------------------------
@@ -1316,8 +1247,6 @@ unsigned long          ulAltitude;
 
 
 unsigned short  usSegmentNumber;
-unsigned char   ucTargetSpeed;
-unsigned char   ucTargetIncline;
 
 Cmd_39_outData_Def  Cloud_0x39_Info;
 
@@ -1326,7 +1255,6 @@ void F_BtmReply39Cmd(void){
     
     
     //__HAL_UART_DISABLE_IT(&huart2, UART_IT_RXNE);
-    
    //__HAL_UART_DISABLE_IT(&huart2, UART_IT_TXE);
     
     unsigned char uci;
@@ -1338,37 +1266,21 @@ void F_BtmReply39Cmd(void){
     ucBtmTxBuf[1] = 0x39;
     ucBtmTxBuf[2] = ucCmdPage;
     //---------------
-    if((ucSubSystemMode == C_App_IdleVal) || (System_Mode == Menu)  )
-        ucBtmTxBuf[3] = 0;
-    if((ucSubSystemMode == C_App_SetupVal) || (System_Mode == Program_Setting) )
-        ucBtmTxBuf[3] = 1;
-    if(ucSubSystemMode == C_App_toRunGoVal || (System_Mode == Ready))
-        ucBtmTxBuf[3] = 2;
-    if((ucSubSystemMode == C_App_WarmUpVal)  || (System_Mode == WarmUp))
-        ucBtmTxBuf[3] = 3;
-    if((ucSubSystemMode == C_App_RunningVal) || (System_Mode == Workout))
-        ucBtmTxBuf[3] = 4;
-    if((ucSubSystemMode == C_App_CoolDownVal) || (System_Mode == CooolDown))
-        ucBtmTxBuf[3] = 5;
-    if((ucSubSystemMode == C_App_PauseVal)  || (System_Mode == Paused))
-        ucBtmTxBuf[3] = 6;
-    if((ucSubSystemMode == C_App_StopVal) || (System_Mode == Summary))
-        ucBtmTxBuf[3] = 7;
+
     
+    ucBtmTxBuf[3] = System_Mode;
     
-    Cloud_0x39_Info.c_System_Mode = ucSubSystemMode;
-    
+    Cloud_0x39_Info.c_System_Mode = System_Mode;
     
     //--------------- 時間 ------------------------
-    if(ucSubSystemMode == C_App_WarmUpVal){
-        
+    if(System_Mode == WarmUp){ 
         ucBtmTxBuf[4] = WarmUp_3_Minute_Cnt%256;
         ucBtmTxBuf[5] = WarmUp_3_Minute_Cnt/256;
         
         Cloud_0x39_Info.c_Times = WarmUp_3_Minute_Cnt;
         
     }else{
-        if(ucSubSystemMode == C_App_CoolDownVal){
+        if(System_Mode == CooolDown){     
             ucBtmTxBuf[4] = CoolDown_3_Minute_Cnt%256;
             ucBtmTxBuf[5] = CoolDown_3_Minute_Cnt/256;
             
@@ -1436,15 +1348,14 @@ void F_BtmReply39Cmd(void){
        SpeedTmp = (System_SPEED * 16)/10;
     }
     
-    ucBtmTxBuf[9] = SpeedTmp;   //ucTargetSpeed
+    ucBtmTxBuf[9] = SpeedTmp;   
     Cloud_0x39_Info.c_Speed = SpeedTmp;
     //------------------------------------------------------------
     
     
     //----------- Incline ---------------
-    //ucBtmTxBuf[10] = ucTargetIncline * 5;
-    ucBtmTxBuf[10] = System_INCLINE;  //ucTargetIncline
-    Cloud_0x39_Info.c_Incline = System_INCLINE;
+    ucBtmTxBuf[10] = System_INCLINE/5;  //ucTargetIncline
+    Cloud_0x39_Info.c_Incline = System_INCLINE/5;
     //--------------------------------------
     
     if(ucCmdPage == 0){
@@ -1556,8 +1467,9 @@ void F_BtmReply44Cmd(void){
     ucBtmTxBuf[15] = ucProductionSerialNumber[12];  // Serial Number
     ucBtmTxBuf[16] = ucProductionSerialNumber[13];  // Serial Number
     
-    ucBtmTxBuf[17] = '0'; 
-    ucBtmTxBuf[18] = '1';
+    //SN  Tool連線才能在 Serial 看的到這兩碼    這兩碼亂丟 IOS 雲跑連線會閃退
+    ucBtmTxBuf[17] = '0';  
+    ucBtmTxBuf[18] = '0'; 
     
     ucBtmTxBuf[19] = ']';
     
@@ -1685,16 +1597,16 @@ void F_BtmReply47Cmd(void){
     ucBtmTxBuf[1] = 0x47;
     ucBtmTxBuf[2] = ucCmdPage;
     
-    if(System_Mode == C_Sys_OTAModeVal)
+    if(System_Mode == Sys_OTA_Mode)
         ucBtmTxBuf[3] = 0x01;         // OTA Mode
     else
         ucBtmTxBuf[3] = 0x00;         // Not OTA
     
     //Console版本
-    ucBtmTxBuf[4] = EepromVer_3%10;       // Ver Low        Console version L
-    ucBtmTxBuf[5] = EepromVer_3/10;       // Ver High        Console version H
+    ucBtmTxBuf[4] = System_Version[2]-'0';   //EepromVer_3%10;       // Ver Low        Console version L
+    ucBtmTxBuf[5] = System_Version[1]-'0';   //EepromVer_3/10;       // Ver High        Console version H
 
-    ucBtmTxBuf[6] = EepromVer_4;          // Axx         Console modify
+    ucBtmTxBuf[6] = (Modify_Version[1]-'0')*10 + (Modify_Version[2]-'0');  //EepromVer_4 // Axx   Console modify
         
     //RF版本
     ucBtmTxBuf[7] = ucRFVersion[0];       // RF L    BLE version L
@@ -1732,23 +1644,13 @@ void F_BtmRead47Cmd(void){
 void F_BtmRead50Cmd(void){
     
 
-    if((System_Mode == Menu) || (System_Mode == C_APPModeVal) ){ //只有在 Menu Idle Mode才能進入更新
+    if(System_Mode == Idle ){ //只有在 Idle Idle Mode才能進入更新
         
         //畫面清空 顯示OTA
         Turn_OFF_All_Segment();
         Turn_OFF_All_LEDMatrix();
-       
-
-        //System_Mode = C_Sys_OTAModeVal;
-        //HAL_GPIO_WritePin(GPIOA,GPIO_PIN_0,GPIO_PIN_RESET);
-        //Btm_Task_Adder(C_50Val);
-        
-        //Btm_Task_Adder(C_47Val);     //告知APP 跑步機進入OTA模式
-        
         
         Flash_Write_OTA_Mode();
-        
-  
         HAL_NVIC_SystemReset();
         
     }else{ 
@@ -1761,7 +1663,7 @@ void F_BtmRead50Cmd(void){
 void F_BtmReply50Cmd(void){
     
     
-    if(System_Mode != C_Sys_OTAModeVal){
+    if(System_Mode != Sys_OTA_Mode){
         memset(ucBtmTxBuf,0x00,20);
         
         ucBtmTxBuf[0] = '[';
@@ -1814,11 +1716,21 @@ void Config_FTMS_Data_Flag(FTMS_Machine_Type_Def Type){
         }FTMS_Treadmill_Flag_Def;
         
         
-        //-----------------------------------設定 要廣播的  運動資料-------------------------------------------------------------
+#if FTMS_Test
+           //-----------------------------------設定 要廣播的  運動資料-------------------------------------------------------------
         FTMS_Data_Flag =  heart_rate_present | treadmill_instantaneouse_pace_present | treadmill_average_pace_present | 
                           elevation_gain_present | inclination_and_ramp_angle_present | metalbolic_equivalent_present |
                           force_belt_power_output_present | total_distance_present | elapsed_time_present | remaining_time_present;
-                        
+                   
+#else
+           //-----------------------------------設定 要廣播的  運動資料-------------------------------------------------------------
+        FTMS_Data_Flag =  heart_rate_present | treadmill_instantaneouse_pace_present | treadmill_average_pace_present | 
+                          elevation_gain_present | inclination_and_ramp_angle_present | metalbolic_equivalent_present |
+                          force_belt_power_output_present | total_distance_present | elapsed_time_present | remaining_time_present;
+                   
+#endif
+        
+          
      
           // expended_energy_present  
         
@@ -1961,6 +1873,8 @@ void FTMS_Feature_Config(FTMS_Machine_Type_Def Type){
     
     if(Type == treadmill){
     
+
+#if FTMS_Test
         //---------------------------- FTMS  設定 Treadmill  Feature -------------------------------------------------- 
         FTMS_Feature = heart_rate_support | pace_support | elevation_gain_support | inclination_support  |
                        metalbolic_equivalent_support | forceOnbelt_and_powerOutput_support | total_distance_support |
@@ -1972,7 +1886,24 @@ void FTMS_Feature_Config(FTMS_Machine_Type_Def Type){
         //---------------------------- FTMS  設定 Treadmill Control Feature-------------------------------------------------- 
         FTMS_Control = inclination_target_setting_support | heart_rate_target_setting_support |
              target_expended_energy_configuration_support | target_step_number_configuartion_support |
-             target_distance_configuration_support        | target_training_time_configuration_support;
+             target_distance_configuration_support        | target_training_time_configuration_support;    
+        
+#else
+        
+        //---------------------------- FTMS  設定 Treadmill  Feature -------------------------------------------------- 
+        FTMS_Feature = heart_rate_support | pace_support | elevation_gain_support | inclination_support  |
+                       metalbolic_equivalent_support | forceOnbelt_and_powerOutput_support | total_distance_support |
+                       elapsed_time_support | remaining_time_support | expended_energy_support | expended_energy_support;
+            
+        //  expended_energy_support (只要丟卡路里資料出來  Kinomap就收不到心跳= =)
+        //average_speed_support                     
+         
+        //---------------------------- FTMS  設定 Treadmill Control Feature-------------------------------------------------- 
+        FTMS_Control = inclination_target_setting_support | heart_rate_target_setting_support |
+             target_expended_energy_configuration_support | target_step_number_configuartion_support |
+             target_distance_configuration_support        | target_training_time_configuration_support;      
+#endif
+
         
         
     }else if(Type == indoor_bike){
@@ -2180,7 +2111,7 @@ void IndooeBike_B1(){
         if(usNowHeartRate){
             ucBtmTxBuf[9] = usNowHeartRate;  //sim_HeartRate;
         }else{
-            ucBtmTxBuf[9] = sim_HeartRate;    //0x01;
+            ucBtmTxBuf[9] = 0;    //0x01;
         }
         //-----------------------------------------------------
 
@@ -2231,6 +2162,121 @@ short sim_Power_Output;
 unsigned short sim_Remain_Time;   //(us)
 unsigned short sim_Elapse_Time;   //(us)
 
+
+#if FTMS_Test
+
+void Test_Data_Brocast(){
+    
+    if(PageSwitch == 0){
+        
+        
+        //------SPEED--------
+        //Kinomap  Indoor Bike  吃這筆 i-speed ------------------------------------
+        ucBtmTxBuf[3] =  0XC1;       // instantaeous speed L      
+        ucBtmTxBuf[4] =  0XC1;  // instantaeous speed H      
+        //-------------------------------------------------------------------------
+        
+        //------INCLINE---------------------------------------------------
+        //current inclination(當前的傾斜角度) (0.1 percent)
+        ucBtmTxBuf[10] =  0XC4;  // sim_incline;       // inclination (sign)L
+        ucBtmTxBuf[11] =  0XC4;  // inclination (sign)H
+        //current setting of the ramp angle (斜坡角度當前設置) (0.1 degree)
+        
+        //-------RAMP-----------------------------------------
+        ucBtmTxBuf[12] = 0XC4;          // ramp and angle set (sign)L
+        ucBtmTxBuf[13] = 0XC4;     // ramp and angle set (sign)H
+        //-----------------------------------------------------------
+        
+        //-----Elevation Gain------------------------------------------
+        //(正高度增益)
+        ucBtmTxBuf[14] = 0XC5;     // positive elevation gain L 
+        ucBtmTxBuf[15] = 0XC5;     // positive elevation gain H
+        //(負仰角增益)
+        ucBtmTxBuf[16] =  0XC5;          // negative elevation gain L 
+        ucBtmTxBuf[17] =  0XC5;     // negative elevation gain H        
+        //--------------------------------------------------------
+       
+        //----Instantaneous Pace-----------------------------------------------------------
+        ucBtmTxBuf[18] =  0XC6;  //Pace_Spd/60;  // treadmill instantaneous pace  // (瞬間步伐) (0.1km per minute)
+        //-------------------------------------------------------------------------------
+
+        //---Total Distance---------------------------------------------------------------------------------
+        uiDistance_1m = Program_Data.Distance/100;                  //  單位 1公尺
+        ucBtmTxBuf[7] = 0XC3;          //(unsigned char)(uiDistance_1m);          // total distance L     
+        ucBtmTxBuf[8] = 0XC3 ;    //(unsigned char)(uiDistance_1m >> 8) ;    // total distance M     
+        ucBtmTxBuf[9] = 0XC3;    //(unsigned char)(uiDistance_1m >> 16);    // total distance H  
+        //--------------------------------------------------------------------------------------------------
+   
+    }else if(PageSwitch == 1){
+        
+        //----Average Pace--------------------------------------------------------------------
+        ucBtmTxBuf[3] = 0XC7;  ///(600*usAvgCount)/uiAvgSpd;  // treadmill average pace // (平均步伐) (0.1km per minute)
+        //------------------------------------------------------------------------------------
+
+        //------Calorie---------------------------------------------------------------------------
+        uiCalories_1kcal = Program_Data.Calories/100000;
+        ucBtmTxBuf[4] = 0XC8;   //(unsigned char)uiCalories_1kcal;           // total energy L
+        ucBtmTxBuf[5] = 0XC8;   //(unsigned char)(uiCalories_1kcal>>8);      // total energy H
+        // (0xFFFF => Data Not Available)( 1 kilo calorie)
+        //---------------------------------------------------------------------------------------
+        
+        //-----Calorie/Hour ----------------------------------------------------------------------------------------
+        ucBtmTxBuf[6] = 0XC8;       //(unsigned char)Program_Data.Calories_HR;          // energy per hour L  (unsigned char)sim_Cal;     
+        ucBtmTxBuf[7] = 0XC8;  //(unsigned char)(Program_Data.Calories_HR>>8);     // energy per hour H  (unsigned char)(sim_Cal>>8);
+        // (0xFF => Data Not Available)( 1 kilo calorie)
+        //---------------------------------------------------------------------------------------------------
+        
+        //-----Calorie/Minute --------------------------------
+        ucBtmTxBuf[8] = 0XC8;   //  Program_Data.Calories_HR/60// energy per minute
+        //----------------------------------------------------
+
+         //---- Heart Rate -------------------------------------
+        if(usNowHeartRate){
+            ucBtmTxBuf[9] = 0XC9;  //sim_HeartRate;
+        }else{
+            ucBtmTxBuf[9] = 0XC9;    //0x01;
+        }
+        //-----------------------------------------------------
+        
+        //----Metalolic Equivalent --------------------------------------------------------------------
+        ucBtmTxBuf[10] = 0XCA;  //usMET  // metalbolic equivalent  // ( 0.1 metalbolic equivalent)
+        //----------------------------------------------------------------------------------------------
+       
+        //---Elapsed Time------------------------------------------------------------ 
+        ucBtmTxBuf[11] = 0XCB;   //elapsed time L
+        ucBtmTxBuf[12] = 0XCB;   //elapsed time H 
+        //--------------------------------------------------------------------------
+
+        //---Remaining Time------------------------------------------------------------ 
+        ucBtmTxBuf[13] = 0XCC;      //remaining time L
+        ucBtmTxBuf[14] = 0XCC;      //remaining time H
+        //--------------------------------------------------------------------------
+        
+        //----Force on Belt-------------------------------------------------------------------------------------------------
+        // (0x7FFF => Data Not Available)
+        ucBtmTxBuf[15] = 0XCD;   //0xFF;   // force on belt(sign)L   // (使用者步伐對跑帶加減速造成的力)(1 newton)
+        ucBtmTxBuf[16] = 0XCD;   //0x7F;   // force on belt(sign)H
+       //-----------------------------------------------------------------------------------------------------------
+        
+        //---Power Output-------------------------------------------------------------------------------------------
+        // (0x7FFF => Data Not Available)
+        ucBtmTxBuf[17] = 0XCD;  //0xFF;   // power output(sign)L     // (使用者步伐對跑步機加減速造成的力)(1 watt)
+        ucBtmTxBuf[18] = 0XCD;  //0x7F;   // power output(sign)H
+        //-------------------------------------------------------------------------------------------------------------
+        
+        
+        //----------------------------------------------時間資料---------------------------------------------
+
+    }else if(PageSwitch == 2){
+       
+    }else if(PageSwitch == 3){
+
+    } 
+    
+}
+
+#endif
+
 void Treadmill_B1(){
 
     memset(ucBtmTxBuf,0x00,20);
@@ -2247,6 +2293,10 @@ void Treadmill_B1(){
     }
     
     ucBtmTxBuf[2] =   PageSwitch ;   
+    
+#if FTMS_Test
+    Test_Data_Brocast();
+#else
     
     if(PageSwitch == 0){
         
@@ -2278,54 +2328,57 @@ void Treadmill_B1(){
         //--------------------------------------------------------
        
         //----Instantaneous Pace-----------------------------------------------------------
-        ucBtmTxBuf[18] =  sim_I_Pace;  //Pace_Spd/60;  // treadmill instantaneous pace  // (瞬間步伐) (0.1km per minute)
+        ucBtmTxBuf[18] =  System_SPEED/60;  //sim_I_Pace;  // treadmill instantaneous pace  // (瞬間步伐) (0.1km per minute)
         //-------------------------------------------------------------------------------
 
         //---Total Distance---------------------------------------------------------------------------------
-        uiDistance_1m = Program_Data.Distance/100;                  //  單位 1公尺
-        ucBtmTxBuf[7] = (unsigned char)(sim_Distance_1m );          //(unsigned char)(uiDistance_1m);          // total distance L     
-        ucBtmTxBuf[8] = (unsigned char)(sim_Distance_1m >> 8) ;    //(unsigned char)(uiDistance_1m >> 8) ;    // total distance M     
-        ucBtmTxBuf[9] = (unsigned char)(sim_Distance_1m >> 16);    //(unsigned char)(uiDistance_1m >> 16);    // total distance H  
+        uiDistance_1m = Program_Data.Distance/100;             //  單位 1公尺                
+        ucBtmTxBuf[7] = (unsigned char)(uiDistance_1m);        // total distance L    (unsigned char)(sim_Distance_1m );     
+        ucBtmTxBuf[8] = (unsigned char)(uiDistance_1m >> 8) ;  // total distance M     (unsigned char)(sim_Distance_1m >> 8) ;
+        ucBtmTxBuf[9] = (unsigned char)(uiDistance_1m >> 16);  // total distance H     (unsigned char)(sim_Distance_1m >> 16);
         //--------------------------------------------------------------------------------------------------
    
     }else if(PageSwitch == 1){
         
         //----Average Pace--------------------------------------------------------------------
-        ucBtmTxBuf[3] = sim_A_Pace;  ///(600*usAvgCount)/uiAvgSpd;  // treadmill average pace // (平均步伐) (0.1km per minute)
+        ucBtmTxBuf[3] = System_SPEED/60;  ///(600*usAvgCount)/uiAvgSpd;  // treadmill average pace // (平均步伐) (0.1km per minute)
         //------------------------------------------------------------------------------------
 
-        //------Calorie---------------------------------------------------------------------------
-        uiCalories_1kcal = Program_Data.Calories/100000;
-        ucBtmTxBuf[4] = (unsigned char)sim_Cal;      //(unsigned char)uiCalories_1kcal;           // total energy L
-        ucBtmTxBuf[5] = (unsigned char)(sim_Cal>>8); //(unsigned char)(uiCalories_1kcal>>8);      // total energy H
+        //------Total Calorie---------------------------------------------------------------------------
+        uiCalories_1kcal = Program_Data.Calories/1000;
+        ucBtmTxBuf[4] = (unsigned char)uiCalories_1kcal;      //(unsigned char)sim_Cal;          // total energy L
+        ucBtmTxBuf[5] = (unsigned char)(uiCalories_1kcal>>8); //(unsigned char)(sim_Cal>>8);     // total energy H
         // (0xFFFF => Data Not Available)( 1 kilo calorie)
         //---------------------------------------------------------------------------------------
         
         //-----Calorie/Hour ----------------------------------------------------------------------------------------
-        ucBtmTxBuf[6] = (unsigned char)sim_Cal_HR;       //(unsigned char)Program_Data.Calories_HR;          // energy per hour L  (unsigned char)sim_Cal;     
-        ucBtmTxBuf[7] = (unsigned char)(sim_Cal_HR>>8);  //(unsigned char)(Program_Data.Calories_HR>>8);     // energy per hour H  (unsigned char)(sim_Cal>>8);
+        ucBtmTxBuf[6] = (unsigned char)Program_Data.Calories_HR;       //(unsigned char)sim_Cal_HR;        // energy per hour L 
+        ucBtmTxBuf[7] = (unsigned char)(Program_Data.Calories_HR>>8);  //(unsigned char)(sim_Cal_HR>>8);   // energy per hour H 
         // (0xFF => Data Not Available)( 1 kilo calorie)
         //---------------------------------------------------------------------------------------------------
         
         //-----Calorie/Minute --------------------------------
-        ucBtmTxBuf[8] = (unsigned char)sim_Cal_MI;   //  Program_Data.Calories_HR/60// energy per minute
+        ucBtmTxBuf[8] = Program_Data.Calories_HR/60;   // (unsigned char)sim_Cal_MI // energy per minute
         //----------------------------------------------------
 
          //---- Heart Rate -------------------------------------
         if(usNowHeartRate){
             ucBtmTxBuf[9] = usNowHeartRate;  //sim_HeartRate;
         }else{
-            ucBtmTxBuf[9] = sim_HeartRate;    //0x01;
+            ucBtmTxBuf[9] = 0;    //0x01;
         }
         //-----------------------------------------------------
         
         //----Metalolic Equivalent --------------------------------------------------------------------
-        ucBtmTxBuf[10] = sim_Met_eq;  //usMET  // metalbolic equivalent  // ( 0.1 metalbolic equivalent)
+        ucBtmTxBuf[10] = usMET/10;  //sim_Met_eq   // metalbolic equivalent  // ( 0.1 metalbolic equivalent)
         //----------------------------------------------------------------------------------------------
        
         //---Elapsed Time------------------------------------------------------------ 
-        ucBtmTxBuf[11] = (unsigned char) sim_Elapse_Time;       //elapsed time L
-        ucBtmTxBuf[12] = (unsigned char)(sim_Elapse_Time>>8);   //elapsed time H 
+        //ucBtmTxBuf[11] = (unsigned char) sim_Elapse_Time;       //elapsed time L
+        //ucBtmTxBuf[12] = (unsigned char)(sim_Elapse_Time>>8);   //elapsed time H 
+        
+        ucBtmTxBuf[11] = (Program_Data.Goal_Time - Program_Data.Goal_Counter)%256;  // elapsed time L  流逝的時間
+        ucBtmTxBuf[12] = (Program_Data.Goal_Time - Program_Data.Goal_Counter)/256;  // elapsed time H
         //--------------------------------------------------------------------------
 
         //---Remaining Time------------------------------------------------------------ 
@@ -2361,11 +2414,11 @@ void Treadmill_B1(){
             //Cloud_0x39_Info.c_Times = Program_Data.Goal_Counter;
         }
         // (1 second)
-        if(ucSubSystemMode == C_App_WarmUpVal){
+        if(System_Mode == WarmUp){
             ucBtmTxBuf[11] =(180 - WarmUp_3_Minute_Cnt);    // elapsed time L
             ucBtmTxBuf[12] = 0;                             // elapsed time H
         }else{
-            if(ucSubSystemMode == C_App_CoolDownVal){
+            if(System_Mode == CooolDown){
                 ucBtmTxBuf[11] = (180-CoolDown_3_Minute_Cnt);     // elapsed time L
                 ucBtmTxBuf[12] = 0;                               // elapsed time H
             }else{
@@ -2374,11 +2427,11 @@ void Treadmill_B1(){
             }
         }
         //---------------
-        if(ucSubSystemMode == C_App_WarmUpVal){
+        if(System_Mode == WarmUp){
             ucBtmTxBuf[13] =  WarmUp_3_Minute_Cnt;   // remaining time L
             ucBtmTxBuf[14] = 0;                             // remaining time H
         }else{
-            if(ucSubSystemMode == C_App_CoolDownVal){
+            if(System_Mode == CooolDown){
                 ucBtmTxBuf[13] = CoolDown_3_Minute_Cnt;       // remaining time L
                 ucBtmTxBuf[14] = 0;                           // remaining time H
             }else{
@@ -2401,6 +2454,7 @@ void Treadmill_B1(){
         ucBtmTxBuf[18] = 0x00;     //Reserve
         */
     }
+#endif
     
     ucBtmTxBuf[19] = ']';
     
@@ -2508,11 +2562,11 @@ void OLDTreadmill_B1__(){
         
         
         // (1 second)
-        if(ucSubSystemMode == C_App_WarmUpVal){
+        if(System_Mode == WarmUp){
         ucBtmTxBuf[11] =(180 - WarmUp_3_Minute_Cnt);    // elapsed time L
         ucBtmTxBuf[12] = 0;                             // elapsed time H
     }else{
-        if(ucSubSystemMode == C_App_CoolDownVal){
+        if(System_Mode == CooolDown){
         ucBtmTxBuf[11] = (180-CoolDown_3_Minute_Cnt);     // elapsed time L
         ucBtmTxBuf[12] = 0;                               // elapsed time H
     }else{
@@ -2521,11 +2575,11 @@ void OLDTreadmill_B1__(){
     }
     }
         //---------------
-        if(ucSubSystemMode == C_App_WarmUpVal){
+        if(System_Mode == WarmUp){
         ucBtmTxBuf[13] =  WarmUp_3_Minute_Cnt;   // remaining time L
         ucBtmTxBuf[14] = 0;                             // remaining time H
     }else{
-        if(ucSubSystemMode == C_App_CoolDownVal){
+        if(System_Mode == CooolDown){
         ucBtmTxBuf[13] = CoolDown_3_Minute_Cnt;       // remaining time L
         ucBtmTxBuf[14] = 0;                           // remaining time H
     }else{
@@ -2651,26 +2705,7 @@ void F_Btm_FTMS_B1_Read(void){
 
 //----------------------------------------0xB1 End --------------------------------------------------------
 
-typedef enum{
 
-    others = 0,
-    Idle   = 1, 
-    Warming_up = 2, 
-    Low_intensity_interval = 3,
-    High_intensity_interval = 4,
-    Recovery_interval = 5,
-    Isometric = 6,
-    Heart_rate_control = 7,
-    Fitness_test = 8,
-    Speed_outside_of_control_region_Low = 9,
-    Speed_outside_of_control_region_High = 10,
-    Cool_down = 11,
-    Watt_control = 12,
-    Manual_mode = 13,
-    Pre_workout = 14,
-    Post_workout = 15,
-
-}Training_status_Def;
 
 //----------------------------------------0xB2 Start --------------------------------------------------------
 
@@ -2857,7 +2892,7 @@ void F_Btm_FTMS_B2_Read(){
     }
     
     if(FTMS_OP_Code == start_or_resume){
-        if(System_Mode == Menu){
+        if(System_Mode == Idle){
             Quick_Start_Init();
             IntoReadyMode_Process();
         }
@@ -3044,49 +3079,44 @@ void Set_Spindown_StopPedaling(){
 
 
 //----------------------------------------0xB4 Start --------------------------------------------------------
-typedef enum{
-
-
-  ASLEEP   = 1,
-  READY    = 2,
-  IN_USE   = 3,
-  FINISHED = 4
-
-}FEC_State_Def;
 
 
 
+Training_status_Def  Training_status = IDLE;
+unsigned short minimum_speed;
+unsigned short maximum_speed;	
+unsigned short mimimum_increment_speed = 20;	
+unsigned short maximum_inclination;		
+unsigned short minimum_inclination;
+
+unsigned short minimum_increment_inclination = 5;	
+unsigned char  minimum_heart_rate  = 40;	
+unsigned char  maximum_heart_rate  = 240;	
+unsigned char  minimum_heart_rate_increment =1;
+
+unsigned short minimum_resistance_level = 0;		
+unsigned short maximum_resistance_level = 20;	
+unsigned short minimum_resistance_level_increment = 5;	
+unsigned short minimum_power = 0;	
+unsigned short maximum_power = 500;		
+unsigned short minimum_power_increment = 5;	
+
+unsigned char  console_status = 1;	
+unsigned char  cycle_length_for_FEC = 0;
+
+
+//--------0xB4 設定運動資料Range--------------------------
 void F_Btm_FEC_B4_SET_Data(unsigned char page){
 
 
+    minimum_speed = Machine_Data.System_SPEED_Min;
+    maximum_speed = Machine_Data.System_SPEED_Max;		
+    maximum_inclination = Machine_Data.System_INCLINE_Max;
+    minimum_inclination = Machine_Data.System_INCLINE_Min;
     
-    Training_status_Def  Training_status = Idle;
     
-    unsigned short minimum_speed = 0;
-    unsigned short maximum_speed = 180;	
-    unsigned short mimimum_increment_speed = 20;	
-    unsigned short maximum_inclination = 750;		
-    unsigned short minimum_inclination = 0;	
-    unsigned short minimum_increment_inclination = 5;	
-    unsigned char  minimum_heart_rate  = 40;	
-    unsigned char  maximum_heart_rate  = 240;	
-    unsigned char  minimum_heart_rate_increment =1;
+    FEC_State_Def FEC_State = READY; // IN_USE  READY
 
-    
-    unsigned short minimum_resistance_level = 0;		
-    unsigned short maximum_resistance_level = 20;	
-    unsigned short minimum_resistance_level_increment = 5;	
-    unsigned short minimum_power = 0;	
-    unsigned short maximum_power = 500;		
-    unsigned short minimum_power_increment = 5;	
-	
-    unsigned char  console_status = 1;	
-    unsigned char  cycle_length_for_FEC = 0;
- 
-    FEC_State_Def FEC_State = IN_USE; // IN_USE  READY
-    
-    
-    
     ucBtmTxBuf[0] = '[';
     ucBtmTxBuf[1] = 0xB4;
     ucBtmTxBuf[2] = page;
@@ -3146,80 +3176,74 @@ void F_Btm_FEC_B4_SET_Data(unsigned char page){
     }
     
     ucBtmTxBuf[19] = ']';
-    
-    
+
     __HAL_UART_ENABLE_IT(&huart2, UART_IT_RXNE); //----------------
     HAL_UART_Transmit(&huart2,ucBtmTxBuf, BtmData,10);
     
+}
+
+//-----
+void F_SetFEC_State(FEC_State_Def FEC_State){
+
+    ucBtmTxBuf[0] = '[';
+    ucBtmTxBuf[1] = 0xB4;
+    ucBtmTxBuf[2] = 1;
+    
+    ucBtmTxBuf[3] = (unsigned char)minimum_resistance_level;
+    ucBtmTxBuf[4] = (unsigned char)(minimum_resistance_level >> 8);
+    
+    ucBtmTxBuf[5] = (unsigned char)maximum_resistance_level;
+    ucBtmTxBuf[6] = (unsigned char)(maximum_resistance_level >> 8);
+    
+    ucBtmTxBuf[7] = (unsigned char)minimum_resistance_level_increment;
+    ucBtmTxBuf[8] = (unsigned char)(minimum_resistance_level_increment >> 8);
+    
+    ucBtmTxBuf[9]  = (unsigned char)minimum_power;
+    ucBtmTxBuf[10] = (unsigned char)(minimum_power >> 8);
+    
+    ucBtmTxBuf[11] = (unsigned char)maximum_power;
+    ucBtmTxBuf[12] = (unsigned char)(maximum_power >> 8);
+    
+    ucBtmTxBuf[13] = (unsigned char)minimum_power_increment;
+    ucBtmTxBuf[14] = (unsigned char)(minimum_power_increment >> 8);
+    
+    ucBtmTxBuf[15] = console_status;
+    
+    ucBtmTxBuf[16] = cycle_length_for_FEC;
+    ucBtmTxBuf[17] = (unsigned char)FEC_State;
+    ucBtmTxBuf[18] = 0;  
+    
+    ucBtmTxBuf[19] = ']';
+    
+    __HAL_UART_ENABLE_IT(&huart2, UART_IT_RXNE); //----------------
+    HAL_UART_Transmit(&huart2,ucBtmTxBuf, BtmData,10);
 }
 
 //----------------------------------------0xB4 END --------------------------------------------------------
 
 
 //----------------------------------------0xB5 Start --------------------------------------------------------
-
-//SN0 ~ SN13 
-char SN_Array[14];
-
-
-
-   // ={ 1,2,3,0,0,0,0,0,0,0,0,0,0,0};
-
-
 void F_Btm_FEC_B5_SET_ANT_ID(void){
     
     unsigned char check_sum;
     
-    
-    SN_Array[0] = 'B';   //年   
-    SN_Array[1] = '5';   //週H
-    SN_Array[2] = '2';   //週L           ANT ID: 5
-    
-    SN_Array[3] = 'T';    //型號
-    SN_Array[4] = '6';    //型號
-    SN_Array[5] = '0';    //型號
-    SN_Array[6] = '0';    //型號
-    SN_Array[7] = '0';    //型號
-        
-    //---------新SN2 DEF---------2碼 廠商ID   4碼流水碼-----------------
-    
-    SN_Array[8]  = '0';   //廠商識別
-    SN_Array[9]  = '0';   //廠商識別
-    
-    SN_Array[10] = '0';   //流水碼
-    SN_Array[11] = '0';   //流水碼
-    SN_Array[12] = '8';   //流水碼
-    SN_Array[13] = '7';   //流水碼
-      
-
-    //---------舊SN1  DEF------ 5 碼流水碼 ------------------
-    /*
-    SN_Array[8]  = '0';   //流水碼
-    SN_Array[9]  = '0';   //流水碼 
-    
-    SN_Array[10] = '0';   //流水碼   ANT ID: 4
-    SN_Array[11] = '1';   //流水碼   ANT ID: 3
-    SN_Array[12] = '8';   //流水碼   ANT ID: 2
-    SN_Array[13] = '7';   //流水碼   ANT ID: 1
-    */
-    
     ucBtmTxBuf[0] = '[';
     ucBtmTxBuf[1] = 0xB5;
     
-    ucBtmTxBuf[2] =  SN_Array[0];
-    ucBtmTxBuf[3] =  SN_Array[1];
-    ucBtmTxBuf[4] =  SN_Array[2];     
-    ucBtmTxBuf[5] =  SN_Array[3];
-    ucBtmTxBuf[6] =  SN_Array[4];
-    ucBtmTxBuf[7] =  SN_Array[5];
-    ucBtmTxBuf[8] =  SN_Array[6];
-    ucBtmTxBuf[9] =  SN_Array[7];
-    ucBtmTxBuf[10] = SN_Array[8];
-    ucBtmTxBuf[11] = SN_Array[9];     
-    ucBtmTxBuf[12] = SN_Array[10];    
-    ucBtmTxBuf[13] = SN_Array[11];    
-    ucBtmTxBuf[14] = SN_Array[12];    
-    ucBtmTxBuf[15] = SN_Array[13];    
+    ucBtmTxBuf[2] =  ucProductionSerialNumber[0];
+    ucBtmTxBuf[3] =  ucProductionSerialNumber[1];
+    ucBtmTxBuf[4] =  ucProductionSerialNumber[2];     
+    ucBtmTxBuf[5] =  ucProductionSerialNumber[3];
+    ucBtmTxBuf[6] =  ucProductionSerialNumber[4];
+    ucBtmTxBuf[7] =  ucProductionSerialNumber[5];
+    ucBtmTxBuf[8] =  ucProductionSerialNumber[6];
+    ucBtmTxBuf[9] =  ucProductionSerialNumber[7];
+    ucBtmTxBuf[10] = ucProductionSerialNumber[8];
+    ucBtmTxBuf[11] = ucProductionSerialNumber[9];     
+    ucBtmTxBuf[12] = ucProductionSerialNumber[10];    
+    ucBtmTxBuf[13] = ucProductionSerialNumber[11];    
+    ucBtmTxBuf[14] = ucProductionSerialNumber[12];    
+    ucBtmTxBuf[15] = ucProductionSerialNumber[13];    
     ucBtmTxBuf[16] = 0;
     ucBtmTxBuf[17] = 0;
     
@@ -3295,7 +3319,10 @@ void Btm_Recive(){
 
         
         if(ucBtmRxData[1] ==0xF1){  //boot ok 
-            btm_is_ready = 1;          
+            btm_is_ready = 1;      
+            ucRFVersion[0] = ucBtmRxData[2];       // RF L    BLE version L
+            ucRFVersion[1] = ucBtmRxData[3];       // RF M    BLE version M
+            ucRFVersion[2] = ucBtmRxData[4];       // RF H    BLE version H
         }
         
         //-----------------------------------------------------心跳裝置------------------------

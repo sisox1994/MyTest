@@ -72,6 +72,9 @@ void Time_Change_Process_Ez_INCLINE();
 void EZ_MAX_INC_Change_Process();
 
 
+void Template_To_Table_96(unsigned char* Template_Table);
+void Table_96_To_BarArray();
+void Table_96_To_BarArray_Mapping();
 
 //   Manual    Initial   Function
 extern unsigned int   NowPeriodLimitValue_Temp;
@@ -120,5 +123,6 @@ void User_2_Init();
 
 //    ¶³¶]  Initial   Function
 void Cloud_Run_Program_Init();
-
+void Train_Dist_Run_Program_Init();
+void Train_Time_Run_Program_Init();
 #endif

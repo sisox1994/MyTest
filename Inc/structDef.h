@@ -13,6 +13,21 @@ typedef enum{
 
 typedef enum{
 
+    DIST    = 0,
+    ALTI    = 1
+    
+}Dist_Display_Def;
+
+typedef enum{
+
+    HR    = 0,
+    METS  = 1
+    
+}HeartRate_Display_Def;
+
+
+typedef enum{
+
     Cal_    = 0,
     Cal_HR  = 1
     
@@ -73,12 +88,14 @@ typedef enum{
     Distance_Goal_5K    = 33,
     Distance_Goal_10K   = 34,
 
-    Custom_1             = 35,
-    Custom_2             = 36,
-    User_1               = 37,
-    User_2               = 38,
+    Custom_1             = 41,
+    Custom_2             = 42,
+    User_1               = 43,
+    User_2               = 44,
         
-    APP_Cloud_Run        = 39
+    APP_Cloud_Run        = 45,
+    APP_Train_Dist_Run   = 46,
+    APP_Train_Time_Run   = 47,
 
 
 }Program_Type_Def;
@@ -140,7 +157,7 @@ typedef struct{
     unsigned int   Distance;
     unsigned int   Distance_Goal;
     
-    unsigned char  Age;
+    unsigned short  Age;
     unsigned short Weight;
     
     Program_Type_Def Like_Program;
@@ -174,11 +191,17 @@ typedef struct{
     
     unsigned char  BarArray_Display[32];     //顯示出來的部分
     
+    unsigned char  BarArray_Display_Speed[32];     //顯示出來的部分(速度)
+    
 
     short INCLINE_Table_96[96];
+    short SPEED_Table_96[96];
+    
     
     unsigned char  MasterPage;
     short          INCLINE_ValueDiff;
+    short          SPEED_ValueDiff;
+    
     
     unsigned short  PeriodNumber;     //總共有幾個區間
     unsigned char   PeriodWidth;     //區間寬度 單位:秒
@@ -200,28 +223,21 @@ typedef struct{
 
 typedef enum{
 
-    StartUP  = 0,
-    Menu     = 1,
-    Program_Setting = 2,
-    WarmUp   = 3,
-    CooolDown = 4,
-    Workout  = 5,
-    Paused   = 6,
-    Ready    = 7,
-    Summary  = 8,
-    Engineer = 9,
-    Safe     = 10,
-        
-
-    C_SysIdleModeVal  = 11,
-    C_APPModeVal      = 12,
-    C_Sys_OTAModeVal  = 13,
-    
+    Idle            = 0,
+    Prog_Set        = 1,
+    Ready           = 2,
+    WarmUp          = 3,
+    Workout         = 4,
+    CooolDown       = 5,
+    Paused          = 6,
+    Summary         = 7,
+    StartUp         = 8,
+    Engineer        = 9,
+    Safe            = 10,
+    Sys_OTA_Mode      = 13,
+   
     RS485_Test_Mode   = 14,
-
-        
-        
-       
+   
 }System_Mode_Def;
 
 
