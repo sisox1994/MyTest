@@ -161,12 +161,15 @@ unsigned char EZ_INCLINE_Template[32];
 void EZ_MAX_INC_Change_Process(){
     
     //--------------產生 EZ Template----------------------------------------
-    for(unsigned char i = 0 ;i <24; i++){
+    for(unsigned char i = 0 ;i <23; i++){
         EZ_INCLINE_Template[i] = i * ((Program_Data.Ez_MaxINCLINE) /24)/5 ;
     }
-    for(unsigned char i = 24 ;i <32; i++){
-        EZ_INCLINE_Template[i] = (32 - i) * ((Program_Data.Ez_MaxINCLINE) /24)/5 ;
+    EZ_INCLINE_Template[23] = Program_Data.Ez_MaxINCLINE / 5;
+    
+    for(unsigned char i = 24 ;i <31; i++){
+        EZ_INCLINE_Template[i] = (31 - i) * ((Program_Data.Ez_MaxINCLINE) /8)/5;
     }
+    EZ_INCLINE_Template[31] = 0;
     //-----------------------------------------------------------------------
     
     Program_Data.Template_Loop_Start_Index = 0;
@@ -229,12 +232,16 @@ void EZ_INCLINE_Init(){
     Program_Data.Template_Table_Num        = 32;
     
     //-------------------------產生 EZ Template------------------------------------
-    for(unsigned char i = 0 ;i <24; i++){
+    for(unsigned char i = 0 ;i <23; i++){
         EZ_INCLINE_Template[i] = i * ((Program_Data.Ez_MaxINCLINE) /24)/5 ;
-    } 
-    for(unsigned char i = 24 ;i <32; i++){
-        EZ_INCLINE_Template[i] = (32 - i) * ((Program_Data.Ez_MaxINCLINE) /24)/5 ;
-    }//---------------------------------------------------------------------------
+    }
+    EZ_INCLINE_Template[23] = Program_Data.Ez_MaxINCLINE / 5;
+    
+    for(unsigned char i = 24 ;i <31; i++){
+        EZ_INCLINE_Template[i] = (31 - i) * ((Program_Data.Ez_MaxINCLINE) /8)/5 ;
+    }
+    EZ_INCLINE_Template[31] = 0;
+    //---------------------------------------------------------------------------
     
     Template_To_Table_96(EZ_INCLINE_Template);
 

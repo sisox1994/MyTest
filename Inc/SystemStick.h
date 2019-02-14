@@ -59,6 +59,8 @@ extern unsigned char MET_Icon_Display_Cnt;
 extern unsigned char HR_Icon_Display_Cnt;
 
 
+extern unsigned char HR_BlinkOneTime_Cnt;
+
 extern unsigned short BTSPK_Icon_Display_Cnt;
 extern unsigned short BTSPK_OFF_Icon_Display_Cnt;
 

@@ -16,7 +16,7 @@ void IntoCoolDownModeProcess(){
 
 void CoolDown_Key(){
     
-    if( KeyCatch(0,1 , Stop) ){
+    if( KeyCatch(0,1 , Stop) || PauseKey()){
         IntoSummaryMode_Process();
         Set_SPEED_Value(0);
         RM6_Task_Adder(Set_SPEED);

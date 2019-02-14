@@ -22,7 +22,7 @@
 #define __SYSTEM_H__
 
 
-#define System_Version "V10"        //APP 只判斷這個
+#define System_Version "V11"        //APP 只判斷這個
 #define Modify_Version "A01"        // AXX 細分版本 V10A01 V10A02 代表都是V10 但是 有稍微修改
 
 
@@ -39,9 +39,14 @@
 #define configUSE_WHR   1
 #define configUSE_HHR   1
 
-#define FAKE_RM6T6_Mode   0
+#define AutoPause       1
 
+#define FAKE_RM6T6_Mode   0
+#define SpdIncSegBlink    0
+ 
 //-------------------------------
+
+extern unsigned char AutoPause_Flag; //隱藏功能
 
 extern char ucProductionSerialNumber[14];     //生產序號
 
@@ -123,6 +128,7 @@ extern User_Program_Data_Def MyUser_1;
 extern User_Program_Data_Def MyUser_2;
 
 extern unsigned short usNowHeartRate;    //使用者心跳 
+extern unsigned char  HeartRate_Is_Exist_Flag;
 extern void F_HeartRate_Supervisor();
 
 //extern unsigned int Total_Machine_Distants;  //機器跑的總里程  單位 公里/10 => 1:100公尺
@@ -147,6 +153,10 @@ extern unsigned char ret_Idle_cnt;
 
 extern unsigned short System_INCLINE; //0~150   => 0.0~15.0 %   =>0~31
 extern unsigned short System_SPEED;   //0 ~ 120 
+
+extern unsigned int uiAvgSpeed;
+extern unsigned int uiAvgIncline;
+extern unsigned int uiAvgHeartRate;
 
 extern unsigned short usMET;
 

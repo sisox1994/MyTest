@@ -1,6 +1,8 @@
 #ifndef MODE_H_
 #define MODE_H_
 
+extern unsigned char NoStep_Cnt;
+
 extern void Program_Init();
 extern void User_Like_Program_Init();
 
@@ -15,6 +17,8 @@ extern unsigned short WarmUp_3_Minute_Cnt;
 extern unsigned short PauseTimeOut_Cnt;
 
 extern unsigned char No_HR_Value_Cnt;
+extern unsigned char HR_BiggerThan85Percent_Cnt;
+
 
 extern void IntoPauseMode_Process();
 extern void IntoWorkoutModeProcess();
@@ -43,4 +47,7 @@ extern void RS485_Test_Func();
 
 extern void SCREEN_OPTION_Key();
 extern void HR_SENSOR_LINK_Key();
+
+
+extern void ResetWorkoutAvgParam();
 #endif

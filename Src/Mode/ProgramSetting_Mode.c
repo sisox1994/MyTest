@@ -689,7 +689,50 @@ void Key_Profile_Setting(){
     
     
     switch(Setting_item_Index){
+      case SET_GENDER:
+        if(StringCnt < 2){
+            //------- 顯示 設定"性別"時按 (Enter) ,(+) ,(-) 鍵進入下一個flow    --------
+            if( Key_Increase() || Key_Decrease() || NumberKeyProcess() || KeyCatch(0,1 , Enter)){
+                StringCnt = 2;
+                //F_Number_buffer_Auto( Stay, Program_Data.Age , 10 ,DEC ,0);
+                writeLEDMatrix(); 
+                ClearBlinkCnt2();
+            }
+            if(KeyCatch(0,1 , Stop)){    //-----mmm
+                
+                Back_Idle_Process();
+            }
+            
+        }else if(StringCnt == 2){
         
+            if(KeyCatch(0,1 , Enter)){
+                StringCnt = 0;
+                Setting_item_Index = SET_Age;
+            }
+            
+            //  ++   單點  按住 連續+
+            if(Key_Increase()){
+                if(Program_Data.Gender == Male){
+                    Program_Data.Gender = Female;
+                }else{
+                    Program_Data.Gender = Male;
+                }
+            }
+            //  --   單點  按住 連續-
+            if(Key_Decrease()){
+                if(Program_Data.Gender == Male){
+                    Program_Data.Gender = Female;
+                }else{
+                    Program_Data.Gender = Male;
+                }
+            }
+            if(KeyCatch(0,1 , Stop)){    //-----mmm
+                
+                Back_Idle_Process();
+            }
+        }
+         
+         break;
       case SET_Time:
         //  ++   單點  按住 連續+
         if(Key_Increase()){
@@ -756,6 +799,10 @@ void Key_Profile_Setting(){
                     Setting_item_Index = SET_Time;
                     break;
                     
+                  case Gender_Age_Weight:
+                    Setting_item_Index = SET_GENDER;
+                    break;
+                    
                   case Age_Weight:
                   case Age_Weight_Cal:
                   case Age_Weight_Lvl:
@@ -771,6 +818,22 @@ void Key_Profile_Setting(){
             
         }else if(StringCnt == 2){           //設定年齡
             
+            unsigned char Age_Low_Limit;
+            
+            if(Program_Select == FIT_ARMY){
+                Age_Low_Limit = 17;
+            }else if(Program_Select == FIT_NAVY){
+                
+                if(Program_Data.Gender == Male){
+                    Age_Low_Limit = 20;
+                }else if(Program_Data.Gender == Female){
+                    Age_Low_Limit = 17;
+                }
+                
+            }else{
+                Age_Low_Limit = 10;
+            }
+            
             //  ++   單點  按住 連續+
             if(Key_Increase()){
                 Number_Digits_Index = 0;
@@ -784,7 +847,7 @@ void Key_Profile_Setting(){
             //  --   單點  按住 連續-
             if(Key_Decrease()){
                 Number_Digits_Index = 0;
-                if(Program_Data.Age > 10){
+                if(Program_Data.Age > Age_Low_Limit){
                     Program_Data.Age--;
                 }
                 F_Number_buffer_Auto( Stay, Program_Data.Age , 10 ,DEC ,0);
@@ -805,14 +868,16 @@ void Key_Profile_Setting(){
                     Program_Data.Age = 100;
                     Number_Buffer = 100;
                     //Number_Digits_Index = 2;
-                }else if(Program_Data.Age < 10){
+                }else if(Program_Data.Age < Age_Low_Limit){
                     StringCnt = 2;
                     Setting_item_Index = SET_Age;
-                    Program_Data.Age = 10;
-                    Number_Buffer = 10;
+                    Program_Data.Age = Age_Low_Limit;
+                    Number_Buffer = Age_Low_Limit;
                     //Number_Digits_Index = 1;
                 }
+                
                 F_Number_buffer_Auto( Stay, Program_Data.Age , 10 ,DEC ,0);
+                
                 writeLEDMatrix(); 
                 ClearBlinkCnt2();
             }
@@ -827,6 +892,10 @@ void Key_Profile_Setting(){
                     Setting_item_Index = SET_Time;
                     break;
  
+                  case Gender_Age_Weight:
+                    Setting_item_Index = SET_GENDER;
+                    break;
+                    
                   case Age_Weight:
                   case Age_Weight_Cal:
                   case Age_Weight_Lvl:
@@ -915,6 +984,9 @@ void Key_Profile_Setting(){
                     break;
                   case Time_Age_Weight_Work_Rest:
                     Setting_item_Index = SET_WORK_Time;
+                    break;
+                  case Gender_Age_Weight:
+                    Setting_item_Index = SET_END;
                     break;
                 }
                 
@@ -1064,6 +1136,32 @@ void Key_Profile_Setting(){
                 writeLEDMatrix(); 
             }  
             
+            if( KeyCatch(0,1 , Inc_15) ){
+                Program_Data.Ez_MaxINCLINE = 150;
+                F_Number_buffer_Auto( Stay, Program_Data.Ez_MaxINCLINE , 10 ,DEC ,0);
+                writeLEDMatrix(); 
+            }
+            if( KeyCatch(0,1 , Inc_12) ){
+                Program_Data.Ez_MaxINCLINE = 120;
+                F_Number_buffer_Auto( Stay, Program_Data.Ez_MaxINCLINE , 10 ,DEC ,0);
+                writeLEDMatrix(); 
+            } 
+            if( KeyCatch(0,1 , Inc_9) ){
+                Program_Data.Ez_MaxINCLINE = 90;
+                F_Number_buffer_Auto( Stay, Program_Data.Ez_MaxINCLINE , 10 ,DEC ,0);
+                writeLEDMatrix(); 
+            }
+            if( KeyCatch(0,1 , Inc_6) ){
+                Program_Data.Ez_MaxINCLINE = 60;
+                F_Number_buffer_Auto( Stay, Program_Data.Ez_MaxINCLINE , 10 ,DEC ,0);
+                writeLEDMatrix(); 
+            }
+            if( KeyCatch(0,1 , Inc_3) ){
+                Program_Data.Ez_MaxINCLINE = 30;
+                F_Number_buffer_Auto( Stay, Program_Data.Ez_MaxINCLINE , 10 ,DEC ,0);
+                writeLEDMatrix(); 
+            } 
+    
             //NumberKeyProcess();
             
             if(KeyCatch(0,1 , Enter)){
@@ -1622,6 +1720,9 @@ void Key_Profile_Setting(){
                   case Age_Weight_Lvl:
                     Setting_item_Index = SET_Age;
                     break;   
+                  case Gender_Age_Weight:
+                    Setting_item_Index = SET_GENDER;
+                    break;   
                 }
             }
             ClearBlinkCnt2();
@@ -1649,6 +1750,9 @@ void Key_Profile_Setting(){
               case Age_Weight_Lvl:
                 Setting_item_Index = SET_Dif_LEVEL;
                 break;   
+              case Gender_Age_Weight:
+                Setting_item_Index = SET_Weight;
+                break;   
             }
             ClearBlinkCnt2();
         }
@@ -1671,6 +1775,12 @@ void Key_Profile_Setting(){
             Setting_item_Index = SET_Time;
             EZ_MAX_INC_Change_Process();
             Time_Change_Process_Ez_INCLINE();
+            break;
+          case FIT_ARMY:
+          case FIT_NAVY:
+          case FIT_AIRFORCE: 
+          case FIT_USMC:
+          case FIT_WFI: 
             break;
           default:
             Time_Change_Process();    //有修改時間的話  重新編 TimePeriod Table
@@ -1719,9 +1829,14 @@ void Key_Profile_Setting(){
           case Distance_Goal_160M:
           case Distance_Goal_5K:
           case Distance_Goal_10K:
+          case FIT_ARMY:
+          case FIT_NAVY:
+          case FIT_AIRFORCE: 
+          case FIT_USMC:
+          case FIT_WFI:    //上數
             SET_Seg_TIME_Display( TIME  , Program_Data.Goal_Time - Program_Data.Goal_Counter);
             break;
-          default:
+          default:         //下數
             SET_Seg_TIME_Display( TIME  , Program_Data.Goal_Counter);
             break;
         }
@@ -1799,6 +1914,13 @@ void ProgramSetting_Key(){
       case User_2:
         Setting_Class = P_Like;
         break; 
+      case FIT_ARMY:
+      case FIT_NAVY:
+      case FIT_AIRFORCE: 
+      case FIT_USMC:
+      case FIT_WFI:
+        Setting_Class = Gender_Age_Weight;
+        break; 
     }
     Key_Profile_Setting();
     
@@ -1866,9 +1988,26 @@ void ProgramSetting_LIKE_Key(){
 
 void ProgSet_Display(){
     
-   // if(T_Marquee_Flag){
-        //T_Marquee_Flag = 0;
+    if(T_Marquee_Flag){
+        T_Marquee_Flag = 0;
         switch(Setting_item_Index){
+            
+          case SET_GENDER:
+            switch(StringCnt){
+              case 0:
+                F_String_buffer_Auto_Middle(Left_and_Stay,"GENDER",50,0);
+                break;
+              case 1:
+                break;
+              case 2:
+                if(Program_Data.Gender == Male){
+                    F_String_buffer_Auto_Middle(Left_and_Stay,"MALE",50,0);
+                }else if(Program_Data.Gender == Female){
+                    F_String_buffer_Auto_Middle(Left_and_Stay,"FEMALE",50,0);
+                }
+                break;
+            }
+            break;
           case SET_Time:
             if( (Program_Select == Custom_1 ) || (Program_Select == Custom_2) ){
                 DrawBarArray(Program_Data.BarArray_Display);
@@ -1941,11 +2080,11 @@ void ProgSet_Display(){
             switch(StringCnt){
               case 0:
                 //F_String_buffer(0,1,"MAX  INC" ,8 ,0);
-                if(T_Marquee_Flag){
-                    T_Marquee_Flag = 0;
+                //if(T_Marquee_Flag){
+                    //T_Marquee_Flag = 0;
                     F_String_buffer_Auto(Left,"MAX  INC",50 ,0);
-                    writeLEDMatrix();
-                }
+                   // writeLEDMatrix();
+                //}
                 break;
               case 1:
                 break;
@@ -1970,11 +2109,11 @@ void ProgSet_Display(){
             switch(StringCnt){
               case 0:
                 //F_String_buffer_Auto_Middle(Stay,"LVL" ,30 ,1);
-                if(T_Marquee_Flag){
-                    T_Marquee_Flag = 0;
-                    F_String_buffer_Auto(Left,"DIFF    LEVEL",50 ,0);
-                    writeLEDMatrix();
-                }
+                //if(T_Marquee_Flag){
+                    //T_Marquee_Flag = 0;
+                    F_String_buffer_Auto(Left,"DIFF    LEVEL",50 ,0); 
+                    //writeLEDMatrix(); 
+                //}
                 break;
               case 1:
                 break;
@@ -2026,10 +2165,12 @@ void ProgSet_Display(){
         if(System_Mode == Prog_Set){
             writeSegmentBuffer();
         }
-        if((Setting_item_Index == SET_MAX_INC)&&(StringCnt == 0) ){}
-        else if( (Setting_item_Index == SET_Dif_LEVEL) && (StringCnt == 0) ){}
-        else{writeLEDMatrix();}   
-    //}
+        //if((Setting_item_Index == SET_MAX_INC)&&(StringCnt == 0) ){}
+        //else if( (Setting_item_Index == SET_Dif_LEVEL) && (StringCnt == 0) ){}
+        //else{
+            writeLEDMatrix();
+        //}   
+    }
 
 }
 

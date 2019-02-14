@@ -169,13 +169,16 @@ const unsigned char Pattern_13[]={6,8,
 0x00,0x00,0x1A,0x1E,0x00,0x00};      //  ,
 
 const unsigned char Pattern_14[]={6,8,
-0x00,0x08,0x08,0x08,0x08,0x00};      //-
+0x00,0x10,0x10,0x10,0x10,0x00};      //-
 
 const unsigned char Pattern_15[]={2,8,
 0x02 ,0x00};     //  .
 
 const unsigned char Pattern_16[]={6,8,
-0x02,0x04,0x18,0x20,0x40,0x00};    //  /
+0x02,0x04,0x08,0x10,0x20,0x40};   //  /
+
+const unsigned char Pattern_17[]={3,8,
+0x00,0x24,0x00};    //  :
 
 
 const unsigned char*Pattern_Array[]={
@@ -194,7 +197,8 @@ const unsigned char*Pattern_Array[]={
    Pattern_13,
    Pattern_14,
    Pattern_15,
-   Pattern_16
+   Pattern_16,
+   Pattern_17
 };
 
 const unsigned char ATTACUS_Logo[]={52,8,

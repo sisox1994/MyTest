@@ -426,6 +426,15 @@ void F_String_buffer(short posX ,short posY,unsigned char *StrArray ,unsigned sh
                 LedMatrixBuffer_Temp[ move+ j ] = Pattern_Array[C_index][j +2];  
             }       
             move = move + C_width;
+        }else if (*(StrArray+i) == ':' ){
+            
+            unsigned char C_index = 16 ;
+            unsigned char C_width = Pattern_Array[C_index][0];   //去陣列抓字元寬度出來
+            
+            for(int j = 0; j < C_width ; j++){    //j = 0~5
+                LedMatrixBuffer_Temp[ move+ j ] = Pattern_Array[C_index][j +2];  
+            }       
+            move = move + C_width;
         }
     }
     
@@ -485,6 +494,15 @@ unsigned char F_String_buffer_Auto( Direction_Def Dir, unsigned char *StrArray ,
                 
                 LedMatrixBuffer_Temp[ width+ j ] = Pattern_Array[C_index][j +2];
                 
+            }       
+            width = width + C_width;
+        }else if (*(StrArray+i) == ':' ){
+            
+            unsigned char C_index = 16 ;
+            unsigned char C_width = Pattern_Array[C_index][0];   //去陣列抓字元寬度出來
+            
+            for(int j = 0; j < C_width ; j++){    //j = 0~5
+                LedMatrixBuffer_Temp[ width+ j ] = Pattern_Array[C_index][j +2];  
             }       
             width = width + C_width;
         }  
@@ -1158,6 +1176,73 @@ void F_Num_buffer(short posX ,short posY,unsigned int Value , unsigned short Spe
 }
 
 
+
+void F_Time_buffer(short posX ,short posY,unsigned int Value){
+  
+
+    unsigned char LedMatrixBuffer_Temp[320];
+    
+    unsigned char move = 0;
+    
+    
+    Digit = 3;
+    
+    memset(LedMatrixBuffer_Temp,0x00,320);
+
+
+    
+    Digit_Value[2] =  Value/60;  //分鐘
+    Digit_Value[1] = (Value%60)/10;  //秒 (十位) 
+    Digit_Value[0] = (Value%60)%10;  //秒 (個位)
+    
+
+    __asm("NOP");
+    
+    
+    unsigned char C_index; 
+    unsigned char C_width; 
+    
+    
+    //------------------------------分鐘---------------------------
+    C_index = Digit_Value[2];
+    C_width = NumberArray[C_index][0];  //去陣列抓字元寬度出來
+    
+    for(int j = 0; j < C_width ; j++){    //j = 0~5
+        LedMatrixBuffer_Temp[j + move] = NumberArray[C_index][j+2];
+    }
+    move = move + C_width; 
+    //------------------------------------------------------------------
+    
+    //-----------------------------冒號---------------------------
+   
+    LedMatrixBuffer_Temp[move+1] = 0x24;
+    move = move + 4; 
+    //------------------------------------------------------------------
+    
+    
+    //------------------------------秒(十位)---------------------------
+    C_index = Digit_Value[1];
+    C_width = NumberArray[C_index][0];  //去陣列抓字元寬度出來
+    
+    for(int j = 0; j < C_width ; j++){    //j = 0~5
+        LedMatrixBuffer_Temp[j + move] = NumberArray[C_index][j+2];
+    }
+    move = move + C_width; 
+    //------------------------------------------------------------------
+    //------------------------------秒(個位)---------------------------
+    C_index = Digit_Value[0];
+    C_width = NumberArray[C_index][0];  //去陣列抓字元寬度出來
+    
+    for(int j = 0; j < C_width ; j++){    //j = 0~5
+        LedMatrixBuffer_Temp[j + move] = NumberArray[C_index][j+2];
+    }
+    move = move + C_width; 
+    //------------------------------------------------------------------
+ 
+    LedMatrixMappingProcess(LedMatrixBuffer_Temp ,posX,posY);
+    
+    
+}
 unsigned char F_Number_buffer_Auto( Direction_Def Dir, unsigned int Value , unsigned short Speed ,Format_Def format ,unsigned char Blink ){
 
     unsigned char  LedMatrixBuffer_Temp[320];
@@ -1236,9 +1321,6 @@ unsigned char F_Number_buffer_Auto( Direction_Def Dir, unsigned int Value , unsi
    
     
     //----------------------------------------------------------------------------------
-    
-    
-    
       //---------------------------  顯示物件判斷  --------------------------------------------
     for(unsigned char i = 0; i<32; i++){
         if(DataCheckBuffer[i] != LedMatrixBuffer_Temp[i]){
@@ -1263,9 +1345,6 @@ unsigned char F_Number_buffer_Auto( Direction_Def Dir, unsigned int Value , unsi
     
     //--------------------------------  跑馬燈 跑完一輪   --------------------------------
    
-
-    
-        
     if((Dir == Left) || (Dir == Left_and_Stay)){
         
         if(Shift_X >= 0){

@@ -7,6 +7,8 @@
 #define Buzzer_Pin  GPIO_PIN_5
 #define BuzzerTimeValue  50;
 
+extern unsigned char BuzzerON_Flag;
+
 void Buzzer_Init();
 void BuzzerCheck();
 void Buzzer_ON();

@@ -73,6 +73,8 @@ void UserData_Init(){
     }else if(System_Unit ==  Imperial){
         Program_Data.Weight = 155;
     }
+    
+    Program_Data.Gender = Male;
   
     Program_Data.Distance = 0;
     Program_Data.Calories = 0;

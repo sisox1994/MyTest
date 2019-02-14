@@ -16,6 +16,7 @@ void UART_TX_Transform();
 
 extern const uint16_t InclineADTable[31];
 extern void Set_SPEED_Value(unsigned short speedValue);
+extern void Set_INCLINE_Value(unsigned short inclineValue);
 
 extern unsigned char  INCL_Moveing_Flag;
 extern unsigned char  SPEED_Changing_Flag;

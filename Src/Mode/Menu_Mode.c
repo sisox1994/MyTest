@@ -120,6 +120,23 @@ void Program_Init(){
         User_2_Init();
         break; 
         
+      case FIT_ARMY:
+        FIT_ARMY_Init();
+        break; 
+      case FIT_NAVY:
+        FIT_NAVY_Init();
+        break; 
+      case FIT_AIRFORCE: 
+        FIT_AIRFORCE_Init();
+        break; 
+      case FIT_USMC:
+        FIT_USMC_Init();
+        break; 
+      case FIT_WFI: 
+        FIT_WFI_Init();
+        break; 
+        
+        
         
     }
     
@@ -205,8 +222,7 @@ void User_Like_Program_Init(){
       case Distance_Goal_10K:
         Distance_Goal_10K_Init();
         break; 
-        
-  
+         
     }
     
 
@@ -349,17 +365,39 @@ void Idle_Display(){
           case User_2:   
             F_String_buffer_Auto_Middle(Stay,"USER2" ,30 ,0);
             break; 
+            
+          case FIT_ARMY: 
+            F_String_buffer_Auto_Middle(Stay,"ARMY" ,30 ,0);
+            break; 
+          case FIT_NAVY: 
+            F_String_buffer_Auto_Middle(Stay,"NAVY" ,30 ,0);
+            break; 
+          case FIT_AIRFORCE: 
+            F_String_buffer_Auto_Middle(Stay,"AIRF" ,30 ,0);
+            break; 
+          case FIT_USMC:   
+            F_String_buffer_Auto_Middle(Stay,"USMC" ,30 ,0);
+            break; 
+          case FIT_WFI:   
+            F_String_buffer_Auto_Middle(Stay,"WFI" ,30 ,0);
+            break; 
+            
         }
         
         
         switch(Program_Select){
         
-          case Quick_start:
+          case Quick_start:            //上數
           case MARATHON_Mode:
           case Calorie_Goal:
           case Distance_Goal_160M:
           case Distance_Goal_5K:
           case Distance_Goal_10K:
+          case FIT_ARMY:
+          case FIT_NAVY:
+          case FIT_AIRFORCE: 
+          case FIT_USMC:
+          case FIT_WFI: 
             SET_Seg_TIME_Display( TIME  , Program_Data.Goal_Time - Program_Data.Goal_Counter);
             break;
             
@@ -384,7 +422,7 @@ void Idle_Display(){
          
             
           default:
-            SET_Seg_TIME_Display( TIME  , Program_Data.Goal_Time);
+            SET_Seg_TIME_Display( TIME  , Program_Data.Goal_Time);   //下數
             break;
         }
 
@@ -423,14 +461,24 @@ extern void Enter_STOPMode_Process();
 
 extern UART_HandleTypeDef huart2;
 
+unsigned char AutoPause_Flag = 1; //隱藏功能
+
 void Idle_Key(){
      
  
     
-    if( KeyCatch(0,1 , Key_FitTest) ){
-    }   
-        
+
     HR_SENSOR_LINK_Key(); 
+    
+    
+    if( KeyCatch(5,3 , Num_1,Num_5,Num_9) ){ 
+    
+        if(AutoPause_Flag == 0){
+            AutoPause_Flag = 1;
+        }else{
+            AutoPause_Flag = 0;
+        }
+    }
     
     if( KeyCatch(0,1 , Key_Manual) ){ 
         KeyChangeDetect(Key_Manual);
@@ -474,6 +522,15 @@ void Idle_Key(){
         Program_Init();
         str_cNt = 0; 
     } 
+    
+    if( KeyCatch(0,1 , Key_FitTest) ){
+        KeyChangeDetect(Key_FitTest);
+        Program_Select = (Program_Type_Def)(51 + (ClassCnt % 5));
+        ClassCnt++;
+        Program_Init();
+        str_cNt = 0; 
+    }   
+        
     
     if( KeyCatch(0,1 , Enter) ){
         if(Program_Select){
@@ -547,7 +604,16 @@ void Idle_Key(){
                 Setting_item_Index = SET_LIKE_Prog;
                 str_cNt = 0;
                 break; 
-          
+                
+              case FIT_ARMY:
+              case FIT_NAVY:
+              case FIT_AIRFORCE: 
+              case FIT_USMC:
+              case FIT_WFI: 
+                System_Mode = Prog_Set; 
+                Setting_item_Index = SET_GENDER;
+                str_cNt = 0;
+                break; 
             }
         }else{
             if(Program_Select == Quick_start){  //快速啟動模式按下Enter 就變成Manual Mode
@@ -561,7 +627,7 @@ void Idle_Key(){
         ClearBlinkCnt2();
     }
     
-    if( KeyCatch(0,1 , Stop) ){
+    if( KeyCatch(0,1 , Stop) || PauseKey()){
         if(Program_Select){
             Program_Select = Quick_start;
             str_cNt = 0;
@@ -579,6 +645,7 @@ void Idle_Key(){
         
         IntoReadyMode_Process();
         
+        //-------------沒有心跳  禁止進入---------------
         switch(Program_Select){
           case Target_HeartRate_Goal:
           case Fat_Burn: 
@@ -586,7 +653,9 @@ void Idle_Key(){
           case Heart_Rate_Hill: 
           case Heart_Rate_Interval: 
           case Extreme_Heart_Rate: 
+          case FIT_WFI: 
             if(!usNowHeartRate){
+                HR_BlinkOneTime_Cnt = 2;
                 System_Mode = Idle;
             }
             break;

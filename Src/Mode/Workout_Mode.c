@@ -4,6 +4,8 @@
 
 unsigned int Shift_Times;
 unsigned char No_HR_Value_Cnt; //判斷運動中  60秒沒有心跳 就進入summary 的cnt
+unsigned char HR_BiggerThan85Percent_Cnt;  // 消防員模式  判斷 10秒 心跳是否超過最大心跳85%
+
 void BarArray_Shift_Process();
 
 unsigned char TimePeroid_Process();
@@ -13,7 +15,8 @@ unsigned int  Set_TimeVal_Temp; //運動中設定時間的暫時存放值
 int           TimeVal_Diff;     //時間增減數值
 unsigned char Cancel_SetTime_Cnt;
 
-
+//---------WFI 消防員  顯示提示用 Flag
+unsigned char Hint_Disp_Flag = 0;
 
 extern unsigned char  Number_Digit_Tmp;
 extern unsigned char  Time_KeyPad_Iput_Flag;  //-------時間設定  keypad輸入模式
@@ -21,6 +24,9 @@ extern unsigned char  NumberKeyProcess();
 extern void NumberInsert_Time(unsigned int* Time_Modify);
 
 void IntoWorkoutModeProcess(){
+    
+    //-----重置  平均心跳  平均速度  平均揚升---------
+    ResetWorkoutAvgParam(); 
     
     if(Program_Select == APP_Cloud_Run){
         System_INCLINE = Program_Data.INCLINE_Table_96[0] * 5;
@@ -253,17 +259,33 @@ void Workout_Key(){
         //-----------------顯示切換-----------------------------------------------
         SCREEN_OPTION_Key();
         
-        if(KeyCatch(0,1 , cool)){
-            System_INCLINE = 0;
-            RM6_Task_Adder(Set_INCLINE);
+        if(KeyCatch(0,1 , cool)){  //FitTest 沒有cool down 模式
             
-            Set_SPEED_Value((System_SPEED * 3)/10 );
-            RM6_Task_Adder(Set_SPEED);
-            IntoCoolDownModeProcess(); 
+            if( (Program_Select == FIT_ARMY)     || (Program_Select == FIT_NAVY) ||
+                (Program_Select == FIT_AIRFORCE) || (Program_Select == FIT_USMC) ||  (Program_Select == FIT_WFI) ){
+            
+            }else{
+                
+                System_INCLINE = 0;
+                RM6_Task_Adder(Set_INCLINE);
+                
+                Set_SPEED_Value((System_SPEED * 3)/10);
+                
+                if( System_SPEED < Machine_Data.System_SPEED_Min){
+                    System_SPEED = Machine_Data.System_SPEED_Min;
+                }
+
+                RM6_Task_Adder(Set_SPEED);
+                IntoCoolDownModeProcess(); 
+            }
         }
         //----------------------------------------------------------
-        if( KeyCatch(0,1 , Stop)){
+        if( KeyCatch(0,1 , Stop) || PauseKey()){
+            
+            
             IntoPauseMode_Process(); 
+            
+            
             Btm_Task_Adder(FTMS_Data_Broadcast); //Page 0 //廣播運動資料 歸零
             Btm_Task_Adder(FTMS_Data_Broadcast); //Page 1
             Set_SPEED_Value(0);
@@ -273,63 +295,85 @@ void Workout_Key(){
         }
 
         //-------------------------------------------------------
-        if(Quick_SPEED__Key() == 1){
-            
-            switch(Program_Select){
-                
-              case APP_Train_Dist_Run:
-              case APP_Train_Time_Run: 
-                Update_BarArray_Data_Ex();
-              default:
-                //---圖形不做改變--//
-                break;
-            }
-            
-            Rst_Speed_Blink();
-            RM6_Task_Adder(Set_SPEED);
-        }
         
-        if(Quick_INCLINE__Key() == 1){
-            RM6_Task_Adder(Set_INCLINE);
+        if((Program_Select == FIT_WFI)&&(Program_Data.NowPeriodIndex < 28)){
+            /*如果是   消防員測試   進入cool  down 前  禁止改變速度*/
+        }else{
             
-            switch(Program_Select){
-              case Quick_start:
-              case Manual:
-              case Random: 
-              case CrossCountry: 
-              case WeightLoss:   
-              case Interval_1_1: 
-              case Interval_1_2:
-              case Hill:   
-              case Hill_Climb: 
-              case Aerobic:     
-              case Interval_1_4: 
-              case Interval_2_1:  
-              case MARATHON_Mode:
-              case Calorie_Goal:
-              case Distance_Goal_160M:
-              case Distance_Goal_5K:
-              case Distance_Goal_10K:
-              case Custom_1: 
-              case Custom_2:
-              case APP_Train_Dist_Run:
-              case APP_Train_Time_Run: 
-                Update_BarArray_Data_Ex();
-                break;
+            if(Quick_SPEED__Key() == 1){
                 
-              case Target_HeartRate_Goal: 
-              case Fat_Burn:            
-              case Cardio:    
-              case Heart_Rate_Hill:     
-              case Heart_Rate_Interval: 
-              case Extreme_Heart_Rate: 
-              case EZ_INCLINE: 
-              case APP_Cloud_Run:
+                switch(Program_Select){
+                    
+                  case APP_Train_Dist_Run:
+                  case APP_Train_Time_Run: 
+                    Update_BarArray_Data_Ex();
+                    break;
+                  case FIT_WFI: 
+                    if(Program_Data.NowPeriodIndex >= 28){
+                        Update_BarArray_Data_Ex();
+                    }
+                    break;
+                  default:
+                    //---圖形不做改變--//
+                    break;
+                }
                 
-                //---鎖揚升--//
-                break; 
+                Rst_Speed_Blink();
+                RM6_Task_Adder(Set_SPEED);
             }
         }
+
+        if(Program_Select == FIT_WFI){
+           /*消防員測試  禁止改變揚升*/
+        }else{
+            if(Quick_INCLINE__Key() == 1){
+                
+                RM6_Task_Adder(Set_INCLINE);
+                
+                switch(Program_Select){
+                  case Quick_start:
+                  case Manual:
+                  case Random: 
+                  case CrossCountry: 
+                  case WeightLoss:   
+                  case Interval_1_1: 
+                  case Interval_1_2:
+                  case Hill:   
+                  case Hill_Climb: 
+                  case Aerobic:     
+                  case Interval_1_4: 
+                  case Interval_2_1:  
+                  case MARATHON_Mode:
+                  case Calorie_Goal:
+                  case Distance_Goal_160M:
+                  case Distance_Goal_5K:
+                  case Distance_Goal_10K:
+                  case Custom_1: 
+                  case Custom_2:
+                  case APP_Train_Dist_Run:
+                  case APP_Train_Time_Run: 
+                  case FIT_ARMY:
+                  case FIT_NAVY:
+                  case FIT_AIRFORCE: 
+                  case FIT_USMC:
+                    Update_BarArray_Data_Ex();
+                    break;
+                    
+                  case Target_HeartRate_Goal: 
+                  case Fat_Burn:            
+                  case Cardio:    
+                  case Heart_Rate_Hill:     
+                  case Heart_Rate_Interval: 
+                  case Extreme_Heart_Rate: 
+                  case EZ_INCLINE: 
+                  case APP_Cloud_Run:
+                  case FIT_WFI:
+                    //---鎖揚升--//
+                    break; 
+                }
+            }
+        }
+
      
     }
 
@@ -425,7 +469,7 @@ void Workout_Key(){
         
         if(Time_Set_Flag == 1){
                         
-            if( KeyCatch(0,1 , Stop)){
+            if( KeyCatch(0,1 , Stop) ){
                 Time_Set_Flag = 0;
                 Time_KeyPad_Iput_Flag = 0;
                 Number_Digit_Tmp =0;
@@ -544,14 +588,100 @@ unsigned char Cnt_Set = 2;
 
 unsigned int uiAvgSpeed_Tmp;
 unsigned int uiAvgSpeed;
-unsigned int uiAvgSpd_Cnt;
+
+unsigned int uiAvgIncline_Tmp;
+unsigned int uiAvgIncline;
+
+unsigned int uiAvgHeartRate_Tmp;
+unsigned int uiAvgHeartRate;
+
+unsigned int uiAvg_Cnt;
+unsigned int uiAvgHR_Cnt;
+
+void ResetWorkoutAvgParam(){
+    
+    uiAvgSpeed_Tmp = 0;
+    uiAvgSpeed     = 0;
+    
+    uiAvgIncline_Tmp = 0;
+    uiAvgIncline     = 0;
+    
+    uiAvgHeartRate_Tmp = 0;
+    uiAvgHeartRate     = 0; 
+    
+    uiAvg_Cnt    = 0;
+    uiAvgHR_Cnt  = 0;
+}
+
 //每隔  "一秒 " 執行
+unsigned int step_old;
+unsigned char NoStep_Cnt;
+
+unsigned short MaxHeart85Percent;//算85%心跳
+
 void TimeProcess(){
 
-    uiAvgSpeed_Tmp += System_SPEED;
-    uiAvgSpd_Cnt++; 
-    uiAvgSpeed = uiAvgSpeed_Tmp/ uiAvgSpd_Cnt;
+#if AutoPause
     
+    //---------跑帶上無人判斷 30s 沒有增加步數   進入暫停 ----------
+    
+    if(AutoPause_Flag == 1){  //隱藏功能   測試用
+    
+        if(step_old != Program_Data.Pace){
+            step_old = Program_Data.Pace;
+            NoStep_Cnt = 0;
+        }
+        if(step_old == Program_Data.Pace){
+            NoStep_Cnt++;
+        }
+        
+        if(NoStep_Cnt == 30){   //
+            IntoPauseMode_Process(); 
+            Btm_Task_Adder(FTMS_Data_Broadcast); //Page 0 //廣播運動資料 歸零
+            Btm_Task_Adder(FTMS_Data_Broadcast); //Page 1
+            Set_SPEED_Value(0);
+            RM6_Task_Adder(Set_SPEED);
+            RM6_Task_Adder(Motor_STOP);
+            Buzzer_BeeBee(Time_Set, Cnt_Set);
+            NoStep_Cnt = 0;
+        }
+        
+    }
+
+    //-------------------------------------
+#endif
+    
+    
+    //----------算運動平均配速-----
+    if(System_SPEED != 0){
+        uiAvg_Cnt++; 
+        uiAvgSpeed_Tmp += System_SPEED;
+        uiAvgSpeed = uiAvgSpeed_Tmp / uiAvg_Cnt;
+    }
+
+    
+    //----------算運動平均揚升-----
+    uiAvgIncline_Tmp += System_INCLINE;
+    uiAvgIncline = uiAvgIncline_Tmp / uiAvg_Cnt;
+    
+    
+    
+    
+    //------心跳平均計算 -----------
+    if(HeartRate_Is_Exist_Flag==1){
+        if(usNowHeartRate >0){
+            
+            uiAvgHR_Cnt++;
+            
+            uiAvgHeartRate_Tmp += usNowHeartRate;
+            uiAvgHeartRate = uiAvgHeartRate_Tmp / uiAvgHR_Cnt;
+            
+            
+        }
+    }
+    //----------------------------------------------
+    
+
     //計算運動強度
     Mets_Calculate();
     //計算高度
@@ -622,7 +752,6 @@ void TimeProcess(){
       case Heart_Rate_Hill:   
       case Heart_Rate_Interval: 
       case Extreme_Heart_Rate: 
-        //-------------------------------------
         if(usNowHeartRate == 0){
             
             if(No_HR_Value_Cnt >=60){
@@ -644,6 +773,52 @@ void TimeProcess(){
         }else{
             No_HR_Value_Cnt = 0;
         }
+        break;
+      case FIT_WFI:
+        //-------------------------------------
+        if(usNowHeartRate == 0){
+            
+            if(No_HR_Value_Cnt >=10){
+                
+                IntoSummaryMode_Process();
+                
+                Set_SPEED_Value(0);
+                RM6_Task_Adder(Set_SPEED);
+                RM6_Task_Adder(Motor_STOP);
+                
+                System_INCLINE = 0;
+                RM6_Task_Adder(Set_INCLINE);
+                Buzzer_BeeBee(Time_Set, Cnt_Set);
+            }
+            
+            No_HR_Value_Cnt++;
+        }else{
+            No_HR_Value_Cnt = 0;
+        }
+        
+        //--------------心跳 > 最大心跳85% 累計10秒強制結束測試------
+        MaxHeart85Percent = (Program_Data.MaxHeartRate * 85)/100;
+        if(usNowHeartRate > MaxHeart85Percent ){
+
+            if(HR_BiggerThan85Percent_Cnt >= 10){
+                
+                IntoSummaryMode_Process();
+                
+                Set_SPEED_Value(0);
+                RM6_Task_Adder(Set_SPEED);
+                RM6_Task_Adder(Motor_STOP);
+                
+                System_INCLINE = 0;
+                RM6_Task_Adder(Set_INCLINE);
+                
+                Buzzer_BeeBee(Time_Set, Cnt_Set);
+            }
+            
+            HR_BiggerThan85Percent_Cnt++;
+        }else{
+            HR_BiggerThan85Percent_Cnt = 0;
+        }
+        
         //---------------------------------------
         break;
       default:
@@ -660,12 +835,20 @@ void TimeProcess(){
             RM6_Task_Adder(Set_INCLINE);
             
             Set_SPEED_Value((System_SPEED * 3)/10 );
+            if( System_SPEED < Machine_Data.System_SPEED_Min){
+                System_SPEED = Machine_Data.System_SPEED_Min;
+            }
+            
             RM6_Task_Adder(Set_SPEED);
             IntoCoolDownModeProcess();
+            Buzzer_BeeBee(Time_Set, Cnt_Set);
         }
     }
     
-    if((Program_Select == Distance_Goal_160M) || (Program_Select == Distance_Goal_5K) || (Program_Select == Distance_Goal_10K)){
+    //------------目標距離模式-------------------------------------------------------
+    if((Program_Select == Distance_Goal_160M) || (Program_Select == Distance_Goal_5K) || 
+       (Program_Select == Distance_Goal_10K) ){
+           
         if((Program_Data.Distance / 100) >= Program_Data.Distance_Goal){
             
             //運動結束  揚升歸0
@@ -673,10 +856,35 @@ void TimeProcess(){
             RM6_Task_Adder(Set_INCLINE);
             
             Set_SPEED_Value((System_SPEED * 3)/10 );
+            if( System_SPEED < Machine_Data.System_SPEED_Min){
+                System_SPEED = Machine_Data.System_SPEED_Min;
+            }
+            
             RM6_Task_Adder(Set_SPEED);
             IntoCoolDownModeProcess();  
+             Buzzer_BeeBee(Time_Set, Cnt_Set);
         }
     }
+    
+    //------------Fit Test 模式-----------------------------------------------------
+    if(  (Program_Select == FIT_ARMY)     || (Program_Select == FIT_NAVY)  ||   
+         (Program_Select == FIT_AIRFORCE) || (Program_Select == FIT_USMC)  ){
+           
+           if((Program_Data.Distance / 100) >= Program_Data.Distance_Goal){
+               
+               GetFitTest_Score();
+               
+               //運動結束  揚升歸0
+               System_INCLINE = 0;
+               RM6_Task_Adder(Set_INCLINE);
+               
+               Set_SPEED_Value(0);
+               RM6_Task_Adder(Set_SPEED);
+               IntoSummaryMode_Process();  
+               Buzzer_BeeBee(Time_Set, Cnt_Set);
+           }
+       }
+    
     
     //-----------------    時間判斷模式   -----------------------------------
     if(Program_Data.Goal_Counter > 0){
@@ -689,12 +897,11 @@ void TimeProcess(){
         switch(Program_Select){            
           case Quick_start:
           case APP_Train_Time_Run:       //訓練計畫  (時間)  
+          case FIT_WFI:
             IntoSummaryMode_Process();
-            
             break;
           default:
             Set_SPEED_Value((System_SPEED * 3)/10 );
-            
             if( System_SPEED < Machine_Data.System_SPEED_Min){
                 System_SPEED = Machine_Data.System_SPEED_Min;
             }
@@ -702,6 +909,7 @@ void TimeProcess(){
             IntoCoolDownModeProcess();
             break;
         } 
+        Buzzer_BeeBee(Time_Set, Cnt_Set);
     }
     //-------------------------------------------------------------------------------------
 
@@ -722,10 +930,9 @@ unsigned char TimePeroid_Process(){
             Program_Data.NextPeriodValue -= Program_Data.PeriodWidth;
         }
         
+        
         if(Program_Select == APP_Train_Time_Run){
     
-            
-            
             if( (Program_Data.NowPeriodIndex - 30) % 32 == 0 && (Program_Data.NowPeriodIndex > 32)){
             
                 Program_Data.MasterPage = ((Program_Data.NowPeriodIndex - 30) /32) % 3;
@@ -755,6 +962,7 @@ unsigned char TimePeroid_Process(){
             
             
         }else{
+        
             if( (Program_Data.NowPeriodIndex - 30) % 32 == 0 && (Program_Data.NowPeriodIndex > 32)){
             
                 Program_Data.MasterPage = ((Program_Data.NowPeriodIndex - 30) /32) % 3;
@@ -786,12 +994,6 @@ unsigned char TimePeroid_Process(){
                 System_INCLINE = 150;
             }
             
-            /*
-            if(System_INCLINE > 150){
-                System_INCLINE = 150;
-            }else if(Program_Data.INCLINE_Table_96[Program_Data.NowPeriodIndex%96] < 0){
-                System_INCLINE = 0;
-            } */
             RM6_Task_Adder(Set_INCLINE);
             //--------------------------------------------------------------------------------//
             
@@ -823,6 +1025,46 @@ unsigned char TimePeroid_Process(){
                 }
                 RM6_Task_Adder(Set_SPEED);
             }
+            
+            //--  FIT Test  WFI  消防員   速度由程式控制   使用者不能調整---------------------
+            if(Program_Select == FIT_WFI){
+                
+                if(Program_Data.NowPeriodIndex == 6){
+                    Hint_Disp_Flag = 2;   //顯示 BEGINING
+                }
+                
+                if(Program_Data.NowPeriodIndex == 28){
+                    Hint_Disp_Flag = 3;   //顯示 Cool Down
+                }
+                
+                if(Program_Data.NowPeriodIndex < 29){ //進入 cool down 以前由程式控制
+                    
+                    System_SPEED = Program_Data.SPEED_Table_96[Program_Data.NowPeriodIndex%96];
+                    
+                    if( (Program_Data.NowPeriodIndex == 6) ||(Program_Data.NowPeriodIndex == 10) ||
+                        (Program_Data.NowPeriodIndex == 14)||(Program_Data.NowPeriodIndex == 18) ||
+                        (Program_Data.NowPeriodIndex == 22)||(Program_Data.NowPeriodIndex == 26) ||
+                        (Program_Data.NowPeriodIndex == 28) ){
+                            
+                            Buzzer_BeeBee(300, 3);
+                    }
+                    
+                    
+                    //-------如果是負的就調整為最小速度
+                    if(Program_Data.SPEED_Table_96[Program_Data.NowPeriodIndex%96]<0){
+                        System_SPEED = Machine_Data.System_SPEED_Min;
+                    } 
+                    if(System_SPEED < Machine_Data.System_SPEED_Min){
+                        System_SPEED = Machine_Data.System_SPEED_Min;
+                    }else if(System_SPEED > Machine_Data.System_SPEED_Max){
+                        System_SPEED = Machine_Data.System_SPEED_Max;
+                    }
+                    RM6_Task_Adder(Set_SPEED);
+                    
+                }
+
+            }
+            
             
             
             break;
@@ -1174,6 +1416,8 @@ void HRC_Rate_INCLINE_Process(){
 
 unsigned char Incline_Speed_BarArrayDisplay_Switch;
 
+
+
 void Workout_Func(){
     
 
@@ -1208,7 +1452,16 @@ void Workout_Func(){
           case Custom_1: 
           case Custom_2:
           case APP_Cloud_Run:
+          case FIT_ARMY:
+          case FIT_NAVY:
+          case FIT_AIRFORCE: 
+          case FIT_USMC:
             DrawBarArray_Workout(Program_Data.BarArray_Display ,Program_Data.PeriodIndex_After_Shift , 1 );
+            break;
+          case FIT_WFI: 
+            if(Hint_Disp_Flag == 0){
+                 DrawBarArray_Workout(Program_Data.BarArray_Display ,Program_Data.PeriodIndex_After_Shift , 1 );
+            }
             break;
           case APP_Train_Dist_Run:
           case APP_Train_Time_Run:
@@ -1226,7 +1479,15 @@ void Workout_Func(){
             break;   
         }
   
-        writeLEDMatrix();
+        if(Program_Select == FIT_WFI){
+            
+            if(Hint_Disp_Flag == 0){
+                writeLEDMatrix();
+            }
+          
+        }else{
+            writeLEDMatrix();
+        }
         
         //Display
         switch(Program_Select){
@@ -1239,6 +1500,11 @@ void Workout_Func(){
           case APP_Cloud_Run:
           case APP_Train_Dist_Run:
           case APP_Train_Time_Run:  
+          case FIT_ARMY:
+          case FIT_NAVY:
+          case FIT_AIRFORCE: 
+          case FIT_USMC:
+          case FIT_WFI: 
             SET_Seg_TIME_Display( TIME  ,Program_Data.Goal_Time - Program_Data.Goal_Counter);
             break;
             
@@ -1257,10 +1523,7 @@ void Workout_Func(){
                     }else if(Time_KeyPad_Iput_Flag == 1){  //--KeyPad輸入顯示
                         SET_Seg_Display(TIME , Time_Chage_InWorkout_Temp/60 , ND , DEC );  
                     }
-
                     
-                    
- 
                 }else{
                     SET_Seg_TIME_Display( TIME  , Program_Data.Goal_Counter);    //剩下多少時間  下數
                 }
@@ -1273,6 +1536,45 @@ void Workout_Func(){
         }
         writeSegmentBuffer();
     }
+    
+    if(Program_Select == FIT_WFI){
+        
+        if(Hint_Disp_Flag == 1){
+            if(T_Marquee_Flag){
+                T_Marquee_Flag = 0;
+                
+                if(F_String_buffer_Auto_Middle( Left, "WARM    UP" ,55 ,0) == 1){
+                    Hint_Disp_Flag = 0;
+                }
+                writeLEDMatrix();
+            }
+        }
+            
+        if(Hint_Disp_Flag == 2){
+            if(T_Marquee_Flag){
+                T_Marquee_Flag = 0;
+                
+                if( F_String_buffer_Auto_Middle( Left, "BEGINING" ,55 ,0) == 1){
+                    Hint_Disp_Flag = 0;
+                }
+                writeLEDMatrix();
+            }
+        }
+        
+        if(Hint_Disp_Flag == 3){
+            if(T_Marquee_Flag){
+                T_Marquee_Flag = 0;
+                
+                if( F_String_buffer_Auto_Middle( Left, "COOL    DOWN" ,55 ,0) == 1){
+                    Hint_Disp_Flag = 0;
+                }
+                writeLEDMatrix();
+            }
+        }
+   
+    }
+
+    
 
     if(T1s_Flag){     //時間計數  單位:秒
         T1s_Flag = 0;
@@ -1295,7 +1597,10 @@ void Workout_Func(){
          
         //Check 目前到達哪一個 Period     //在抵達下一個 period 時去判斷要怎麼位移陣列
          //競賽模式 和   訓練計畫(距離)
-        if(Program_Select == APP_Cloud_Run || Program_Select == APP_Train_Dist_Run){
+        if(Program_Select == APP_Cloud_Run || Program_Select == APP_Train_Dist_Run || 
+           Program_Select == FIT_ARMY      || Program_Select == FIT_NAVY ||
+           Program_Select == FIT_AIRFORCE  || Program_Select == FIT_USMC   ){
+               
             if(DistancePeroid_Process() == 1){  //用距離衡量
                 BarArray_Shift_Process();
             }

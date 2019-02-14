@@ -30,8 +30,8 @@ void Calorie_Goal_Init(){
   
 }
 
-unsigned char INCLINE_HIGH_Limit_Table[20] = {10,20,30,40,45,50,55,60,65,70,75,80,85,90,95,100,105,110,115,120};
-unsigned char INCLINE_LOW_Limit_Table[20]  = { 0, 0, 0, 0, 5,10,15,20,25,30,35,40,45,50,55, 60, 65, 70, 75, 80};
+unsigned char INCLINE_HIGH_Limit_Table[21] = {0,10,20,30,40,45,50,55,60,65,70,75,80,85,90,95,100,105,110,115,120};
+unsigned char INCLINE_LOW_Limit_Table[21]  = {0,0, 0, 0, 0, 5,10,15,20,25,30,35,40,45,50,55, 60, 65, 70, 75, 80};
 
 
 void Distance_Goal_160M_Init(){
@@ -69,6 +69,11 @@ void Distance_Goal_160M_Init(){
     }*/
     
     Table_96_To_BarArray_Mapping();
+
+    //Program_Data.PeriodNumber = 32;
+    //Program_Data.PeriodWidth = Program_Data.Distance_Goal/32;
+    //Program_Data.NextPeriodValue = Program_Data.Distance_Goal - Program_Data.PeriodWidth;    
+
 }
 
 
@@ -146,5 +151,7 @@ void Distance_Goal_10K_Init(){
     }*/
   
     Table_96_To_BarArray_Mapping();
+
+
 
 }

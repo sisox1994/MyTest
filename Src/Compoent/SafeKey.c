@@ -29,7 +29,7 @@ void SafeKey_Detect(){
     
     Pause_State =  HAL_GPIO_ReadPin(PAUSE_KEY_GPIO,PAUSE_KEY_PIN);
     
-    if((HAL_GPIO_ReadPin(SAFETY_GPIO,SAFETY_PIN) == 1) || (Pause_State == GPIO_PIN_RESET) ){ 
+    if((HAL_GPIO_ReadPin(SAFETY_GPIO,SAFETY_PIN) == 1)  ){    //|| (Pause_State == GPIO_PIN_RESET)
         safekey = Plug_Out;
 #if Use_SafeKey
         if( (System_Mode == CooolDown) || (System_Mode == Workout) || (System_Mode == WarmUp) ){
@@ -50,8 +50,14 @@ unsigned char PauseKey(){
        
         if(Pause_press_Flag == 0){
             if(Pause_State == GPIO_PIN_RESET){
-             
+                BuzzerON_Flag = 0;
+                
                 Pause_press_Flag = 1;
+                if(System_Mode!= Workout){
+                    Buzzer_ON();
+                }
+                
+                return 1;
             }
         }
     }
@@ -59,8 +65,7 @@ unsigned char PauseKey(){
     if(Pause_press_Flag == 1){
         if(Pause_State == GPIO_PIN_SET){
             T100ms_PauseKey_Flag = 0;
-            Pause_press_Flag = 0;
-            return 1;
+            Pause_press_Flag = 0; 
         }
     }
     return 0;

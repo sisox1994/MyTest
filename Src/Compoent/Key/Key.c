@@ -257,7 +257,12 @@ unsigned char KeyCatch(unsigned char Sec ,uint8_t Num, ...){
             
             if(ContuineBeepFlag!=1){   //防止蜂鳴器錯誤動作
                 if(KeyConfirm_Cnt==1){
-                    Buzzer_ON();
+                    
+                    if( (System_Mode== Workout) && (Press_Key == Stop) ){
+                      //---峰鳴器不要叫
+                    }else{
+                      Buzzer_ON();
+                    }
                 }
             }
     

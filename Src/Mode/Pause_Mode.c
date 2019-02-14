@@ -1,15 +1,31 @@
 #include "system.h"
 
 
-unsigned short PauseTimeOut_Cnt = 300;
+unsigned short PauseTimeOut_Cnt = 180;
 
 void IntoPauseMode_Process(){
     
-    F_SetFEC_State(FINISHED);
     
-    PauseTimeOut_Cnt = 300;
-    System_Mode = Paused;
-    ClearStd_1_Sec_Cnt(); 
+    //如果是fit test模式 按 暫停  或  30s沒步數 直接停止運動測試
+    if( (Program_Select == FIT_ARMY)     || (Program_Select == FIT_NAVY) ||
+        (Program_Select == FIT_AIRFORCE) || (Program_Select == FIT_USMC) ||
+        (Program_Select == FIT_WFI) ){  
+        
+        Program_Data.FitTest_Score = 0;
+        Program_Data.FitTest_RISK  = 3;  //不顯示Risk?
+        
+        IntoSummaryMode_Process();
+        
+        System_INCLINE = 0;
+        RM6_Task_Adder(Set_INCLINE);
+        
+    }else{
+        
+        F_SetFEC_State(FINISHED);
+        PauseTimeOut_Cnt = 180;
+        System_Mode = Paused;
+        ClearStd_1_Sec_Cnt(); 
+    }
     
 }
 
@@ -25,7 +41,7 @@ void Pause_Key(){
             RM6_Task_Adder(Motor_FR);
         }
         
-        if( KeyCatch(0,1 , Stop) ){
+        if( KeyCatch(0,1 , Stop) || PauseKey()){
             IntoSummaryMode_Process();
             
             System_INCLINE = 0;
@@ -45,7 +61,8 @@ void Pause_Func(){
     if(T1s_Flag){
         T1s_Flag = 0;
         
-        F_Number_buffer_Auto( Stay, PauseTimeOut_Cnt , 35 ,DEC ,0);
+        //F_Number_buffer_Auto( Stay, PauseTimeOut_Cnt , 35 ,DEC ,0);
+        F_Time_buffer(5 ,1 , PauseTimeOut_Cnt);
         writeLEDMatrix();
        
         if(PauseTimeOut_Cnt == 0){
@@ -67,7 +84,12 @@ void Pause_Func(){
           case Distance_Goal_10K:
           case APP_Cloud_Run:
           case APP_Train_Dist_Run:  
-          case APP_Train_Time_Run:  
+          case APP_Train_Time_Run:
+          case FIT_ARMY:
+          case FIT_NAVY:
+          case FIT_AIRFORCE: 
+          case FIT_USMC:
+          case FIT_WFI: 
             SET_Seg_TIME_Display( TIME  ,Program_Data.Goal_Time - Program_Data.Goal_Counter);
             break;
             

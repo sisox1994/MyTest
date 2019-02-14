@@ -2061,7 +2061,7 @@ unsigned char  sim_Cal_MI = 0;
 
 unsigned char  sim_Met_eq = 0;
 
-extern unsigned int uiAvgSpeed;
+
 unsigned char Met_Tmp = 0;
 
 
@@ -2881,19 +2881,25 @@ void F_Btm_FTMS_B2_Read(){
     }
  
     if(FTMS_OP_Code == set_target_inclination){
+        
+        Buzzer_BeeBee(300, 3);
+        
         FTMS_Control_Value.target_Incline = (unsigned short)ucBtmRxData[3] + (unsigned short)(ucBtmRxData[4]<<8);  
         if(System_Mode == Workout){
-            System_INCLINE = FTMS_Control_Value.target_Incline;
+            
+            unsigned short tmp = FTMS_Control_Value.target_Incline;
+            System_INCLINE = (tmp/5)*5;
             Rst_Incline_Blink();
             INCL_Moveing_Flag = 0;
             RM6_Task_Adder(Set_INCLINE);
+            Update_BarArray_Data_Ex();
         }
     
     }
     
     if(FTMS_OP_Code == start_or_resume){
         if(System_Mode == Idle){
-            Quick_Start_Init();
+            Quick_Start_Init();       //Zwift 沒事就會一直下這個cmd (包括掃描裝置時)
             IntoReadyMode_Process();
         }
     }
@@ -2914,14 +2920,18 @@ void F_Btm_FTMS_B2_Read(){
         if(ucBtmRxData[3] == 0x01){ 
             //----Stop---/
             
-            if(System_Mode == Workout){    //暫時先做  暫停的動作
-                IntoPauseMode_Process(); 
+            if(System_Mode == Workout){
+                
+               
+                IntoSummaryMode_Process(); //190115 直接進入summary
                 
                 Btm_Task_Adder(FTMS_Data_Broadcast); //Page 0 //廣播運動資料 歸零
                 Btm_Task_Adder(FTMS_Data_Broadcast); //Page 1
                 
                 Set_SPEED_Value(0);
+                Set_INCLINE_Value(0);
                 RM6_Task_Adder(Set_SPEED);
+                RM6_Task_Adder(Set_INCLINE);
                 RM6_Task_Adder(Motor_STOP);
                 
                Buzzer_BeeBee(Time_Set, Cnt_Set);
@@ -3086,10 +3096,11 @@ Training_status_Def  Training_status = IDLE;
 unsigned short minimum_speed;
 unsigned short maximum_speed;	
 unsigned short mimimum_increment_speed = 20;	
+
 unsigned short maximum_inclination;		
 unsigned short minimum_inclination;
-
 unsigned short minimum_increment_inclination = 5;	
+
 unsigned char  minimum_heart_rate  = 40;	
 unsigned char  maximum_heart_rate  = 240;	
 unsigned char  minimum_heart_rate_increment =1;

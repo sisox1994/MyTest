@@ -24,7 +24,7 @@ unsigned char HR5KPairOkFlag;
 #define C_ON	1
 #define C_OFF	0
 unsigned char ucWhr;												//無線心跳
-static unsigned char ucWhrTemp,ucWhr_Buf[4];	
+static unsigned char ucWhrTemp;	
 
 unsigned char WhrFlag;
 unsigned char WPulseFlag;
@@ -55,7 +55,7 @@ void Hand_HR__Init(){
     /*PE1   -->    Hand_HR_IN    IN  */ 
     GPIO_InitStruct.Pin = HHR_PIN;
     GPIO_InitStruct.Mode = GPIO_MODE_INPUT;     
-    GPIO_InitStruct.Pull =GPIO_NOPULL ;         
+    GPIO_InitStruct.Pull =  GPIO_PULLUP;  //GPIO_NOPULL       
     HAL_GPIO_Init(HHR_GPIO, &GPIO_InitStruct);
     
 }
@@ -66,10 +66,14 @@ void Hand_HR__Init(){
 #if configUSE_HHR
 unsigned char ucHhr;
 
-unsigned char HhrFlag;
+volatile unsigned char HhrFlag;
+
 unsigned char HPulseFlag;
 //有線心跳
-static unsigned char ucHhrTemp,ucHhr_Buf[4];						 
+#define BUF_SIZE 10
+unsigned char ucHhrTemp;
+unsigned char ucHhr_Buf[BUF_SIZE];
+unsigned char ucWhr_Buf[BUF_SIZE];
 #endif
 
 /*============================================================================
@@ -81,7 +85,7 @@ static unsigned char F_HRCalculate(unsigned char HRValue ,unsigned char HRValueT
   if(HRValue == 0)
   {
     /* 心跳初值設定 */
-      /*
+      
     if(HRValueTemp > 90){
 	 HRValue = 90;
     }else{
@@ -90,34 +94,51 @@ static unsigned char F_HRCalculate(unsigned char HRValue ,unsigned char HRValueT
       }else{
 	 HRValue = HRValueTemp;			
       }
-    }*/
-    HRbuffer[0] = HRValue;
+    }
+    for(unsigned char i =0;i<BUF_SIZE;i++){
+        HRbuffer[i] = HRValue;
+    }
+    /*HRbuffer[0] = HRValue;
     HRbuffer[1] = HRValue;
     HRbuffer[2] = HRValue;
-    HRbuffer[3] = HRValue;	
+    HRbuffer[3] = HRValue;*/	
   }
   else
   {
     /* 不讓差距超過六 */
     if(HRValueTemp >= HRValue)
     {
-	 if((HRValueTemp - HRValue) > 10 )
+	 if((HRValueTemp - HRValue) > 4 )
 	 {
-	   HRValueTemp = HRValue + 10;
+	   HRValueTemp = HRValue + 4;
 	 }
     }
     else
     {
-	 if((HRValue - HRValueTemp) > 10 )
+	 if((HRValue - HRValueTemp) > 4 )
 	 {
-	   HRValueTemp = HRValue -10;
+	   HRValueTemp = HRValue -4;
 	 }
     }
-    HRbuffer[0] = HRbuffer[1];
+    
+    for(unsigned char i = 0;i<(BUF_SIZE-1);i++){
+        HRbuffer[i] = HRbuffer[i+1];
+    }
+    HRbuffer[BUF_SIZE-1] = HRValueTemp;
+    
+    unsigned int temp = 0;
+    for(unsigned char i = 0;i<BUF_SIZE;i++){
+      temp+= HRbuffer[i];
+    }
+    HRValue = temp / BUF_SIZE;
+    
+    /*HRbuffer[0] = HRbuffer[1];
     HRbuffer[1] = HRbuffer[2];
     HRbuffer[2] = HRbuffer[3];
     HRbuffer[3] = HRValueTemp;
     HRValue = (HRbuffer[0] + HRbuffer[1] + HRbuffer[2] + HRbuffer[3]) / 4;
+    */
+    
   }
   return HRValue;
 }
@@ -212,10 +233,17 @@ static void F_WHRTask( void )
     ucWhr = 0;
     ucWhrOld = 0;			
     ucWhrTemp = 0;
+    
+    for(unsigned char i = 0;i<BUF_SIZE;i++){
+        ucWhr_Buf[i]=0;   
+    }
+    /*
     ucWhr_Buf[0]=0;
     ucWhr_Buf[1]=0;
     ucWhr_Buf[2]=0;
     ucWhr_Buf[3]=0;
+    */
+    
     HR5KPairOkFlag=C_OFF;
   }
 }
@@ -225,12 +253,28 @@ static void F_WHRTask( void )
 * Description	: 有線心跳計算
 =============================================================================*/
 #if configUSE_HHR
+
+/*
+static unsigned short usHhrCnt;										//有線心跳時間計數
+static unsigned short usHhrWidth;									//有線心跳脈波時間寬度
+static unsigned char ucHhrOld;										//有線心跳
+static unsigned char ucTemp;
+  */
+unsigned short usHhrCnt;		
+unsigned short usHhrWidth;
+unsigned char ucHhrOld;		
+unsigned char ucTemp;
+
+unsigned short usHhrCnt_Record[10];
+
+unsigned short usHhrVal_Record[10];
+
+unsigned short tmp_cnt;
+
+
 static void F_HHRTask( void )
 {
-  static unsigned short usHhrCnt;										//有線心跳時間計數
-  static unsigned short usHhrWidth;									//有線心跳脈波時間寬度
-  static unsigned char ucHhrOld;										//有線心跳
-  static unsigned char ucTemp;	
+	
   
   /* 有線心跳時間計數 unit:1ms */
   usHhrCnt++;
@@ -249,8 +293,18 @@ static void F_HHRTask( void )
 	   /* 心跳範圍: 40-240 其餘排除 (60000/40)<usWhrCnt<(60000/240)*/
 	   if((usHhrCnt <= 1500) && (usHhrCnt >= 250))     
 	   {   
+               
+  
 		ucHhrTemp = 60000 / usHhrCnt;
-		usHhrCnt = 0;
+                
+                
+                usHhrCnt_Record[tmp_cnt] = usHhrCnt;
+                usHhrVal_Record[tmp_cnt] = ucHhrTemp;
+                
+                tmp_cnt++;
+                tmp_cnt = tmp_cnt%10;
+                
+                usHhrCnt = 0;
 		/* 一開始先取得兩次 誤差在+-6 的心跳訊號 */
 		if(ucHhr == 0)
 		{
@@ -287,16 +341,20 @@ static void F_HHRTask( void )
     usHhrWidth = 0;
   }
   /* 兩秒沒心跳 清除所有紀錄 */
-  if(usHhrCnt > 2000)
+  if(usHhrCnt > 3000)
   {
     usHhrCnt=0;
     ucHhr = 0;
     ucHhrOld = 0;			
     ucHhrTemp = 0;
-    ucHhr_Buf[0]=0;
+    
+    for(unsigned char i = 0;i<BUF_SIZE;i++){
+        ucHhr_Buf[i]=0;   
+    }
+    /*ucHhr_Buf[0]=0;
     ucHhr_Buf[1]=0;
     ucHhr_Buf[2]=0;
-    ucHhr_Buf[3]=0;
+    ucHhr_Buf[3]=0;*/
   } 
 }
 #endif

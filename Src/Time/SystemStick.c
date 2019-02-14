@@ -31,12 +31,15 @@ unsigned char STEP_Icon_Display_Cnt;
 unsigned char MET_Icon_Display_Cnt;
 unsigned char HR_Icon_Display_Cnt;
 
+unsigned char HR_BlinkOneTime_Cnt;  //心跳 七段顯示器閃一下 
+
 
 unsigned short  BTSPK_Icon_Display_Cnt;
 unsigned short  BTSPK_OFF_Icon_Display_Cnt;
 
 unsigned short Ble_wait_disconnect_Time_out_Cnt;
 unsigned short Btm_Timer_Cnt;
+unsigned short RM6t6_Timer_Cnt;
 unsigned short BarArrayBlinkCnt;
 unsigned int   standard_1_Sec_Cnt;
 
@@ -92,7 +95,7 @@ void time(){
     BuzzerCheck();
   
     //------------------------------------------------//
-    if(Btm_Timer_Cnt%100 == 0){    //BTM 排程器用
+    if(Btm_Timer_Cnt%200 == 0){    //BTM 排程器用
         T100ms_Btm_Task_Flag = 1;
         
         if(Ble_Icon_Display_Cnt > 0){
@@ -143,29 +146,32 @@ void time(){
         if(HR_Icon_Display_Cnt > 0){
             HR_Icon_Display_Cnt--;
         } 
+        if(HR_BlinkOneTime_Cnt > 0){
+            HR_BlinkOneTime_Cnt--;
+        }
              
         //------------------------------------------------
         
     }
     
-    if((Btm_Timer_Cnt + 50)%100 == 0){  //與下控 RM6T6溝通用 刻意與BTM 差 50 ms
+    if((Btm_Timer_Cnt + 100)%300 == 0 ){  //RM6t6_Timer_Cnt%150 ==0){  //與下控 RM6T6溝通用 刻意與BTM 差 50 ms
         T100ms_RM6T6_Task_Flag = 1;
     }
     
     //---------------------------------------------------//
     
 
-    //------------   5K 心跳  --------------------//
+    //------------   5K 心跳  + 手握 --------------------//
     
-      #if configUSE_WHR 
-         F_HR();        //1ms  5K心跳偵測
-      #endif
+
+    if(NeverClearCnt % 100 == 0){   //每隔10ms 算5k心跳數值 
+#if configUSE_WHR  
+        F_HRProcess();    // 5K心跳數值計算
+#endif  
     
-    if(NeverClearCnt % 10 == 0){   //每隔10ms 算5k心跳數值 
-      #if configUSE_WHR  
-       F_HRProcess();    // 5K心跳數值計算
-      #endif    
     }
+    
+    
     //-----------------------------------------//
 
     if(TimerCnt%1000 == 0){ //偵測按鈕按住多少(秒)
@@ -216,7 +222,7 @@ void time(){
     if(NeverClearCnt%500 == 0){  //偵測藍芽喇叭連線用
         T500ms_BTSPK_Det_Flag = 1;
     }
-    if(NeverClearCnt%500 == 0){  //偵測pauseKey用
+    if(NeverClearCnt%100 == 0){  //偵測pauseKey用
         T100ms_PauseKey_Flag = 1;
     }
     //-------------------------------------------------------------------//
@@ -279,6 +285,9 @@ void time(){
     if(Btm_Timer_Cnt == 9999) Btm_Timer_Cnt = 0;
     else Btm_Timer_Cnt++;
     
+    if(RM6t6_Timer_Cnt == 9999) RM6t6_Timer_Cnt = 0;
+    else RM6t6_Timer_Cnt++;
+      
     if(NeverClearCnt == 99999) NeverClearCnt = 0;
     else NeverClearCnt++;
     

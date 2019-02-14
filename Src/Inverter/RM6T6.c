@@ -126,7 +126,7 @@ const uint16_t InclineADTable[31] = {
 };
 
 // 系統參數設置
-void Set_SPEED_Value(unsigned short speedValue){
+void Set_SPEED_Value(unsigned short speedValue){ 
     System_SPEED = speedValue;
 }
 
@@ -193,95 +193,134 @@ void RM6_Task_Adder(RM6T6_Task_Def  RM6_Task){
     }  
 }
 
+
+unsigned char Task_execute_Flag = 1;
+unsigned char Incline_Check_Flag = 1;
+unsigned char Speed_Check_Flag = 1;
+unsigned char footfall_Check_Flag = 1;
+
 void RM6_background_Task(){
 
 #if RM6T6_IN_USE
+    
     if(T100ms_RM6T6_Task_Flag){
         T100ms_RM6T6_Task_Flag = 0;
         
-        if(Inverter_UART_Busy_Flag != 1){  //在RM6T6沒有收資料的時候才傳送 任務命令 
-            if(RM6_Task_Cnt >=1){  //至少要有一個任務  
-                
-                switch(RM6_Task_List[0]){  
-                  case Set_SPEED:
-                    Set_System_SPEED();
-                    break;
-                  case Set_INCLINE:
-                    Set_System_INCLINE();
-                    break;
-                  case Motor_FR:
-                    Set_Motor_FR();
-                    break;
-                  case Motor_RR:
-                    break;
-                  case Motor_STOP:
-                    Set_Motor_STOP();
-                    break;
-                  case Read_SPEED:
-                    read_SPEED();
-                    break; 
-                  case Read_INCLINE:
-                    read_INCLINE();
-                    break; 
-                  case Read_Foot_Fall:
-                    read_Foot_Fall();
-                    break;
-                  case  Read_Foot_Fall_10s:
-                    read_Foot_Fall_10s();
-                    break;
-                  case NO_Task:
-                    /*not do anything*/
-                    break;      
-                }
-                         
-                //-----------------做完之後 刪掉[0] 的任務     [0]<--[1]    [1]<--[2] ....
-                for(unsigned char i = 0; i < RM6_Task_Cnt; i++){
-                    if(i == (RM6_Task_Amount - 1)){
-                        RM6_Task_List[(RM6_Task_Amount - 1)] = NO_Task; 
-                    }else{
-                        RM6_Task_List[i] = RM6_Task_List[i+1];
+        if(Task_execute_Flag == 1){
+        //--------------------------------------------------------------------------------  
+            if(Inverter_UART_Busy_Flag != 1){  //在RM6T6沒有收資料的時候才傳送 任務命令 
+                if(RM6_Task_Cnt >=1){  //至少要有一個任務  
+                    
+                    
+                    switch(RM6_Task_List[0]){  
+                      case Set_SPEED:
+                        Set_System_SPEED();
+                        break;
+                      case Set_INCLINE:
+                        Set_System_INCLINE();
+                        break;
+                      case Motor_FR:
+                        Set_Motor_FR();
+                        break;
+                      case Motor_RR:
+                        break;
+                      case Motor_STOP:
+                        Set_Motor_STOP();
+                        break;
+                      case Read_SPEED:
+                        read_SPEED();
+                        break; 
+                      case Read_INCLINE:
+                        read_INCLINE();
+                        break; 
+                      case Read_Foot_Fall:
+                        read_Foot_Fall();
+                        break;
+                      case  Read_Foot_Fall_10s:
+                        read_Foot_Fall_10s();
+                        break;
+                      case NO_Task:
+                        //not do anything
+                        break;      
                     }
-                }
-                RM6_Task_Cnt = RM6_Task_Cnt - 1;    //執行完 就 -1  
-            }   
-        }
-
-        //檢查  揚升有沒有到達該到的位置
-        if( (RM6T6_state.INCLINE_ivt >= (INCL_Config_Value + 6)) || (RM6T6_state.INCLINE_ivt <= (INCL_Config_Value - 6))){
-            
-            RM6_Task_Adder(Read_INCLINE);
-            INCL_Moveing_Flag = 1;
-
-            if(INCL_Moveing_Time_out_Cnt >=10){ //超過時間沒有到達目標速度 在下一次速度cmd
-                Set_INCLINE_Value(System_INCLINE);
-                RM6_Task_Adder(Set_INCLINE);
-                INCL_Moveing_Time_out_Cnt = 0;
+                    
+                    //-----------------做完之後 刪掉[0] 的任務     [0]<--[1]    [1]<--[2] ....
+                    
+                    for(unsigned char i = 0; i < RM6_Task_Cnt; i++){
+                        if(i == (RM6_Task_Amount - 1)){
+                            RM6_Task_List[(RM6_Task_Amount - 1)] = NO_Task; 
+                        }else{
+                            RM6_Task_List[i] = RM6_Task_List[i+1];
+                        }
+                    }
+                    RM6_Task_Cnt = RM6_Task_Cnt - 1;    //執行完 就 -1  
+                    
+                    //--------------------------------------------------------------------
+                }   
             }
-            INCL_Moveing_Time_out_Cnt++;
-                
-        }else{
-            INCL_Moveing_Flag = 0;
-            INCL_Moveing_Time_out_Cnt = 0;
+        //------------------------------------------------------------------------------
         }
         
-        if((RM6T6_state.SPEED_ivt >= (SPEED_Config_Value + 6)) || (RM6T6_state.SPEED_ivt <= (SPEED_Config_Value - 6)) ){
-            RM6_Task_Adder(Read_SPEED);
-            SPEED_Changing_Flag = 1;
-            if(SPEED_Change_Time_out_Cnt >=10){ //超過時間沒有到達目標速度 在下一次速度cmd
-                Set_SPEED_Value(System_SPEED);
-                RM6_Task_Adder(Set_SPEED);
+
+          
+        if(Incline_Check_Flag == 1){
+            //-----------------------------------------------------------------------
+            //檢查  揚升有沒有到達該到的位置
+            if( (RM6T6_state.INCLINE_ivt >= (INCL_Config_Value + 6)) || (RM6T6_state.INCLINE_ivt <= (INCL_Config_Value - 6))){
+                
+                RM6_Task_Adder(Read_INCLINE);
+                INCL_Moveing_Flag = 1;
+                
+                if(INCL_Moveing_Time_out_Cnt >=10){ //超過時間沒有到達目標速度 在下一次速度cmd
+                    Set_INCLINE_Value(System_INCLINE);
+                    RM6_Task_Adder(Set_INCLINE);
+                    INCL_Moveing_Time_out_Cnt = 0;
+                }
+                INCL_Moveing_Time_out_Cnt++;
+                
+            }else{
+                INCL_Moveing_Flag = 0;
+                INCL_Moveing_Time_out_Cnt = 0;
+            }
+            //-----------------------------------------------------------------------
+        }
+        
+
+        
+        if(Speed_Check_Flag == 1){
+            //-----------------------------------------------------------------------
+            if((RM6T6_state.SPEED_ivt >= (SPEED_Config_Value + 6)) || (RM6T6_state.SPEED_ivt <= (SPEED_Config_Value - 6)) ){
+                
+                RM6_Task_Adder(Read_SPEED);
+                SPEED_Changing_Flag = 1;
+                if(SPEED_Change_Time_out_Cnt >=10){ //超過時間沒有到達目標速度 在下一次速度cmd
+                    Set_SPEED_Value(System_SPEED);
+  
+                    
+                    RM6_Task_Adder(Set_SPEED);
+                    SPEED_Change_Time_out_Cnt = 0;
+                }
+                SPEED_Change_Time_out_Cnt++;
+            }else{
+                SPEED_Changing_Flag = 0;
                 SPEED_Change_Time_out_Cnt = 0;
             }
-            SPEED_Change_Time_out_Cnt++;
-        }else{
-            SPEED_Changing_Flag = 0;
-            SPEED_Change_Time_out_Cnt = 0;
+            //-----------------------------------------------------------------------   
         }
-       if( (System_Mode == Workout) || (System_Mode == WarmUp) || (System_Mode == CooolDown ) ){
-            RM6_Task_Adder(Read_Foot_Fall);
-            RM6_Task_Adder(Read_Foot_Fall_10s);
+
+        
+        if(footfall_Check_Flag == 1){
+        //----------------------------------------------------------------------------
+            if( (System_Mode == Workout) || (System_Mode == WarmUp) || (System_Mode == CooolDown ) ){
+                RM6_Task_Adder(Read_Foot_Fall);
+                RM6_Task_Adder(Read_Foot_Fall_10s);
+            }  
+        //----------------------------------------------------------------------------    
         }
+        
+
     }
+  
 #endif
 }
 
@@ -678,12 +717,15 @@ void DEControl(unsigned char state){      //RS485 Control Pin
 }
 
 void UART_TX_Transform(){
+    
     DEControl(High);
     __asm("NOP");
     HAL_UART_Transmit(&huart1,ucUART_TxBuf, TXData_Length,10);
+    //HAL_UART_Transmit_IT(&huart1, ucUART_TxBuf, TXData_Length);
     __asm("NOP");
     DEControl(Low);  
     __HAL_UART_ENABLE_IT(&huart1, UART_IT_RXNE);  //防止自己停下來 不中斷了
+   
 }
 
 //-------------------------Tx  Asistance  Func   ----------------------------

@@ -5,6 +5,13 @@
 
 typedef enum{
 
+    Male   = 0,
+    Female = 1
+        
+}Gender_Def;
+
+typedef enum{
+
     Remaining  = 0,
     Elspsed    = 1
     
@@ -96,6 +103,13 @@ typedef enum{
     APP_Cloud_Run        = 45,
     APP_Train_Dist_Run   = 46,
     APP_Train_Time_Run   = 47,
+    
+    
+    FIT_ARMY     = 51,
+    FIT_NAVY     = 52,
+    FIT_AIRFORCE = 53,
+    FIT_USMC     = 54,
+    FIT_WFI      = 55
 
 
 }Program_Type_Def;
@@ -149,6 +163,7 @@ typedef struct{
 
 
 
+
 typedef struct{
     
     unsigned int   Goal_Time;
@@ -158,7 +173,8 @@ typedef struct{
     unsigned int   Distance_Goal;
     
     unsigned short  Age;
-    unsigned short Weight;
+    unsigned short  Weight;
+    Gender_Def      Gender;
     
     Program_Type_Def Like_Program;
     unsigned short Ez_MaxINCLINE;       //Ez-INCLINE ¼Ò¦¡³Ì°ª´­¤É
@@ -217,7 +233,8 @@ typedef struct{
     unsigned char  WorkTime;
     unsigned char  RestTime;
     
-    
+    unsigned short FitTest_Score;
+    unsigned char  FitTest_RISK;
 
 }Program_Data_Def;
 

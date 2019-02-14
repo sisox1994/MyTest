@@ -14,28 +14,32 @@ typedef enum{
     SET_REST_Time = 8,
     SET_LIKE_Prog = 9,
     SET_END       = 10,
+    
+    SET_GENDER    = 11,
+    
         
 
 }Program_Setting_item_Def;
 
 typedef enum{
   
-    Time_Age_Weight         = 0,
-    Time_Age_Weight_THR     = 1,
-    Time_Age_Weight_MAX_INC = 2,
-    Age_Weight              = 3,  
-    Age_Weight_Cal          = 4,
-    Age_Weight_Lvl          = 5,
+    Time_Age_Weight           = 0,
+    Time_Age_Weight_THR       = 1,
+    Time_Age_Weight_MAX_INC   = 2,
+    Age_Weight                = 3,  
+    Age_Weight_Cal            = 4,
+    Age_Weight_Lvl            = 5,
     Time_Age_Weight_Work_Rest = 6,
-    P_Like                    = 7
+    P_Like                    = 7,
+    Gender_Age_Weight         = 8,
     
    
 }Setting_Class_Def;
 
 extern Program_Setting_item_Def  Setting_item_Index;
 
-extern unsigned char INCLINE_HIGH_Limit_Table[20];
-extern unsigned char INCLINE_LOW_Limit_Table[20]; 
+extern unsigned char INCLINE_HIGH_Limit_Table[21];
+extern unsigned char INCLINE_LOW_Limit_Table[21]; 
 
 
 #define INCLINE_MAX_Level_DEF  31
@@ -55,12 +59,16 @@ void Calorie_Calculate();
 void Mets_Calculate();
 void ALTI_Calculate();
 
+void Update_BarArray_Data_Ex();
+    
 unsigned char Quick_SPEED__Key();
 unsigned char Quick_INCLINE__Key();
 
 void UserData_Init();
 void GetMaxHeartRate();
 void GetTargetHeartRate();
+
+void GetFitTest_Score();
 
 void Time_Change_Process();
 void Time_Change_Process_InWorkout(short TimeChangeValue);
@@ -125,4 +133,12 @@ void User_2_Init();
 void Cloud_Run_Program_Init();
 void Train_Dist_Run_Program_Init();
 void Train_Time_Run_Program_Init();
+
+//   Fit Test   Function
+void FIT_ARMY_Init();
+void FIT_NAVY_Init();
+void FIT_AIRFORCE_Init();
+void FIT_USMC_Init();
+void FIT_WFI_Init();
+
 #endif

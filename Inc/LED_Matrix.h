@@ -23,6 +23,9 @@ unsigned char F_String_buffer_Auto_Middle( Direction_Def Dir, unsigned char *Str
 void F_Num_buffer(short posX ,short posY,unsigned int Value , unsigned short Speed ,Format_Def format);
 unsigned char F_Number_buffer_Auto( Direction_Def Dir, unsigned int Value , unsigned short Speed ,Format_Def format ,unsigned char Blink );
 
+void F_Time_buffer(short posX ,short posY,unsigned int Value);
+
+
 void DrawBarArray(unsigned char *BarArray_Temp);
 void DrawBarArray_Workout( unsigned char *BarArray_Temp , unsigned char Blink_Index , unsigned char Blink_Flag );
 void Basic_HRC_Display();

@@ -3,11 +3,51 @@
 #include "system.h"
 
 UART_HandleTypeDef huart6;
+TIM_HandleTypeDef htim1;
+
+/* TIM1 init function */
+static void MX_TIM1_Init(void);
+static void MX_TIM1_Init(void)
+{
+
+  TIM_ClockConfigTypeDef sClockSourceConfig;
+  TIM_MasterConfigTypeDef sMasterConfig;
+
+  htim1.Instance = TIM1;
+  htim1.Init.Prescaler = 30;
+  htim1.Init.CounterMode = TIM_COUNTERMODE_UP;
+  htim1.Init.Period = 1549;
+  htim1.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+  htim1.Init.RepetitionCounter = 0;
+  if (HAL_TIM_Base_Init(&htim1) != HAL_OK)
+  {
+    _Error_Handler(__FILE__, __LINE__);
+  }
+
+  sClockSourceConfig.ClockSource = TIM_CLOCKSOURCE_INTERNAL;
+  if (HAL_TIM_ConfigClockSource(&htim1, &sClockSourceConfig) != HAL_OK)
+  {
+    _Error_Handler(__FILE__, __LINE__);
+  }
+
+  sMasterConfig.MasterOutputTrigger = TIM_TRGO_ENABLE;
+  sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
+  if (HAL_TIMEx_MasterConfigSynchronization(&htim1, &sMasterConfig) != HAL_OK)
+  {
+    _Error_Handler(__FILE__, __LINE__);
+  }
+
+  HAL_TIM_Base_Start_IT(&htim1);
+  
+}
+
+
 void SystemClock_Config(void);
 void GPIO_CLK_Enable();
 void MX_USART1_UART_Init(void);
 void MX_USART2_UART_Init(void);
              
+
 unsigned char My_PWM_Value = 0;
 
 void Other_Init(){
@@ -20,6 +60,8 @@ void Other_Init(){
 #endif
 }
 
+unsigned char RM_Task_Switch = 1;
+unsigned char APP_Task_Switch = 1;
 int main(void)
 {
     
@@ -29,7 +71,8 @@ int main(void)
     SafeKey_Init();
     Flash_Init();
     Power_5V_ON();
-    
+  
+    MX_TIM1_Init();
     //FlashErase(0);
     
     Flash_Machine_Data_Loading();
@@ -43,6 +86,20 @@ int main(void)
     
     Buzzer_BeeBee(500, 2);
     
+  //---------------時序測試----------------------------
+  /*Configure GPIO pin Output Level */
+    GPIO_InitTypeDef GPIO_InitStruct;
+    
+  HAL_GPIO_WritePin(GPIOE, GPIO_PIN_2, GPIO_PIN_RESET);
+
+  /*Configure GPIO pins :PE1 */
+  GPIO_InitStruct.Pin = GPIO_PIN_2;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(GPIOE, &GPIO_InitStruct);
+  //--------------------------------------------------  
+  
     if(OTA_Mode_Flag == 0){   
         
         System_Mode = StartUp; 
@@ -50,7 +107,7 @@ int main(void)
         Turn_ON_All_Segment();  
         Key_GPIO_Init();
         Reality_Key_Init();
-        //Other_Init();       //風扇跟藍芽喇叭
+        Other_Init();       //風扇跟藍芽喇叭
         RM6T6_Init();
         HR_5K_Init();
         Hand_HR__Init();
@@ -72,14 +129,16 @@ int main(void)
     System_Mode = RS485_Test_Mode;
 #endif
     
+
     
     while (1)
     {
-        
+  
 #if Use_FAN     
         FAN_SET_PWM_DUTY(My_PWM_Value);
 #endif
-        
+  
+
 #if Use_BTSPK 
         if(System_Mode != StartUp){
             BT_SPK_Detect();
@@ -93,8 +152,15 @@ int main(void)
         
         if( OTA_Mode_Flag == 0){   //如果是OTA 模式就不做其他背景執行動作
             F_HeartRate_Supervisor(); 
-            RM6_background_Task(); // 變頻器 任務排程器
-            APP_background_Broadcast();   //0x39  每隔5秒  丟系統狀態       
+            
+            if(RM_Task_Switch == 1){
+                RM6_background_Task(); // 變頻器 任務排程器
+            }
+            
+            if(APP_Task_Switch == 1){
+                APP_background_Broadcast();   //0x39  每隔5秒  丟系統狀態 
+            }
+                  
         }  
         
         switch(System_Mode){
@@ -140,8 +206,11 @@ int main(void)
             RS485_Test_Func();
             break;
 #endif
-            
-        }
+           
+        } 
+        
+        
+        
     }
 
 }

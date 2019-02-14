@@ -11,13 +11,15 @@ unsigned char ucSecondCnt = 0;
 extern unsigned char EngineerTestItem;
 //兩秒全顯期間  按鍵判斷  進入工程模式?
 void EnterEngineerMode_Key(){
-    if(KeyCatch(0 ,2, Stop , cool)){
+    
+    if(KeyCatch(1 ,2, Stop , cool)){
         System_Mode = Engineer;
         EngineerTestItem = 0;
     }
 }
 
 void LUBE_Mode_Key(){
+    
     if( KeyCatch(0,1 , Stop) ){ 
         ucStartUpFlow = 3;  
     } 

@@ -20,7 +20,7 @@ System_Unit_Def System_Unit;
 //unsigned int Total_Machine_Times    = 10;     //機器跑的總時間  單位 小時 
 
 unsigned short usNowHeartRate;
-unsigned char HeartRate_Is_Exist_Flag = 0;
+unsigned char  HeartRate_Is_Exist_Flag = 0;
 
 ///主要功能   判斷心跳裝置是否有數值   有數值 FTMS 心跳Flag = 1  數值變0  或斷線  Flag = 0
 // Zwift 特殊情況  FTMS 心跳送0bpm 或將Flag取消 Zwift心跳數值都會停留在最後大於0的整數值

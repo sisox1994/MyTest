@@ -1319,10 +1319,20 @@ void Workout_Value_DisplayProcess(){
             }    
         }
         
-        if(HeartRate_Display_Type == HR){
-           SET_Seg_Display(HEARTRATE  , usNowHeartRate , ND , DEC );
-        }else if(HeartRate_Display_Type == METS){
-           SET_Seg_Display(HEARTRATE  , usMET , ND , DEC );
+        if(System_Mode != Summary){  //Summary Mode 顯示平均心跳
+            
+            if(HeartRate_Display_Type == HR){
+                
+                if(HR_BlinkOneTime_Cnt > 0){
+                    SET_Seg_Display_Blink(HEARTRATE, usNowHeartRate , ND , DEC , 1 );
+                }else{
+                    SET_Seg_Display(HEARTRATE  , usNowHeartRate , ND , DEC );
+                }
+   
+                
+            }else if(HeartRate_Display_Type == METS){
+                SET_Seg_Display(HEARTRATE  , usMET , ND , DEC );
+            }
         }
         
         //--------------外部按鍵----------------------------
@@ -1346,25 +1356,43 @@ void Workout_Value_DisplayProcess(){
         }
         //-----------------------------------------------------------------
         
-        SET_INCLINE_Blink( System_INCLINE ,D2 ,DEC  , INCL_Moveing_Flag);
-        SET_SPEED_Blink(    System_SPEED  ,D2 ,DEC  , SPEED_Changing_Flag);
+
         
+        if(System_Mode != Summary){
+            
+#if SpdIncSegBlink
+            SET_INCLINE_Blink( System_INCLINE ,D2 ,DEC  , INCL_Moveing_Flag);
+            SET_SPEED_Blink(    System_SPEED  ,D2 ,DEC  , SPEED_Changing_Flag);
+            
+            if(INCL_Moveing_Flag == 1){
+                L_Mode = 'B';
+            }else{
+                L_Mode = 'N';
+            }
+            
+            if(SPEED_Changing_Flag == 1){
+                R_Mode = 'B';
+            }else{
+                R_Mode = 'N';
+            }
+                 
+#else
+            SET_INCLINE_Blink( System_INCLINE ,D2 ,DEC  , 0);
+            SET_SPEED_Blink(    System_SPEED  ,D2 ,DEC  , 0);            
+           
+            L_Mode = 'N';
+            R_Mode = 'N';
+#endif
+
+            
+
+            SET_DisplayBoard_Data(L_Mode,1,System_INCLINE ,R_Mode,1,System_SPEED);    
+        }else if(System_Mode == Summary){
+        
+        }
+       
         //------------------------------Display Board --------------------------
         
-        if(INCL_Moveing_Flag == 1){
-            L_Mode = 'B';
-        }else{
-            L_Mode = 'N';
-        }
-        
-        if(SPEED_Changing_Flag == 1){
-            R_Mode = 'B';
-        }else{
-            R_Mode = 'N';
-        }
-        
-        SET_DisplayBoard_Data(L_Mode,1,System_INCLINE ,R_Mode,1,System_SPEED);
-         
         //---------------------------------------------------------------------------------
         
         
@@ -1425,7 +1453,6 @@ void Workout_Value_DisplayProcess(){
         }else if(Pace_Display_Switch == 1){            
             // ----------- 步頻 -----------------------    
             SET_Seg_Display(PACE   ,  Pace_Freq   , ND , DEC );  //  步頻= 每分鐘走幾步   =>   (10s 走幾步) * 6
-            
         }else if(Pace_Display_Switch == 2){  //   
             
             // ----------- 步幅 ---------------------- 
@@ -1435,7 +1462,12 @@ void Workout_Value_DisplayProcess(){
         }else if(Pace_Display_Switch == 3){
             //-------------步速-------------------------
             //跑一公里所需的時間   基礎單位 秒(s)   顯示(MM:SS)
-            TIME_SET_Display( PACE_SPD  , Pace_Spd ,0x0F , 1);   
+            if(System_Mode == Summary){
+                
+                TIME_SET_Display( PACE_SPD  , 36000/uiAvgSpeed ,0x0F , 1);
+            }else{
+                TIME_SET_Display( PACE_SPD  , Pace_Spd ,0x0F , 1);
+            }
             //SET_Seg_TIME_Display(PACE , Pace_Spd);                    // 步速 =  跑一公里所需的時間
         } 
     }

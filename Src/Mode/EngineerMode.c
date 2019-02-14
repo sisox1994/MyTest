@@ -3,6 +3,7 @@
 
 unsigned char EngineerTestItem;
 unsigned char LED_SweepCnt;
+unsigned char DispBoard_SweepCnt;
 
 unsigned char TestValue = 1;
 unsigned char TestItem = 26;
@@ -13,7 +14,7 @@ unsigned char Key_Press_Record_3;
 unsigned char Key_Press_Record_4;
 unsigned char Key_Press_Record_5;
 unsigned char Key_Press_Record_6;
-
+unsigned char Key_Press_Record_7;
 
 
 void RestStepValue(){
@@ -28,7 +29,8 @@ void RestStepValue(){
 }
                                         // :17   :12    :8
 unsigned char Oder_Adj[27] = { 0,1,2,3,4,5,6,7,8,9,10,15,11,12,13,14,20,16,17,18,19,21,22,23,24,25,26};
-
+unsigned char KeyNameStriBuff[3];
+unsigned char Test_Dot = 1; 
 void Engineer_Func(){
     
     
@@ -66,7 +68,7 @@ void Engineer_Func(){
              }
              
              if( KeyCatch(0,1 , Start) ){
-                  EngineerTestItem = 2;
+                  EngineerTestItem = 3;
                   RestStepValue();
              }else if(KeyCatch(0,1 , Stop) ){
                  memset(LedMatrixBuffer,0x00,32);
@@ -77,7 +79,7 @@ void Engineer_Func(){
              
         }
          //-------------------------------橫掃 LED  矩陣測試-------
-        if(EngineerTestItem == 2){
+        /*if(EngineerTestItem == 2){
              
              for(unsigned char i = 0; i < 32; i++){
                  if(i == LED_SweepCnt){
@@ -102,7 +104,7 @@ void Engineer_Func(){
                  EngineerTestItem = 1;
                  RestStepValue();
              } 
-        }
+        }*/
         
         //-----------------------------      E1  七段顯示器 測試    ----------
         if(EngineerTestItem == 3){
@@ -111,16 +113,16 @@ void Engineer_Func(){
             Turn_OFF_All_Segment();
             
             if( KeyCatch(0,1 , Start) ){
-                EngineerTestItem = 4;
+                EngineerTestItem = 5;
                 RestStepValue();
                 LED_SweepCnt = 6;
             }else if(KeyCatch(0,1, Stop) ){
-                EngineerTestItem = 2;
+                EngineerTestItem = 1;
                 RestStepValue();
             }  
         }
         
-        if(EngineerTestItem == 4){  //-----------  一顆一顆測  -----------------
+        /*if(EngineerTestItem == 4){  //-----------  一顆一顆測  -----------------
             
             Test_Segment(Oder_Adj[TestItem] , (TestValue>>LED_SweepCnt));
             if(T300ms_Flag){
@@ -171,24 +173,51 @@ void Engineer_Func(){
                      TestItem++;
                  }
              } 
-        }
+        }*/
         
         if(EngineerTestItem == 5){
             //-----------------------------------------全部七段一起測----
-            Test7_Segment((TestValue>>LED_SweepCnt));
+            
+            
+
+            if(LED_SweepCnt == 8){
+                Test7_Segment(0xFF);
+            }else{
+                Test7_Segment((TestValue>>LED_SweepCnt));
+            }
+            
+            
+            SET_DisplayBoard_Data('N',Test_Dot, DispBoard_SweepCnt*111,'N',Test_Dot,DispBoard_SweepCnt*111);
+           
+            
             if(T300ms_Flag){
                 T300ms_Flag = 0;
-                if(LED_SweepCnt < 7){
+                
+                if(DispBoard_SweepCnt == 9){
+                    if(Test_Dot == 1){
+                        Test_Dot = 2;
+                    }else{
+                        Test_Dot = 1;
+                    }
+                }
+                
+                if(LED_SweepCnt < 8){
                     LED_SweepCnt++;
                 }else{
                     LED_SweepCnt = 0;
                 }
+                
+                DispBoard_SweepCnt++;
+                DispBoard_SweepCnt= DispBoard_SweepCnt%10;
+                
             }
             if( KeyCatch(0,1 , Start) ){           
                 EngineerTestItem = 6;
+                SET_DisplayBoard_Data('X',0, 0,'X',0,0);
                 RestStepValue(); 
             }else if(KeyCatch(0,1 , Stop) ){      
-                EngineerTestItem = 4;
+                EngineerTestItem = 5;
+                SET_DisplayBoard_Data('X',0, 0,'X',0,0);
                 RestStepValue();
             } 
         }
@@ -218,11 +247,13 @@ void Engineer_Func(){
              LedMatrixBuffer[3] = Key_Press_Record_4;
              LedMatrixBuffer[4] = Key_Press_Record_5;
              LedMatrixBuffer[5] = Key_Press_Record_6;
+             LedMatrixBuffer[6] = Key_Press_Record_7;
              
              
              if( (Key_Press_Record_1 != 0xFF) || (Key_Press_Record_2 != 0xFF) ||
                  (Key_Press_Record_3 != 0xFF) || (Key_Press_Record_4 != 0xFF) || 
-                 (Key_Press_Record_5 != 0xFF) || (Key_Press_Record_6 != 0x0F)     ){    //按鈕還沒全部按過一遍
+                 (Key_Press_Record_5 != 0xFF) || (Key_Press_Record_6 != 0xFF) ||
+                 (Key_Press_Record_7 != 0x01)   ){    //按鈕還沒全部按過一遍
                  
                  if(KeyCatch(0 ,2, cool , Start)){  //跳過 按鍵測試
                      EngineerTestItem = 8;
@@ -231,150 +262,316 @@ void Engineer_Func(){
                  
                  //------------------------------------
                  if( KeyCatch(0,1 , Spd_3) ){
-                      Key_Press_Record_1 ^= 0x01; 
+                      Key_Press_Record_1 |= 0x01; 
+                      KeyNameStriBuff[0] = 'K';
+                      KeyNameStriBuff[1] = '1'; 
+                      KeyNameStriBuff[2] = 0x00; 
+                      
                  }  
                  if( KeyCatch(0,1 , Spd_6) ){
-                      Key_Press_Record_1 ^= 0x02; 
+                      Key_Press_Record_1 |= 0x02;
+                      KeyNameStriBuff[0] = 'K';
+                      KeyNameStriBuff[1] = '2';
+                      KeyNameStriBuff[2] = 0x00;  
                  }    
                  if( KeyCatch(0,1 , Spd_9) ){
-                      Key_Press_Record_1 ^= 0x04; 
+                      Key_Press_Record_1 |= 0x04; 
+                      KeyNameStriBuff[0] = 'K';
+                      KeyNameStriBuff[1] = '3'; 
+                      KeyNameStriBuff[2] = 0x00;  
                  }    
                  if( KeyCatch(0,1 , Spd_12) ){
-                      Key_Press_Record_1 ^= 0x08; 
+                      Key_Press_Record_1 |= 0x08; 
+                      KeyNameStriBuff[0] = 'K';
+                      KeyNameStriBuff[1] = '4'; 
+                      KeyNameStriBuff[2] = 0x00; 
                  }    
                  
                  if( KeyCatch(0,1 , cool) ){
-                      Key_Press_Record_1 ^= 0x10; 
+                      Key_Press_Record_1 |= 0x10; 
+                      KeyNameStriBuff[0] = 'K';
+                      KeyNameStriBuff[1] = '5'; 
+                      KeyNameStriBuff[2] = 0x00;  
                  }    
                  if( KeyCatch(0,1 , Start) ){
-                      Key_Press_Record_1 ^= 0x20; 
+                      Key_Press_Record_1 |= 0x20; 
+                      KeyNameStriBuff[0] = 'K';
+                      KeyNameStriBuff[1] = '6'; 
+                      KeyNameStriBuff[2] = 0x00;  
                  }    
                  if( KeyCatch(0,1 , Stop) ){
-                      Key_Press_Record_1 ^= 0x40; 
+                      Key_Press_Record_1 |= 0x40; 
+                      KeyNameStriBuff[0] = 'K';
+                      KeyNameStriBuff[1] = '7'; 
+                      KeyNameStriBuff[2] = 0x00;   
                  }   
                  
                  if( KeyCatch(0,1 , Spd_15) ){
-                      Key_Press_Record_1 ^= 0x80; 
+                      Key_Press_Record_1 |= 0x80; 
+                      KeyNameStriBuff[0] = 'K';
+                      KeyNameStriBuff[1] = '8'; 
+                      KeyNameStriBuff[2] = 0x00;   
                  }    
                  //--------------------------------------
                  
                  
                  if( KeyCatch(0,1 , Spd_18) ){
-                     Key_Press_Record_2 ^= 0x01; 
+                     Key_Press_Record_2 |= 0x01; 
+                     KeyNameStriBuff[0] = 'K';
+                     KeyNameStriBuff[1] = '9'; 
+                     KeyNameStriBuff[2] = 0x00;  
                  }   
                  if( KeyCatch(0,1 , Cancel) ){
-                     Key_Press_Record_2 ^= 0x02; 
+                     Key_Press_Record_2 |= 0x02; 
+                     KeyNameStriBuff[0] = 'K';
+                     KeyNameStriBuff[1] = '1'; 
+                     KeyNameStriBuff[2] = '0';  
                  }   
                  if( KeyCatch(0,1 , Num_0) ){
-                     Key_Press_Record_2 ^= 0x04; 
+                     Key_Press_Record_2 |= 0x04; 
+                     KeyNameStriBuff[0] = 'K';
+                     KeyNameStriBuff[1] = '1'; 
+                     KeyNameStriBuff[2] = '1';  
                  }                   
                  if( KeyCatch(0,1 , Enter) ){
-                     Key_Press_Record_2 ^= 0x08; 
+                     Key_Press_Record_2 |= 0x08; 
+                     KeyNameStriBuff[0] = 'K';
+                     KeyNameStriBuff[1] = '1'; 
+                     KeyNameStriBuff[2] = '2';  
                  }
                  if( KeyCatch(0,1 , Num_7) ){
-                     Key_Press_Record_2 ^= 0x10; 
+                     Key_Press_Record_2 |= 0x10; 
+                     KeyNameStriBuff[0] = 'K';
+                     KeyNameStriBuff[1] = '1'; 
+                     KeyNameStriBuff[2] = '3';  
                  }    
                  if( KeyCatch(0,1 , Num_8) ){
-                     Key_Press_Record_2 ^= 0x20; 
+                     Key_Press_Record_2 |= 0x20; 
+                     KeyNameStriBuff[0] = 'K';
+                     KeyNameStriBuff[1] = '1'; 
+                     KeyNameStriBuff[2] = '4';  
                  }    
                  if( KeyCatch(0,1 , Num_9) ){
-                     Key_Press_Record_2 ^= 0x40; 
+                     Key_Press_Record_2 |= 0x40; 
+                     KeyNameStriBuff[0] = 'K';
+                     KeyNameStriBuff[1] = '1'; 
+                     KeyNameStriBuff[2] = '5';  
                  }   
                  if( KeyCatch(0,1 , Num_4) ){
-                     Key_Press_Record_2 ^= 0x80; 
+                     Key_Press_Record_2 |= 0x80; 
+                     KeyNameStriBuff[0] = 'K';
+                     KeyNameStriBuff[1] = '1'; 
+                     KeyNameStriBuff[2] = '6';  
                  }  
                  
                  //------------------------------------------
                  
                  if( KeyCatch(0,1 , Num_5) ){
-                     Key_Press_Record_3 ^= 0x01;
+                     Key_Press_Record_3 |= 0x01;
+                     KeyNameStriBuff[0] = 'K';
+                     KeyNameStriBuff[1] = '1'; 
+                     KeyNameStriBuff[2] = '7';  
                  }    
                  if( KeyCatch(0,1 , Num_6) ){
-                     Key_Press_Record_3 ^= 0x02;
+                     Key_Press_Record_3 |= 0x02;
+                     KeyNameStriBuff[0] = 'K';
+                     KeyNameStriBuff[1] = '1'; 
+                     KeyNameStriBuff[2] = '8';  
                  }  
                  if( KeyCatch(0,1 , Num_1) ){
-                     Key_Press_Record_3 ^= 0x04;
+                     Key_Press_Record_3 |= 0x04;
+                     KeyNameStriBuff[0] = 'K';
+                     KeyNameStriBuff[1] = '1'; 
+                     KeyNameStriBuff[2] = '9';  
                  }    
                  if( KeyCatch(0,1 , Num_2) ){
-                     Key_Press_Record_3 ^= 0x08;
+                     Key_Press_Record_3 |= 0x08;
+                     KeyNameStriBuff[0] = 'K';
+                     KeyNameStriBuff[1] = '2'; 
+                     KeyNameStriBuff[2] = '0';  
                  }   
                  if( KeyCatch(0,1 , Num_3) ){
-                     Key_Press_Record_3 ^= 0x10;
+                     Key_Press_Record_3 |= 0x10;
+                     KeyNameStriBuff[0] = 'K';
+                     KeyNameStriBuff[1] = '2'; 
+                     KeyNameStriBuff[2] = '1';  
                  }  
                  if( KeyCatch(0,1 , Key_SpdDwn) ){
-                     Key_Press_Record_3 ^= 0x20;
+                     Key_Press_Record_3 |= 0x20;
+                     KeyNameStriBuff[0] = 'K';
+                     KeyNameStriBuff[1] = '2'; 
+                     KeyNameStriBuff[2] = '2';  
                  } 
                  if( KeyCatch(0,1 , Key_SpdUp) ){
-                     Key_Press_Record_3 ^= 0x40; 
+                     Key_Press_Record_3 |= 0x40; 
+                     KeyNameStriBuff[0] = 'K';
+                     KeyNameStriBuff[1] = '2'; 
+                     KeyNameStriBuff[2] = '3'; 
                  }
                  if( KeyCatch(0,1 , Key_Met) ){
-                     Key_Press_Record_3 ^= 0x80; 
+                     Key_Press_Record_3 |= 0x80; 
+                     KeyNameStriBuff[0] = 'K';
+                     KeyNameStriBuff[1] = '2'; 
+                     KeyNameStriBuff[2] = '4'; 
                  } 
                  //----------------------------------
                  
                  if( KeyCatch(0,1 , Key_Pace) ){
-                     Key_Press_Record_4 ^= 0x01;
+                     Key_Press_Record_4 |= 0x01;
+                     KeyNameStriBuff[0] = 'K';
+                     KeyNameStriBuff[1] = '2'; 
+                     KeyNameStriBuff[2] = '5'; 
                  }   
                  if( KeyCatch(0,1 , Key_Time ) ){
-                     Key_Press_Record_4 ^= 0x02;
+                     Key_Press_Record_4 |= 0x02;
+                     KeyNameStriBuff[0] = 'K';
+                     KeyNameStriBuff[1] = '2'; 
+                     KeyNameStriBuff[2] = '6'; 
                  }
                  if( KeyCatch(0,1 , Key_Cal) ){
-                     Key_Press_Record_4 ^= 0x04;
+                     Key_Press_Record_4 |= 0x04;
+                     KeyNameStriBuff[0] = 'K';
+                     KeyNameStriBuff[1] = '2'; 
+                     KeyNameStriBuff[2] = '7'; 
                  } 
                  if( KeyCatch(0,1 , Key_Dist) ){
-                     Key_Press_Record_4 ^= 0x08;
+                     Key_Press_Record_4 |= 0x08;
+                     KeyNameStriBuff[0] = 'K';
+                     KeyNameStriBuff[1] = '2'; 
+                     KeyNameStriBuff[2] = '8';    
                  }       
                  if( KeyCatch(0,1 , ANT) ){
-                     Key_Press_Record_4 ^= 0x10;
+                     Key_Press_Record_4 |= 0x10;
+                     KeyNameStriBuff[0] = 'K';
+                     KeyNameStriBuff[1] = '2'; 
+                     KeyNameStriBuff[2] = '9'; 
                  } 
                  if( KeyCatch(0,1 , Key_IncUp) ){
-                     Key_Press_Record_4 ^= 0x20;
+                     Key_Press_Record_4 |= 0x20;
+                     KeyNameStriBuff[0] = 'K';
+                     KeyNameStriBuff[1] = '3'; 
+                     KeyNameStriBuff[2] = '0';
                  }  
                  if( KeyCatch(0,1 , Key_IncDwn) ){
-                     Key_Press_Record_4 ^= 0x40;
+                     Key_Press_Record_4 |= 0x40;
+                     KeyNameStriBuff[0] = 'K';
+                     KeyNameStriBuff[1] = '3'; 
+                     KeyNameStriBuff[2] = '1'; 
                  }  
                  if( KeyCatch(0,1 , Key_Goal) ){ 
-                     Key_Press_Record_4 ^= 0x80;
+                     Key_Press_Record_4 |= 0x80;
+                     KeyNameStriBuff[0] = 'K';
+                     KeyNameStriBuff[1] = '3'; 
+                     KeyNameStriBuff[2] = '2';
                  }
                  //-------------------------------------
                  if( KeyCatch(0,1 , Key_FitTest) ){ 
-                     Key_Press_Record_5 ^= 0x01;
+                     Key_Press_Record_5 |= 0x01;
+                     KeyNameStriBuff[0] = 'K';
+                     KeyNameStriBuff[1] = '3'; 
+                     KeyNameStriBuff[2] = '3';
                  }
                  if( KeyCatch(0,1 , Key_Custom) ){ 
-                     Key_Press_Record_5 ^= 0x02;
+                     Key_Press_Record_5 |= 0x02;
+                     KeyNameStriBuff[0] = 'K';
+                     KeyNameStriBuff[1] = '3'; 
+                     KeyNameStriBuff[2] = '4';
                  }
                  if( KeyCatch(0,1 , Key_Manual) ){ 
-                     Key_Press_Record_5 ^= 0x04;
+                     Key_Press_Record_5 |= 0x04;
+                     KeyNameStriBuff[0] = 'K';
+                     KeyNameStriBuff[1] = '3'; 
+                     KeyNameStriBuff[2] = '5';
                  }
                  if( KeyCatch(0,1 , Key_HRC) ){ 
-                     Key_Press_Record_5 ^= 0x08;
+                     Key_Press_Record_5 |= 0x08;
+                     KeyNameStriBuff[0] = 'K';
+                     KeyNameStriBuff[1] = '3'; 
+                     KeyNameStriBuff[2] = '6'; 
                  }
                  if( KeyCatch(0,1 , Key_Advance) ){ 
-                     Key_Press_Record_5 ^= 0x10;
+                     Key_Press_Record_5 |= 0x10;
+                     KeyNameStriBuff[0] = 'K';
+                     KeyNameStriBuff[1] = '3'; 
+                     KeyNameStriBuff[2] = '7';
                  }
                  if( KeyCatch(0,1 , BLE) ){
-                     Key_Press_Record_5 ^= 0x20;
+                     Key_Press_Record_5 |= 0x20;
+                     KeyNameStriBuff[0] = 'K';
+                     KeyNameStriBuff[1] = '3'; 
+                     KeyNameStriBuff[2] = '8';
                  }    
                  if( KeyCatch(0,1 , Inc_0) ){
-                     Key_Press_Record_5 ^= 0x40;
+                     Key_Press_Record_5 |= 0x40;
+                     KeyNameStriBuff[0] = 'K';
+                     KeyNameStriBuff[1] = '3'; 
+                     KeyNameStriBuff[2] = '9';
                  }  
                  if( KeyCatch(0,1 , Inc_3) ){
-                      Key_Press_Record_5 ^= 0x80;
+                     Key_Press_Record_5 |= 0x80;
+                     KeyNameStriBuff[0] = 'K';
+                     KeyNameStriBuff[1] = '4'; 
+                     KeyNameStriBuff[2] = '0';
                  } 
                  //---------------------------------
                  if( KeyCatch(0,1 , Inc_6) ){
-                      Key_Press_Record_6 ^= 0x01;
+                     Key_Press_Record_6 |= 0x01;
+                     KeyNameStriBuff[0] = 'K';
+                     KeyNameStriBuff[1] = '4'; 
+                     KeyNameStriBuff[2] = '1';
                  }
                  if( KeyCatch(0,1 , Inc_9) ){
-                     Key_Press_Record_6 ^= 0x02;
+                     Key_Press_Record_6 |= 0x02;
+                     KeyNameStriBuff[0] = 'K';
+                     KeyNameStriBuff[1] = '4'; 
+                     KeyNameStriBuff[2] = '2'; 
                  } 
                  if( KeyCatch(0,1 , Inc_12) ){
-                     Key_Press_Record_6 ^= 0x04;
+                     Key_Press_Record_6 |= 0x04;
+                     KeyNameStriBuff[0] = 'K';
+                     KeyNameStriBuff[1] = '4'; 
+                     KeyNameStriBuff[2] = '3';
                  }  
                  if( KeyCatch(0,1 , Inc_15) ){
-                     Key_Press_Record_6 ^= 0x08;
+                     Key_Press_Record_6 |= 0x08;
+                     KeyNameStriBuff[0] = 'K';
+                     KeyNameStriBuff[1] = '4'; 
+                     KeyNameStriBuff[2] = '4';
                  } 
-                              
+                 if(R_KeyCatch(Spd_Up)){
+                     Key_Press_Record_6 |= 0x10;
+                     KeyNameStriBuff[0] = 'K';
+                     KeyNameStriBuff[1] = '4'; 
+                     KeyNameStriBuff[2] = '5';
+                 }
+                 if(R_KeyCatch(Spd_Down)){
+                     Key_Press_Record_6 |= 0x20;
+                     KeyNameStriBuff[0] = 'K';
+                     KeyNameStriBuff[1] = '4'; 
+                     KeyNameStriBuff[2] = '6';
+                 }
+                 if(R_KeyCatch(Inc_Up)){
+                     Key_Press_Record_6 |= 0x40;
+                     KeyNameStriBuff[0] = 'K';
+                     KeyNameStriBuff[1] = '4'; 
+                     KeyNameStriBuff[2] = '7';
+                 }
+                 if(R_KeyCatch(Inc_Down)){
+                     Key_Press_Record_6 |= 0x80;
+                     KeyNameStriBuff[0] = 'K';
+                     KeyNameStriBuff[1] = '4'; 
+                     KeyNameStriBuff[2] = '8';
+                 }
+                 
+                 if(PauseKey()){
+                     Key_Press_Record_7 |= 0x01;
+                     KeyNameStriBuff[0] = 'K';
+                     KeyNameStriBuff[1] = '4'; 
+                     KeyNameStriBuff[2] = '9';
+                 }
+
+                 F_String_buffer_Auto_Middle( Stay, KeyNameStriBuff ,50 ,0);
+                 
              }else{    //----------------------全部按完一輪
              
                  F_String_buffer_Auto_Middle( Stay, "OK" ,50 ,0);

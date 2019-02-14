@@ -1,5 +1,5 @@
 #include "stm32f4xx_hal.h"
-
+#include "system.h"
 #if Use_FAN
 
 TIM_HandleTypeDef htim2;
