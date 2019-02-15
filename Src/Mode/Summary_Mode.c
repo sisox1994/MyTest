@@ -1,7 +1,10 @@
 #include "system.h"
 
 void IntoSummaryMode_Process(){
-
+    
+    System_INCLINE = 0;
+    RM6_Task_Adder(Set_INCLINE);
+    
     __asm("NOP");  //將運動 距離,時間  寫進Flash 
     
     

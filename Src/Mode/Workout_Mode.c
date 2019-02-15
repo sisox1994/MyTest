@@ -711,8 +711,6 @@ void TimeProcess(){
             RM6_Task_Adder(Set_SPEED);
             RM6_Task_Adder(Motor_STOP);
             
-            System_INCLINE = 0;
-            RM6_Task_Adder(Set_INCLINE);
             
             Buzzer_BeeBee(Time_Set, Cnt_Set);
         }
@@ -737,8 +735,6 @@ void TimeProcess(){
             RM6_Task_Adder(Set_SPEED);
             RM6_Task_Adder(Motor_STOP);
             
-            System_INCLINE = 0;
-            RM6_Task_Adder(Set_INCLINE);
             
             Buzzer_BeeBee(Time_Set, Cnt_Set);
         }
@@ -761,10 +757,7 @@ void TimeProcess(){
                 Set_SPEED_Value(0);
                 RM6_Task_Adder(Set_SPEED);
                 RM6_Task_Adder(Motor_STOP);
-                
-                System_INCLINE = 0;
-                RM6_Task_Adder(Set_INCLINE);
-                
+                 
                 Buzzer_BeeBee(Time_Set, Cnt_Set);
                 
             }
@@ -786,8 +779,6 @@ void TimeProcess(){
                 RM6_Task_Adder(Set_SPEED);
                 RM6_Task_Adder(Motor_STOP);
                 
-                System_INCLINE = 0;
-                RM6_Task_Adder(Set_INCLINE);
                 Buzzer_BeeBee(Time_Set, Cnt_Set);
             }
             
@@ -808,8 +799,6 @@ void TimeProcess(){
                 RM6_Task_Adder(Set_SPEED);
                 RM6_Task_Adder(Motor_STOP);
                 
-                System_INCLINE = 0;
-                RM6_Task_Adder(Set_INCLINE);
                 
                 Buzzer_BeeBee(Time_Set, Cnt_Set);
             }
@@ -873,11 +862,7 @@ void TimeProcess(){
            if((Program_Data.Distance / 100) >= Program_Data.Distance_Goal){
                
                GetFitTest_Score();
-               
-               //¹B°Êµ²§ô  ´­¤ÉÂk0
-               System_INCLINE = 0;
-               RM6_Task_Adder(Set_INCLINE);
-               
+   
                Set_SPEED_Value(0);
                RM6_Task_Adder(Set_SPEED);
                IntoSummaryMode_Process();  

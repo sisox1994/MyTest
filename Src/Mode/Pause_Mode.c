@@ -15,10 +15,7 @@ void IntoPauseMode_Process(){
         Program_Data.FitTest_RISK  = 3;  //§£≈„•‹Risk?
         
         IntoSummaryMode_Process();
-        
-        System_INCLINE = 0;
-        RM6_Task_Adder(Set_INCLINE);
-        
+         
     }else{
         
         F_SetFEC_State(FINISHED);
@@ -44,8 +41,6 @@ void Pause_Key(){
         if( KeyCatch(0,1 , Stop) || PauseKey()){
             IntoSummaryMode_Process();
             
-            System_INCLINE = 0;
-            RM6_Task_Adder(Set_INCLINE);
         }
         
         SCREEN_OPTION_Key();
