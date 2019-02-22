@@ -178,9 +178,19 @@ void IntoReadyMode_Process(){
     
     //Program_Select = (Program_Type_Def)0;
     str_cNt = 0;
+    
+    if(System_Mode != Ready){
+        Buzzer_Set(150);
+    }
+   
     System_Mode = Ready;
    
-    Buzzer_Set(150);
+    ClearStd_1_Sec_Cnt();
+    
+    
+    
+    
+    
 }
 extern unsigned char Hint_Disp_Flag;
 void Next_Mode_Process(){

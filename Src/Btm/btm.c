@@ -994,7 +994,7 @@ void F_BtmRead35Cmd(void){
     
     Btm_Task_Adder(C_35Val);
     Cloud_Run_Initial_Busy_Flag = 1;
-    
+    ClearStd_1_Sec_Cnt();
 }
 //-------------------------------------------0x35 End-----------------------------------------------------------
 
@@ -1068,7 +1068,9 @@ void F_BtmRead36Cmd(void){
             usSetWeight   =  ucBtmRxData[8] + (256*ucBtmRxData[9]);
             usLapDistance =  ucBtmRxData[10] * 100;
             
-            System_Mode = Ready;    
+            
+            IntoReadyMode_Process();
+                
         }
     }
 }

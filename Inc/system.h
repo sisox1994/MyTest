@@ -22,7 +22,7 @@
 #define __SYSTEM_H__
 
 
-#define System_Version "V11"        //APP 只判斷這個
+#define System_Version "V12"        //APP 只判斷這個
 #define Modify_Version "A01"        // AXX 細分版本 V10A01 V10A02 代表都是V10 但是 有稍微修改
 
 

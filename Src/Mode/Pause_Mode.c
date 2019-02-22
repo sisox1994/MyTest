@@ -67,6 +67,9 @@ void Pause_Func(){
        
         if(PauseTimeOut_Cnt == 0){
             IntoSummaryMode_Process();
+            
+            System_INCLINE = 0;
+            RM6_Task_Adder(Set_INCLINE);
         }else{ 
             PauseTimeOut_Cnt--; 
         }
