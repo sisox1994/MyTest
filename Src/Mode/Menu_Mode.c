@@ -373,7 +373,7 @@ void Idle_Display(){
             F_String_buffer_Auto_Middle(Stay,"NAVY" ,30 ,0);
             break; 
           case FIT_AIRFORCE: 
-            F_String_buffer_Auto_Middle(Stay,"AIRF" ,30 ,0);
+            F_String_buffer_Auto_Middle(Stay,"USAF" ,30 ,0);
             break; 
           case FIT_USMC:   
             F_String_buffer_Auto_Middle(Stay,"USMC" ,30 ,0);
