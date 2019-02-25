@@ -254,7 +254,10 @@ typedef enum{
     Sys_OTA_Mode      = 13,
    
     RS485_Test_Mode   = 14,
-   
+    
+    System_Sleep    = 15,
+    
+    
 }System_Mode_Def;
 
 

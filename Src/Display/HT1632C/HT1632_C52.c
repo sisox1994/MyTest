@@ -34,6 +34,9 @@ void HT1632C_GPIO_Init(){
     HAL_GPIO_Init(HT1632__CS2_GPIO, &GPIO_InitStruct);
     
 }
+
+
+
    
 void CS2_Low(){HAL_GPIO_WritePin(HT1632__CS2_GPIO,CS2_Pin,GPIO_PIN_RESET);}
 void CS2_High(){HAL_GPIO_WritePin(HT1632__CS2_GPIO,CS2_Pin,GPIO_PIN_SET);}
@@ -221,6 +224,37 @@ void HT1632_Init(unsigned char sw ){
     Blink_Off(sw);
     
 }
+
+void HT1632C_DeInit(){
+    
+    
+    Turn_OFF_All_LEDMatrix();
+    Turn_OFF_All_Segment();
+    
+    GPIO_InitTypeDef GPIO_InitStruct;
+        
+    //PB7 --> DA  
+    //PB6 --> WR 
+    //PB5 --> CS2
+    //PB4 --> CS1   
+    
+    CS2_Low();
+    CS1_Low();
+    DA_Low();
+    WR_Low();
+    
+    GPIO_InitStruct.Pin = DA_Pin | WR_Pin | CS1_Pin;
+    GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+    GPIO_InitStruct.Pull = GPIO_NOPULL;
+    HAL_GPIO_Init(HT1632_GPIO, &GPIO_InitStruct);
+    
+    GPIO_InitStruct.Pin = CS2_Pin;
+    GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+    GPIO_InitStruct.Pull = GPIO_NOPULL;
+    HAL_GPIO_Init(HT1632__CS2_GPIO, &GPIO_InitStruct);
+    
+}
+
 
 void LED_Matrix_Init(){
     

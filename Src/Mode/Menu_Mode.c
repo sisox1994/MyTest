@@ -665,9 +665,17 @@ void Idle_Key(){
     }    
 }
 
+
+unsigned char GoToSleepFlag;
+extern void SystemConfigForIntSleepMode();
+
 extern void Idel_detect();
 void Idle_Func(){
 
+    /*if( KeyCatch(0,1 , cool) ){ 
+        GoToSleepFlag = 1;
+    }*/
+    
     Idle_Key();
     Idle_Display();
     Idel_detect();
@@ -677,4 +685,15 @@ void Idle_Func(){
         
         Btm_Task_Adder(FTMS_Data_Broadcast);
     }
+    
+
+    
+    if(GoToSleepFlag == 1){
+        GoToSleepFlag = 0;
+        
+        SystemConfigForIntSleepMode();
+        
+        System_Mode = System_Sleep;        
+    }
+    
 }

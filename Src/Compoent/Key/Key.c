@@ -30,6 +30,78 @@ void Key_GPIO_Init(){
     
     
 }
+
+void Key_GPIO_DeInit(){
+    //------------------        OUTPUT    -----------------------------------   
+    //Key0 ~ Key6  --:     PE15 - PE14 - PE13 - PE12 - PE11 - PE10 - PE9
+    GPIO_InitTypeDef GPIO_InitStruct;
+
+    HAL_GPIO_WritePin( GPIOE, GPIO_PIN_15 | GPIO_PIN_14 | GPIO_PIN_13 | GPIO_PIN_12 | GPIO_PIN_11 | GPIO_PIN_10 | GPIO_PIN_9 ,   GPIO_PIN_RESET  );
+    GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+    GPIO_InitStruct.Pull = GPIO_NOPULL;
+    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+    HAL_GPIO_Init(GPIOE, &GPIO_InitStruct);
+    
+    
+    //-----------------       INPUT     ---------------------------------------
+    __HAL_RCC_GPIOD_CLK_ENABLE();
+    __HAL_RCC_GPIOB_CLK_ENABLE();
+    __HAL_RCC_GPIOE_CLK_ENABLE();
+    
+    //KD0 ~ KD6  --:       PD14 - PD13 - PD12 - PD11 - PD10 - PD9 - PD8   
+    GPIO_InitStruct.Pin = GPIO_PIN_14 | GPIO_PIN_13 | GPIO_PIN_12 | GPIO_PIN_11 | GPIO_PIN_10 | GPIO_PIN_9 | GPIO_PIN_8;        
+    GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
+    GPIO_InitStruct.Pull = GPIO_NOPULL;
+    HAL_GPIO_Init(GPIOD, &GPIO_InitStruct);
+    
+    
+    
+     //---   SPD+   SPD-    --------------------------------
+    GPIO_InitStruct.Pin =  GPIO_PIN_1 | GPIO_PIN_2 ;        
+    GPIO_InitStruct.Mode = GPIO_MODE_IT_FALLING;
+    GPIO_InitStruct.Pull = GPIO_NOPULL;
+    HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+    
+    //---   INC+   INC-    --------------------------
+    GPIO_InitStruct.Pin =  GPIO_PIN_7 | GPIO_PIN_8 ;        
+    GPIO_InitStruct.Mode = GPIO_MODE_IT_FALLING;
+    GPIO_InitStruct.Pull = GPIO_NOPULL;
+    HAL_GPIO_Init(GPIOE, &GPIO_InitStruct);
+    
+    
+    /*PD4  -->    PAUSE_KEY  IN  */ 
+    GPIO_InitStruct.Pin = GPIO_PIN_4;
+    GPIO_InitStruct.Mode = GPIO_MODE_IT_FALLING;     
+    GPIO_InitStruct.Pull = GPIO_NOPULL;         
+    HAL_GPIO_Init(GPIOD,&GPIO_InitStruct);
+    
+    
+    /*PD5  -->   Safe Key  IN  */ 
+    GPIO_InitStruct.Pin = GPIO_PIN_5;
+    GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING_FALLING;     
+    GPIO_InitStruct.Pull = GPIO_NOPULL;         
+    HAL_GPIO_Init(GPIOD,&GPIO_InitStruct);
+    
+    
+    /* EXTI interrupt init*/
+    HAL_NVIC_SetPriority(EXTI1_IRQn, 0, 0);
+    HAL_NVIC_EnableIRQ(EXTI1_IRQn);
+    
+    HAL_NVIC_SetPriority(EXTI2_IRQn, 0, 0);
+    HAL_NVIC_EnableIRQ(EXTI2_IRQn);
+    
+    HAL_NVIC_SetPriority(EXTI4_IRQn, 0, 0);
+    HAL_NVIC_EnableIRQ(EXTI4_IRQn);
+    
+    
+    HAL_NVIC_SetPriority(EXTI9_5_IRQn, 0, 0);
+    HAL_NVIC_EnableIRQ(EXTI9_5_IRQn);
+    
+    HAL_NVIC_SetPriority(EXTI15_10_IRQn, 0, 0);
+    HAL_NVIC_EnableIRQ(EXTI15_10_IRQn);
+    
+    
+}
 //-------------------------------------
 unsigned char KeyProcessingFlag;
 unsigned char KeyPressingFlag;

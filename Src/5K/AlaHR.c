@@ -60,7 +60,6 @@ void Hand_HR__Init(){
     
 }
 
-
 #endif
 
 #if configUSE_HHR

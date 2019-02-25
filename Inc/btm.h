@@ -309,6 +309,7 @@ void Btm_Task_Adder(Btm_Task_Def btmTask);
 void BTM_background_Task();
 
 void BLE_Init();
+void BLE_DeInit();
 
 void Btm_Recive();
 void BtmRst();

@@ -10,6 +10,7 @@
 extern unsigned char BuzzerON_Flag;
 
 void Buzzer_Init();
+void Buzzer_DeInit();
 void BuzzerCheck();
 void Buzzer_ON();
 void Buzzer_Set(unsigned short setValue);

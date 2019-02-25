@@ -9,6 +9,7 @@
 #define UART_RxBufDataLength 20
 
 void RM6T6_Init();
+void RM6T6_DeInit();
 void Inveter_UART_IT_Recive();
 uint16_t F_SpeedToHz(uint16_t Speed);
 void UART_TX_Transform();

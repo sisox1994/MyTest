@@ -63,6 +63,7 @@ typedef enum{
 extern unsigned char KeyDelaying_Flag;
 extern Key_Name_Def Press_Key;
 void Key_GPIO_Init();
+void Key_GPIO_DeInit();
 void KeySweep();
 void KeyCheck();
 void KeyTest();

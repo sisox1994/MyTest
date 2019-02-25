@@ -1,6 +1,8 @@
 #ifndef HT1632_C52_H_
 #define HT1632_C52_H_
 
+
+void HT1632C_DeInit();
 void LED_Matrix_Init();
 void HT_Write(unsigned char Address ,unsigned char Data,unsigned char sw );
 void Blink_On(unsigned char sw);

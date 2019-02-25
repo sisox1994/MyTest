@@ -389,6 +389,28 @@ void RM6T6_Init(){
     F_CMD(Write,0);
     HAL_Delay(20);
 }
+
+
+void RM6T6_DeInit(){
+    
+    GPIO_InitTypeDef GPIO_InitStruct;
+   
+    HAL_NVIC_DisableIRQ(USART1_IRQn);
+    __HAL_UART_DISABLE_IT(&huart1, UART_IT_RXNE); 
+    
+        //--PA9 Tx    -- PA10 Rx    
+    if (HAL_UART_DeInit(&huart1) != HAL_OK){
+        Error_Handler();
+    }
+    
+    //ADM485 Control Pin   PA11-->Control
+    HAL_GPIO_WritePin( Control_GPIO, Control_PIN ,   GPIO_PIN_RESET  );
+    GPIO_InitStruct.Pin = Control_PIN;
+    GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+    GPIO_InitStruct.Pull = GPIO_NOPULL;
+    HAL_GPIO_Init(Control_GPIO, &GPIO_InitStruct);
+
+}
 //-----------------------------          RX          ------------------------------------------------------------------------ 
 
 void Response_Message_Clear(){

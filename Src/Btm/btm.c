@@ -3454,6 +3454,15 @@ void BLE_Init(){
     
     GPIO_InitTypeDef GPIO_InitStruct;
     
+    
+    /* -----         PA4 --> GFIT_CTRL    ¶}±ÒRF_PWR      ------------- */
+    GPIO_InitStruct.Pin =  GPIO_PIN_4;
+    GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+    GPIO_InitStruct.Pull = GPIO_NOPULL;
+    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+    HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+    HAL_GPIO_WritePin(GPIOA,  GPIO_PIN_4 , GPIO_PIN_RESET);
+    
     /* -----         PA1 --> BLE_RST      ------------- */
     GPIO_InitStruct.Pin =  GPIO_PIN_1;
     GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
@@ -3487,6 +3496,42 @@ void BLE_Init(){
     
 }
 
+
+
+void BLE_DeInit(){
+    
+    GPIO_InitTypeDef GPIO_InitStruct;
+    
+    
+    btm_is_ready =0;
+    
+    HAL_NVIC_DisableIRQ(USART2_IRQn);
+    __HAL_UART_DISABLE_IT(&huart2, UART_IT_RXNE); 
+    
+    
+    HAL_UART_MspInit(&huart2); 
+    
+    if(HAL_UART_DeInit(&huart2) != HAL_OK ){
+        Error_Handler();    
+    }
+
+    /* -----         PA1 -->   BLE_RST ------------- */
+    HAL_GPIO_WritePin(GPIOA,  GPIO_PIN_1 , GPIO_PIN_RESET);
+    GPIO_InitStruct.Pin =  GPIO_PIN_1;
+    GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+    GPIO_InitStruct.Pull = GPIO_NOPULL;
+    HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+    
+    
+    /* -----         PA4 --> GFIT_CTRL    Ãö±¼RF_PWR      ------------- */
+    HAL_GPIO_WritePin(GPIOA,  GPIO_PIN_4 , GPIO_PIN_SET);
+    GPIO_InitStruct.Pin =  GPIO_PIN_4;
+    GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+    GPIO_InitStruct.Pull = GPIO_NOPULL;
+    HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+   
+    
+}
 
 void ble_disconnect_wait_Process(){
 

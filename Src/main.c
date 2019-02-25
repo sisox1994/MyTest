@@ -62,11 +62,49 @@ void Other_Init(){
 
 unsigned char RM_Task_Switch = 1;
 unsigned char APP_Task_Switch = 1;
+
+
+void Sleep_Func(){
+
+    
+}
+
+void SystemConfigForIntSleepMode(){
+
+    BLE_DeInit();
+    RM6T6_DeInit();
+    HT1632C_DeInit();
+    Key_GPIO_DeInit();
+    Buzzer_DeInit();
+    Power_5V_OFF();
+    
+    HAL_TIM_Base_Stop_IT(&htim1);
+    
+
+    SysTick->CTRL = 0;
+    __HAL_RCC_PWR_CLK_DISABLE();
+    
+
+    
+    //HAL_PWR_DisableWakeUpPin(PWR_WAKEUP_PIN1);
+    //HAL_PWR_EnableWakeUpPin(PWR_WAKEUP_PIN1);
+    
+    /* Clear all related wakeup flags */
+    __HAL_PWR_CLEAR_FLAG(PWR_FLAG_WU);
+    
+    
+    //HAL_PWR_EnterSTANDBYMode(); 
+    HAL_PWR_EnterSTOPMode(PWR_MAINREGULATOR_ON, PWR_STOPENTRY_WFI);
+    
+    
+}
+
 int main(void)
 {
     
     HAL_Init();
     SystemClock_Config();
+    
     GPIO_CLK_Enable();
     SafeKey_Init();
     Flash_Init();
@@ -134,35 +172,37 @@ int main(void)
     while (1)
     {
   
-#if Use_FAN     
-        FAN_SET_PWM_DUTY(My_PWM_Value);
-#endif
-  
+        if(System_Mode != System_Sleep){
+            //------------------------------------------
+            #if Use_FAN     
+            FAN_SET_PWM_DUTY(My_PWM_Value);
+            #endif
 
-#if Use_BTSPK 
-        if(System_Mode != StartUp){
-            BT_SPK_Detect();
+            #if Use_BTSPK 
+            if(System_Mode != StartUp){
+                BT_SPK_Detect();
+            }
+            #endif   
+            
+            RealityKey_PressDetect();
+            SafeKey_Detect();
+            BTM_background_Task(); // 藍芽 任務排程器
+            
+            if( OTA_Mode_Flag == 0){   //如果是OTA 模式就不做其他背景執行動作
+                F_HeartRate_Supervisor(); 
+                
+                if(RM_Task_Switch == 1){
+                    RM6_background_Task(); // 變頻器 任務排程器
+                }
+                if(APP_Task_Switch == 1){
+                    APP_background_Broadcast();   //0x39  每隔5秒  丟系統狀態 
+                }
+                
+            }
+        //-------------------------------------------
         }
-#endif   
-
-        RealityKey_PressDetect();
         
-        SafeKey_Detect();
-        BTM_background_Task(); // 藍芽 任務排程器
-        
-        if( OTA_Mode_Flag == 0){   //如果是OTA 模式就不做其他背景執行動作
-            F_HeartRate_Supervisor(); 
-            
-            if(RM_Task_Switch == 1){
-                RM6_background_Task(); // 變頻器 任務排程器
-            }
-            
-            if(APP_Task_Switch == 1){
-                APP_background_Broadcast();   //0x39  每隔5秒  丟系統狀態 
-            }
-                  
-        }  
-        
+ 
         switch(System_Mode){
           case StartUp:
             StartUp_Func();
@@ -199,6 +239,10 @@ int main(void)
             break;
           case  Sys_OTA_Mode:
             OTA_Mode_Func();
+            break;
+            
+          case System_Sleep:
+            Sleep_Func();
             break;
             
 #if FAKE_RM6T6_Mode

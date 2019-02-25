@@ -115,3 +115,13 @@ void Buzzer_Init(){
     GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
     HAL_GPIO_Init(Buzzer_GPIO, &GPIO_InitStruct);
 }
+
+void Buzzer_DeInit(){
+    
+    GPIO_InitTypeDef GPIO_InitStruct;
+    //-------------  PB5 ----  Buzzer  ---------------------- 
+    GPIO_InitStruct.Pin = Buzzer_Pin;             
+    GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+    GPIO_InitStruct.Pull = GPIO_NOPULL;
+    HAL_GPIO_Init(Buzzer_GPIO, &GPIO_InitStruct);
+}
