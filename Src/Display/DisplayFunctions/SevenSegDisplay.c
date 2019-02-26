@@ -1096,7 +1096,7 @@ void TIME_SET_Display( Seg_Display_ITEM_Def Item  , unsigned int Value , unsigne
     unsigned char BYTE_4;
     unsigned char COLON;
     
-    if(Item == PACE_SPD){
+    if(Item == PACE_SPD){  //PACE
         
         if(Value < 3600){       //      步速> (一小時 ) ==> 一樣顯示 XX分鐘: XX秒
             BYTE_4 = (Value / 60) / 10;
@@ -1110,7 +1110,7 @@ void TIME_SET_Display( Seg_Display_ITEM_Def Item  , unsigned int Value , unsigne
             BYTE_1 = ((Value % 3600) / 60) % 10;
         }
         
-    }else{
+    }else{                  //時間
         
         if(Value < 3600){
             
@@ -1165,7 +1165,13 @@ void TIME_SET_Display( Seg_Display_ITEM_Def Item  , unsigned int Value , unsigne
         //強迫全部顯示
         if(Force == 1){
             
-            SevenSegmentBuffer[BIT_3/4] = numbers[BYTE_4];
+            if(BYTE_4 !=0){
+                SevenSegmentBuffer[BIT_3/4] = numbers[BYTE_4];
+            }else{
+                SevenSegmentBuffer[BIT_3/4] = 0;//隱藏0
+            }
+            
+            
             SevenSegmentBuffer[BIT_2/4] = numbers[BYTE_3];
             SevenSegmentBuffer[BIT_1/4] = numbers[BYTE_2];
             
@@ -1454,7 +1460,6 @@ void Workout_Value_DisplayProcess(){
             // ----------- 步頻 -----------------------    
             SET_Seg_Display(PACE   ,  Pace_Freq   , ND , DEC );  //  步頻= 每分鐘走幾步   =>   (10s 走幾步) * 6
         }else if(Pace_Display_Switch == 2){  //   
-            
             // ----------- 步幅 ---------------------- 
             //System_SPEED(單位0.1km)     步幅   =  每小時距離 / 每小時步數  =>   (( 一步的距離  ))  單位公尺 or 公分?
             SET_Seg_Display(PACE   ,  Pace_Dist   , ND , DEC );   //   步幅   =   一步的距離  

@@ -1961,7 +1961,7 @@ void F_Btm_FTMS_B0(unsigned char ucPage){
         ucBtmTxBuf[9]  = FTMS_Control_4byte[2];   // 16~23
         ucBtmTxBuf[10] = FTMS_Control_4byte[3];   // 24~31
           
-        btm_is_ready = 0; //如果有修改  BTM 會重新 Reset  等下一個F1
+        //btm_is_ready = 0; //如果有修改  BTM 會重新 Reset  等下一個F1
         
     }else if(ucPage == 1){
         

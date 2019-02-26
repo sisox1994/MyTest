@@ -258,12 +258,20 @@ unsigned char KeyCatch(unsigned char Sec ,uint8_t Num, ...){
                         }
                     }
                     if(KeyConfirm_DoubleCnt == Num){
-                        Buzzer_ON();
+                        
                         memset(KeyPressRelease_Array, 0x00,10);
                         KeyDelaying_Flag = 0;
                         KeyProcessFlag = 0;
                         ret_Idle_cnt = 0;
-                        return 1;
+                        
+                        if(BuzzerCnt>0){  //------防止 buzzer正在叫 又跟按按鈕的回饋音相撞
+                            return 0;
+                        }else{
+                            Buzzer_Btn();
+                            return 1;
+                        }
+                        
+                        
                     }
                 }
             }
@@ -333,7 +341,7 @@ unsigned char KeyCatch(unsigned char Sec ,uint8_t Num, ...){
                     if( (System_Mode== Workout) && (Press_Key == Stop) ){
                       //---峰鳴器不要叫
                     }else{
-                      Buzzer_ON();
+                      Buzzer_Btn();
                     }
                 }
             }
@@ -345,6 +353,8 @@ unsigned char KeyCatch(unsigned char Sec ,uint8_t Num, ...){
         }
     }
     __asm("NOP");
+    
+    
     
     //--------------------------------------------------
     return 0;

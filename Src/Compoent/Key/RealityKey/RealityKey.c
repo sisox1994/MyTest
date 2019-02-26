@@ -106,7 +106,7 @@ void RealityKey_PressDetect(){
         
         if(PB_1_spdUP | PB_2_spdDown | PE_7_incUP | PE_8_inc_Down){
             
-            Buzzer_ON();        //4個按鍵有一個按鍵被觸發 ,蜂鳴器就先B一聲
+            Buzzer_Btn();        //4個按鍵有一個按鍵被觸發 ,蜂鳴器就先B一聲
             
             //紀錄 按下的 按鍵 名稱  儲存到   Catch_Key_Name  
             if(PB_1_spdUP == GPIO_PIN_SET){

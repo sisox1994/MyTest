@@ -54,7 +54,7 @@ unsigned char PauseKey(){
                 
                 Pause_press_Flag = 1;
                 if(System_Mode!= Workout){
-                    Buzzer_ON();
+                    Buzzer_Btn();
                 }
                 
                 return 1;

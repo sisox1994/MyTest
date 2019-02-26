@@ -8,33 +8,51 @@ unsigned char BuzzerON_Flag;
 unsigned char ContuineBeepFlag;  //連續 bb叫
 unsigned short Buzzer_BB_Period;
 
+unsigned char Buzzer_Interval_Time;  //讓buzzer 響完有緩衝時間
+
+
+void SetBuzzer_Interval(){
+    Buzzer_Interval_Time = 100;
+}
+
 void Buzzer_Init();
 void BuzzerCheck();
-void Buzzer_ON();
+void Buzzer_Btn();
 
-void Buzzer_ON(){
+//------------------按鍵回饋音
+void Buzzer_Btn(){
     
-    ContuineBeepFlag = 0;
-    if(BuzzerON_Flag == 0){
-        
+    
+    if(Buzzer_Interval_Time == 0){
+    //----------------------------------------------------  
+        ContuineBeepFlag = 0;
+        if(BuzzerON_Flag == 0){
+            
 #if Use_Buzzer
-        BuzzerON_Flag = 1;
-        
-        if(Press_Key == Start){
-            if( (System_Mode == Idle) || (System_Mode == Prog_Set)){
-                BuzzerCnt = 0;
-                BuzzerON_Flag = 0;
+            BuzzerON_Flag = 1;
+            
+            if(Press_Key == Start){
+                if( (System_Mode == Idle) || (System_Mode == Prog_Set)){
+                    BuzzerCnt = 0;
+                    BuzzerON_Flag = 0;
+                }else{
+                    BuzzerCnt = BuzzerTimeValue;
+                    HAL_GPIO_WritePin(Buzzer_GPIO, Buzzer_Pin, GPIO_PIN_SET);
+                }
             }else{
-                BuzzerCnt = BuzzerTimeValue;
+                
+                BuzzerCnt = BuzzerTimeValue; 
                 HAL_GPIO_WritePin(Buzzer_GPIO, Buzzer_Pin, GPIO_PIN_SET);
+                
             }
-        }else{
-            BuzzerCnt = BuzzerTimeValue; 
-            HAL_GPIO_WritePin(Buzzer_GPIO, Buzzer_Pin, GPIO_PIN_SET);
-        }
-        __asm("NOP");
+            __asm("NOP");
 #endif
+        } 
+       
+    //------------------------------------------    
     }
+    
+
     
 }
 
@@ -84,7 +102,8 @@ void BuzzerCheck(){
             if(BuzzerCnt !=0){
                 BuzzerCnt--;
             }else{
-                Buzzer_OFF();
+                Buzzer_OFF();                
+                SetBuzzer_Interval();
             }   
         }else if(ContuineBeepFlag == 1 ){
             if(BuzzerCnt !=0){
@@ -100,9 +119,15 @@ void BuzzerCheck(){
             }else if(BuzzerCnt == 0){
                 Buzzer_OFF();
                 ContuineBeepFlag = 0;
+                SetBuzzer_Interval();                
             }  
         }
     }
+    
+    if(Buzzer_Interval_Time>0){
+        Buzzer_Interval_Time--;
+    }
+    
     
 }
 void Buzzer_Init(){

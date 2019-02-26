@@ -6,7 +6,7 @@ Program_Data_Def Program_Data;
 
 void IntoIdleMode_Process(){
 
-    Pace_Display_Switch    = 0;
+    Pace_Display_Switch    = 3;    //¹w³]¬°  PACE
     Calories_Display_Type  = Cal_;
     Dist_Display_Type      = DIST;
     HeartRate_Display_Type = HR;

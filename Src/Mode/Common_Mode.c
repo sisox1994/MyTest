@@ -173,7 +173,7 @@ void IntoReadyMode_Process(){
     
     Time_Display_Type     = Remaining;    // 預設為 下數顯示
     Calories_Display_Type = Cal_;        // 預設為 卡路里顯示
-    Pace_Display_Switch   = 0;           //預設為 總步數
+    Pace_Display_Switch   = 3;           //預設為  PACE
     
     
     //Program_Select = (Program_Type_Def)0;
