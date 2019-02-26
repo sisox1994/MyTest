@@ -1961,7 +1961,7 @@ void F_Btm_FTMS_B0(unsigned char ucPage){
         ucBtmTxBuf[9]  = FTMS_Control_4byte[2];   // 16~23
         ucBtmTxBuf[10] = FTMS_Control_4byte[3];   // 24~31
           
-        //btm_is_ready = 0; //如果有修改  BTM 會重新 Reset  等下一個F1
+        btm_is_ready = 0; //如果有修改  BTM 會重新 Reset  等下一個F1
         
     }else if(ucPage == 1){
         
@@ -3304,10 +3304,9 @@ void Btm_Recive(){
        
         if(ucBtmRxBuf[19] == 0x5D){
         
-            //btmRAR_Cnt++;
-            //btmRAR_Cnt = btmRAR_Cnt%50;
-            
-            //memcpy(btmReceiveArrayRecord[btmRAR_Cnt] ,  ucBtmRxBuf ,20);
+            btmRAR_Cnt++;
+            btmRAR_Cnt = btmRAR_Cnt%50;
+            memcpy(btmReceiveArrayRecord[btmRAR_Cnt] ,  ucBtmRxBuf ,20);
             
             memcpy(ucBtmRxData ,  ucBtmRxBuf ,20);
             memset(ucBtmRxBuf,0x00,20);
@@ -3439,6 +3438,7 @@ void Btm_Recive(){
         if( ucBtmRxData[1] == 0xB2 ){
             F_Btm_FTMS_B2_Read();
         }
+           
         btm_Rx_is_busy = 0;
     }
     
