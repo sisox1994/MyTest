@@ -221,28 +221,53 @@ unsigned char Quick_SPEED__Key(){
     
     
     if( KeyCatch(0,1 , Spd_18) ){
-        System_SPEED = 180;
+        
+        if(System_Unit == Imperial){
+            System_SPEED = 120;
+        }else{
+            System_SPEED = 180;
+        }
         return 1;
     }
     
     if( KeyCatch(0,1 , Spd_15) ){
-        System_SPEED = 150;
+        if(System_Unit == Imperial){
+            System_SPEED = 100;
+        }else{            
+            System_SPEED = 150;
+        }
         return 1;
     } 
     if( KeyCatch(0,1 , Spd_12) ){
-        System_SPEED = 120;
+        if(System_Unit == Imperial){
+            System_SPEED = 80;
+        }else{ 
+            System_SPEED = 120;
+        }
         return 1;
     }
-    if( KeyCatch(0,1 , Spd_9) ){
-        System_SPEED = 90;
+    if( KeyCatch(0,1 , Spd_9) ){        
+        if(System_Unit == Imperial){
+            System_SPEED = 60;
+        }else{ 
+            System_SPEED = 90;
+        }
         return 1;
     }
     if( KeyCatch(0,1 , Spd_6) ){
-        System_SPEED = 60;
+        if(System_Unit == Imperial){
+            System_SPEED = 40;
+        }else{ 
+            System_SPEED = 60;
+        }
         return 1;
     } 
     if( KeyCatch(0,1 , Spd_3) ){
-        System_SPEED = 30;
+        if(System_Unit == Imperial){
+            System_SPEED = 20;
+        }else{ 
+            System_SPEED = 30;
+        }
         return 1;
     }  
   

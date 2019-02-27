@@ -2,6 +2,8 @@
 
 void IntoSummaryMode_Process(){
 
+    SET_DisplayBoard_Data(L_Mode,1,0 ,R_Mode,1,0); 
+    
     __asm("NOP");  //將運動 距離,時間  寫進Flash 
     
     

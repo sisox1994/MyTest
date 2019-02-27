@@ -46,6 +46,9 @@
  
 //-------------------------------
 
+extern unsigned char L_Mode;
+extern unsigned char R_Mode;
+
 extern unsigned char AutoPause_Flag; //隱藏功能
 
 extern char ucProductionSerialNumber[14];     //生產序號
