@@ -1010,7 +1010,8 @@ unsigned char TimePeroid_Process(){
             
             //--(速度會變)-------設定速度----------訓練模式(時間)---------------------
             if(Program_Select == APP_Train_Time_Run){
-            
+                
+                Buzzer_BeeBee(300, 3);
                 System_SPEED = Program_Data.SPEED_Table_96[Program_Data.NowPeriodIndex%96];
              
                 //-------如果是負的就調整為最小速度
@@ -1157,6 +1158,7 @@ unsigned char DistancePeroid_Process(){
             //--(速度會變)-------設定速度----------訓練模式(時間)---------------------
             if(Program_Select == APP_Train_Dist_Run){
             
+                Buzzer_BeeBee(300, 3);
                 System_SPEED = Program_Data.SPEED_Table_96[Program_Data.NowPeriodIndex%96];
                  
                 //-------如果是負的就調整為最小速度
