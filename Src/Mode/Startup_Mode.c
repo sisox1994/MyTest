@@ -16,6 +16,13 @@ void EnterEngineerMode_Key(){
         System_Mode = Engineer;
         EngineerTestItem = 0;
     }
+    
+    if(KeyCatch(1 ,2, Start , cool)){
+        System_Mode = Engineer;
+        
+        EngineerTestItem = 24;
+    }
+    
 }
 
 void LUBE_Mode_Key(){
