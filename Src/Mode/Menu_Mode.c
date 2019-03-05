@@ -463,22 +463,64 @@ extern UART_HandleTypeDef huart2;
 
 unsigned char AutoPause_Flag = 1; //¡Ù¬√•\Ø‡
 
+
+Key_Name_Def Key159Record;
+unsigned DetectOderCnt;
+
 void Idle_Key(){
      
  
     
-
-    HR_SENSOR_LINK_Key(); 
+    if(Press_Key == Num_1 | Press_Key == Num_5 | Press_Key == Num_9 ){
+          
+        
+        Key159Record = Press_Key;
+        
+        if(DetectOderCnt == 0){
+            if(Key159Record == Num_1){
+                DetectOderCnt = 1;
+            }else{
+                DetectOderCnt = 0;
+            }
+        }else if(DetectOderCnt == 1){
+            if(Key159Record == Num_1){
+                DetectOderCnt = 1;
+            }else if(Key159Record == Num_5){
+                DetectOderCnt = 2;
+            }else{
+                DetectOderCnt = 0;
+            }
+        }else if(DetectOderCnt == 2){
+            if(Key159Record == Num_5){
+                DetectOderCnt = 2;
+            }else if(Key159Record == Num_9){
+                DetectOderCnt = 3;
+            }else{
+                DetectOderCnt = 0;
+            }
+        }    
+    }else if(Press_Key == 0){
+        //Do NotThing
+    }else{
+        DetectOderCnt = 0;
+    }
     
-    
-    if( KeyCatch(5,3 , Num_1,Num_5,Num_9) ){ 
-    
+    if(DetectOderCnt == 3){
+        DetectOderCnt = 0;
+           
         if(AutoPause_Flag == 0){
             AutoPause_Flag = 1;
         }else{
             AutoPause_Flag = 0;
         }
+        Buzzer_Btn(); 
+        
     }
+    
+
+    HR_SENSOR_LINK_Key(); 
+    
+    
     
     if( KeyCatch(0,1 , Key_Manual) ){ 
         KeyChangeDetect(Key_Manual);
