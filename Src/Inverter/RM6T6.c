@@ -222,10 +222,17 @@ void read_Foot_Fall_10s(){
     FootFall_10s();
 }
 //--------------------------RM6T6 - 任務管理器----------------------------------------
-#define RM6_Task_Amount 5
+#define RM6_Task_Amount 10
 unsigned char RM6_Task_Cnt;
-
 RM6T6_Task_Def RM6_Task_List[RM6_Task_Amount];  
+
+void RM6T6_Task_ClearAll(){
+
+    for(unsigned char i =0;i<RM6_Task_Amount;i++){
+        RM6_Task_List[i] = NO_Task;
+    }
+}
+
 void RM6_Task_Adder(RM6T6_Task_Def  RM6_Task){
     //目前沒有任務的話就不去確認 直接新增任務到清單
     if( RM6_Task_Cnt == 0 ){
@@ -243,8 +250,19 @@ void RM6_Task_Adder(RM6T6_Task_Def  RM6_Task){
         }
         if(Task_Exit_Flag == 0){
             if(RM6_Task_Cnt < RM6_Task_Amount){  //最多N個任務在駐列清單
-                RM6_Task_List[RM6_Task_Cnt] = RM6_Task;
-                RM6_Task_Cnt++;   
+                
+                /*if( RM6_Task == Set_SPEED ){
+                    //------------------速度命令優先-----------------------
+                    for(unsigned char i = (RM6_Task_Amount-1); i > 1; i--){
+                        RM6_Task_List[i] = RM6_Task_List[i-1];                        
+                    }                    
+                    RM6_Task_List[0] = RM6_Task;
+                    RM6_Task_Cnt++;
+                }else{*/
+                    RM6_Task_List[RM6_Task_Cnt] = RM6_Task;
+                    RM6_Task_Cnt++;  
+                //}
+ 
             }  
         }
     }  
@@ -444,6 +462,15 @@ void RM6T6_Init(){
     INCL_Config_Value  = InclineADTable[0];           //初始化目標 揚升直
     SPEED_Config_Value = F_SpeedToHz(System_SPEED);   //初始化目標 速度頻率
     F_CMD(Write,0);
+    
+    HAL_Delay(20);
+    PAR_CMD(Read,90,0); //讀出VR 最小值
+    HAL_Delay(20);
+    if(Response_Message.Data != 60){
+        PAR_CMD(Write,90,60);  //寫入 60 VR 最小值
+        HAL_Delay(20);
+    }  
+    
     HAL_Delay(20);
 }
 

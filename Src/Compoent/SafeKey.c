@@ -34,6 +34,7 @@ void SafeKey_Detect(){
 #if Use_SafeKey
         if( (System_Mode == CooolDown) || (System_Mode == Workout) || (System_Mode == WarmUp) ){
             Machine_Data_Update();
+            RM6T6_Task_ClearAll();
         }   
         System_Mode = Safe;
 #endif

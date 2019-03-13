@@ -3269,6 +3269,7 @@ void F_Btm_FEC_B5_SET_ANT_ID(void){
     
     ucBtmTxBuf[19] = ']';
     
+    
     __HAL_UART_ENABLE_IT(&huart2, UART_IT_RXNE); //----------------
     HAL_UART_Transmit(&huart2,ucBtmTxBuf, BtmData,10);
  
@@ -3281,6 +3282,7 @@ void F_Btm_FEC_B5_SET_ANT_ID(void){
 
 unsigned char btmReceiveArrayRecord[50][20];
 unsigned char btmRAR_Cnt = 0;
+uint32_t Uart2Srflags;
 
 void Btm_Recive(){
     
@@ -3288,6 +3290,14 @@ void Btm_Recive(){
         ucBtmRxBuf[ucRxAddrs] = ucBtmRxTemp;
         
         __HAL_UART_DISABLE_IT(&huart2, UART_IT_TXE);    //  TXE = 0   (如果TXE = 1 都沒清掉 會卡在中斷裡面
+        
+        if( (huart2.Instance->SR)&USART_SR_ORE == USART_SR_ORE){
+            __HAL_UART_CLEAR_OREFLAG(&huart2);
+        }
+        
+        //Uart2Srflags = huart2.Instance->SR | USART_SR_ORE;
+        //huart2.Instance->SR = Uart2Srflags;
+       
         
         if(ucBtmRxBuf[0] == 0x5B ){
             

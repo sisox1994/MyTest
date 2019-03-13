@@ -13,6 +13,7 @@ void RM6T6_DeInit();
 void Inveter_UART_IT_Recive();
 uint16_t F_SpeedToHz(uint16_t Speed);
 void UART_TX_Transform();
+void RM6T6_Task_ClearAll();
 
 
 extern const uint16_t InclineADTable[31];
@@ -182,6 +183,6 @@ void FootFall_10s();                                           //No.18
 void FootFall_Total( );                                        //No.19
 void SaveToFlash(CMD_Type_Def cmd_Type,unsigned char Data);   //No.20
 
-
+void PAR_CMD(CMD_Type_Def cmd_Type,unsigned char Parameter_No,  uint32_t Data );
 
 #endif

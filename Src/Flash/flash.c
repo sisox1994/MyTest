@@ -26,11 +26,12 @@ unsigned char Read_Buffer_256Byte[256];
 
 #define Flash_EngineerTest_Address  0x0000F0     //工程模式 Flash 讀寫功能測試
 #define Custom_Save_Address         0x000100     
-#define Machine_Save_Address        0x000200
+#define Machine_ODO_Address        0x000200      //
 #define Serial_Number_Address       0x000300
 
 //--------------Sector 1 ~     ---------------
-//#define Update_Firmware_Address  0x010000
+#define Machine_SysSetting_Address  0x001000    //速度Max Min 揚升 Max Min 單位:公制 英制 
+
 
 //--------------Sector 979      ---------------
 #define Update_Firmware_Address  0x3D3000
@@ -74,9 +75,6 @@ void Write_EE_Flash( unsigned int start_addr , unsigned int amount , unsigned ch
             CMD_PP( i * 4096 + page, ucWrite256bytebuffer , 256);   //寫一個page 進去 
         }
     }
-    //-------------寫進去完   讀出來確認---------------
-    CMD_READ( Sector_0 , FlashBuffer4096, 4096);  //先讀出 Setor 4096個資料
-    __asm("NOP");
 }
 
 unsigned short start_Index;
@@ -508,41 +506,37 @@ void Flash_Machine_Data_Loading(){
     //------------ 把FLASH ODO  最大最小 速度  揚升   資料解出來 ------------------------------------
   
    //代表沒有初始化過
-   if(FlashBuffer4096[Machine_Save_Address + 255] == 0xFF){
-       
-       Write_Machine_Data_Init(Metric);  //初始化  : 公制
-       
+   if(FlashBuffer4096[Machine_ODO_Address + 255] != 0x02){
+       Write_Machine_Data_Init(Metric);  //初始化  : 公制  
    }
-   
-    Machine_Data.TotalDistance = (unsigned int) FlashBuffer4096[Machine_Save_Address + 0]
-                               + (unsigned int)(FlashBuffer4096[Machine_Save_Address + 1] <<  8)
-                               + (unsigned int)(FlashBuffer4096[Machine_Save_Address + 2] << 16) 
-                               + (unsigned int)(FlashBuffer4096[Machine_Save_Address + 3] << 24);
+      
+    Machine_Data.TotalDistance = (unsigned int) FlashBuffer4096[Machine_ODO_Address + 0]
+                               + (unsigned int)(FlashBuffer4096[Machine_ODO_Address + 1] <<  8)
+                               + (unsigned int)(FlashBuffer4096[Machine_ODO_Address + 2] << 16) 
+                               + (unsigned int)(FlashBuffer4096[Machine_ODO_Address + 3] << 24);
                                
     
-    Machine_Data.Total_Times = (unsigned int)FlashBuffer4096[Machine_Save_Address + 4]
-                             + (unsigned int)(FlashBuffer4096[Machine_Save_Address + 5] << 8)
-                             + (unsigned int)(FlashBuffer4096[Machine_Save_Address + 6] << 16)
-                             + (unsigned int)(FlashBuffer4096[Machine_Save_Address + 7] << 24); 
+    Machine_Data.Total_Times = (unsigned int)FlashBuffer4096[Machine_ODO_Address + 4]
+                             + (unsigned int)(FlashBuffer4096[Machine_ODO_Address + 5] << 8)
+                             + (unsigned int)(FlashBuffer4096[Machine_ODO_Address + 6] << 16)
+                             + (unsigned int)(FlashBuffer4096[Machine_ODO_Address + 7] << 24); 
     
     
+    CMD_READ(Sector_1 , FlashBuffer4096, 4096);
     
-    Machine_Data.System_INCLINE_Max = (unsigned short) FlashBuffer4096[Machine_Save_Address + 8]
-                                    + (unsigned short)(FlashBuffer4096[Machine_Save_Address + 9] << 8);
+    Machine_Data.System_INCLINE_Max = (unsigned short) FlashBuffer4096[Machine_SysSetting_Address % 4096 + 0]
+                                    + (unsigned short)(FlashBuffer4096[Machine_SysSetting_Address % 4096 + 1] << 8);
                                     
-    Machine_Data.System_SPEED_Max   = (unsigned short) FlashBuffer4096[Machine_Save_Address + 10] 
-                                    + (unsigned short)(FlashBuffer4096[Machine_Save_Address + 11] << 8);
+    Machine_Data.System_SPEED_Max   = (unsigned short) FlashBuffer4096[Machine_SysSetting_Address % 4096 + 2] 
+                                    + (unsigned short)(FlashBuffer4096[Machine_SysSetting_Address % 4096 + 3] << 8);
+
+    Machine_Data.System_INCLINE_Min = (unsigned short) FlashBuffer4096[Machine_SysSetting_Address % 4096 + 4]
+                                    + (unsigned short)(FlashBuffer4096[Machine_SysSetting_Address % 4096 + 5] << 8);
                                      
-   
-    Machine_Data.System_INCLINE_Min = (unsigned short) FlashBuffer4096[Machine_Save_Address + 12]
-                                    + (unsigned short)(FlashBuffer4096[Machine_Save_Address + 13] << 8);
-                                     
-    
-    Machine_Data.System_SPEED_Min   = (unsigned short) FlashBuffer4096[Machine_Save_Address + 14]
-                                    + (unsigned short)(FlashBuffer4096[Machine_Save_Address + 15] << 8);
-    
-                                        
-    Machine_Data.System_UNIT = (System_Unit_Def)FlashBuffer4096[Machine_Save_Address + 16];
+    Machine_Data.System_SPEED_Min   = (unsigned short) FlashBuffer4096[Machine_SysSetting_Address % 4096 + 6]
+                                    + (unsigned short)(FlashBuffer4096[Machine_SysSetting_Address % 4096 + 7] << 8);
+            
+    Machine_Data.System_UNIT = (System_Unit_Def)FlashBuffer4096[Machine_SysSetting_Address % 4096 + 8];
     
     System_Unit = Machine_Data.System_UNIT;
 
@@ -553,32 +547,40 @@ void Flash_Machine_Data_Loading(){
 
 
 //將 Machine_Data 資料寫入暫存陣列..
-unsigned char MachineDataArray[17];
-void MachineData_To_Array(){
+unsigned char Machine_ODO_DataArray[8];
+unsigned char Machine_Sys_Set_Array[9];
+
+
+void Machine_ODO_Data_To_Array(){
     
-    MachineDataArray[0] = (unsigned char)Machine_Data.TotalDistance;
-    MachineDataArray[1] = (unsigned char)(Machine_Data.TotalDistance >> 8);
-    MachineDataArray[2] = (unsigned char)(Machine_Data.TotalDistance >> 16);
-    MachineDataArray[3] = (unsigned char)(Machine_Data.TotalDistance >> 24);
+    Machine_ODO_DataArray[0] = (unsigned char)Machine_Data.TotalDistance;
+    Machine_ODO_DataArray[1] = (unsigned char)(Machine_Data.TotalDistance >> 8);
+    Machine_ODO_DataArray[2] = (unsigned char)(Machine_Data.TotalDistance >> 16);
+    Machine_ODO_DataArray[3] = (unsigned char)(Machine_Data.TotalDistance >> 24);
     
-    MachineDataArray[4] = (unsigned char)Machine_Data.Total_Times;
-    MachineDataArray[5] = (unsigned char)(Machine_Data.Total_Times >> 8);
-    MachineDataArray[6] = (unsigned char)(Machine_Data.Total_Times >> 16);
-    MachineDataArray[7] = (unsigned char)(Machine_Data.Total_Times >> 24);
+    Machine_ODO_DataArray[4] = (unsigned char)Machine_Data.Total_Times;
+    Machine_ODO_DataArray[5] = (unsigned char)(Machine_Data.Total_Times >> 8);
+    Machine_ODO_DataArray[6] = (unsigned char)(Machine_Data.Total_Times >> 16);
+    Machine_ODO_DataArray[7] = (unsigned char)(Machine_Data.Total_Times >> 24);
+   
+}
+
+void Machine_System_Setting_To_Array(){
     
-    MachineDataArray[8] = (unsigned char)Machine_Data.System_INCLINE_Max;
-    MachineDataArray[9] = (unsigned char)(Machine_Data.System_INCLINE_Max >> 8);
     
-    MachineDataArray[10] = (unsigned char)Machine_Data.System_SPEED_Max;
-    MachineDataArray[11] = (unsigned char)(Machine_Data.System_SPEED_Max >> 8);
+    Machine_Sys_Set_Array[0] = (unsigned char)Machine_Data.System_INCLINE_Max;
+    Machine_Sys_Set_Array[1] = (unsigned char)(Machine_Data.System_INCLINE_Max >> 8);
     
-    MachineDataArray[12] = (unsigned char)Machine_Data.System_INCLINE_Min;
-    MachineDataArray[13] = (unsigned char)(Machine_Data.System_INCLINE_Min >> 8);
+    Machine_Sys_Set_Array[2] = (unsigned char)Machine_Data.System_SPEED_Max;
+    Machine_Sys_Set_Array[3] = (unsigned char)(Machine_Data.System_SPEED_Max >> 8);
     
-    MachineDataArray[14] = (unsigned char)Machine_Data.System_SPEED_Min;
-    MachineDataArray[15] = (unsigned char)(Machine_Data.System_SPEED_Min >> 8);
+    Machine_Sys_Set_Array[4] = (unsigned char)Machine_Data.System_INCLINE_Min;
+    Machine_Sys_Set_Array[5] = (unsigned char)(Machine_Data.System_INCLINE_Min >> 8);
     
-    MachineDataArray[16] = (unsigned char)(Machine_Data.System_UNIT);
+    Machine_Sys_Set_Array[6] = (unsigned char)Machine_Data.System_SPEED_Min;
+    Machine_Sys_Set_Array[7] = (unsigned char)(Machine_Data.System_SPEED_Min >> 8);
+    
+    Machine_Sys_Set_Array[8] = (unsigned char)(Machine_Data.System_UNIT);
     
 }
 
@@ -586,10 +588,12 @@ void MachineData_To_Array(){
 //機器資料初始化  清掉總時間 總里程ODO 最大速度最小速度 最大揚升最小揚升  Unit為設定單位: 公制 or 英制
 void Write_Machine_Data_Init(System_Unit_Def Unit){
     
-    //-----------數值初始化-----------------------------
+    //-----------數值初始化----------
     Machine_Data.TotalDistance = 0;
     Machine_Data.Total_Times   = 0;
+    //-------------------------------
         
+    //-------------系統設定參數-----------//
     Machine_Data.System_INCLINE_Max = 150;
     Machine_Data.System_INCLINE_Min = 0;
     
@@ -602,13 +606,25 @@ void Write_Machine_Data_Init(System_Unit_Def Unit){
         Machine_Data.System_SPEED_Max = 150;
         Machine_Data.System_SPEED_Min = 3;
     }           
+    //-------------------------------------//
     
-    MachineData_To_Array();   
     unsigned char WriteBuffer256[256];
+    
+    //-----------------*******只有第一次初始化會 寫入初始值**************-----------------------------------///
+    //-----****系統設定參數寫在 sector1  刻意跟ODO分開 必免之後寫錯資料 跑步機動作異常 *****---------------------///
+    Machine_System_Setting_To_Array();
     memset(WriteBuffer256,0x00,256);
-    WriteBuffer256[255] = 0x01;              //把0xFF清掉    -->表示初始化過了
-    memcpy(WriteBuffer256, MachineDataArray,17);
-    Write_EE_Flash( Machine_Save_Address , 256 , WriteBuffer256);  //寫入Flash
+    memcpy(WriteBuffer256, Machine_Sys_Set_Array,9);
+    Write_EE_Flash( Machine_SysSetting_Address , 256 , WriteBuffer256);  //寫入Flash
+    //--------------------********************---------------------//
+    
+    Machine_ODO_Data_To_Array();      
+    memset(WriteBuffer256,0x00,256);
+    WriteBuffer256[255] = 0x02;              //把0xFF清掉    -->表示初始化過了
+    memcpy(WriteBuffer256, Machine_ODO_DataArray,8);
+    Write_EE_Flash( Machine_ODO_Address , 256 , WriteBuffer256);  //寫入Flash
+        
+    
     Flash_Machine_Data_Loading();                                    //讀出Flash (確認寫入    
     //機器資料重置  Custom Program也一起重置  防止 公制模式  存的資料卻是英制
     Write_Default_Custom_Program_Data();
@@ -626,8 +642,8 @@ void Machine_Data_Update(){
     }
   
     Machine_Data.Total_Times += (Program_Data.Goal_Time - Program_Data.Goal_Counter); //
-    MachineData_To_Array();
-    Write_EE_Flash( Machine_Save_Address , 17 , MachineDataArray);   
+    Machine_ODO_Data_To_Array();
+    Write_EE_Flash( Machine_ODO_Address , 8 , Machine_ODO_DataArray);   
     Flash_Machine_Data_Loading();
     
 }

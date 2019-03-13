@@ -2,6 +2,9 @@
 #include "system.h"
 #include "Buzzer.h"
 
+//------------------------------Debug專用 只能從Live Watch關掉
+unsigned char Debug_BuzzerOFf;
+
 unsigned short BuzzerCnt;
 unsigned char BuzzerON_Flag;
 
@@ -29,6 +32,7 @@ void Buzzer_Btn(){
         if(BuzzerON_Flag == 0){
             
 #if Use_Buzzer
+if(Debug_BuzzerOFf == 0){
             BuzzerON_Flag = 1;
             
             if(Press_Key == Start){
@@ -46,6 +50,7 @@ void Buzzer_Btn(){
                 
             }
             __asm("NOP");
+}
 #endif
         } 
        
@@ -61,6 +66,8 @@ void Buzzer_Set(unsigned short setValue){
     if(BuzzerON_Flag == 0){
         
 #if Use_Buzzer
+if(Debug_BuzzerOFf == 0){
+    
         BuzzerON_Flag = 1;
         HAL_GPIO_WritePin(Buzzer_GPIO, Buzzer_Pin, GPIO_PIN_SET);
         
@@ -70,6 +77,7 @@ void Buzzer_Set(unsigned short setValue){
             BuzzerCnt = setValue;  
         }
          __asm("NOP");
+}
 #endif
     }
 }
@@ -79,12 +87,15 @@ void Buzzer_BeeBee(unsigned short setValue, unsigned char BeeCnt){
     if(BuzzerON_Flag == 0){
        
 #if Use_Buzzer 
+if(Debug_BuzzerOFf == 0){
+    
         ContuineBeepFlag = 1;
         Buzzer_BB_Period  = setValue / (BeeCnt * 2);
         BuzzerON_Flag = 1;
         HAL_GPIO_WritePin(Buzzer_GPIO, Buzzer_Pin, GPIO_PIN_SET);
         BuzzerCnt = setValue;
         __asm("NOP");
+}
 #endif
     }
     

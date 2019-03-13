@@ -99,6 +99,17 @@ void SystemConfigForIntSleepMode(){
     
 }
 
+#if RM6_Param_Debug
+typedef struct{
+    unsigned char AddTask_Flag;
+    CMD_Type_Def  type; 
+    unsigned char par_No;
+    unsigned int  data;
+            
+}RM6T6_Par_Task_Def;
+RM6T6_Par_Task_Def MyParTask;
+#endif
+
 int main(void)
 {
     
@@ -110,8 +121,11 @@ int main(void)
     Flash_Init();
     Power_5V_ON();
   
+    
+    
     MX_TIM1_Init();
-    //FlashErase(0);
+    //FlashErase(0);    
+ 
     
     Flash_Machine_Data_Loading();
     Read_SerialNumber_From_Flash(ucProductionSerialNumber);  //Read  BTM  Serial Number
@@ -171,6 +185,14 @@ int main(void)
     
     while (1)
     {
+        
+        #if RM6_Param_Debug
+        if(MyParTask.AddTask_Flag == 1){
+            MyParTask.AddTask_Flag = 0;
+            PAR_CMD(MyParTask.type,MyParTask.par_No,MyParTask.data);
+        }
+        #endif
+    
   
         if(System_Mode != System_Sleep){
             //------------------------------------------
@@ -192,7 +214,9 @@ int main(void)
                 F_HeartRate_Supervisor(); 
                 
                 if(RM_Task_Switch == 1){
-                    RM6_background_Task(); // 變頻器 任務排程器
+                    if(System_Mode != Safe){ //safe模式下不要再執行任務了
+                        RM6_background_Task(); // 變頻器 任務排程器
+                    }                    
                 }
                 if(APP_Task_Switch == 1){
                     APP_background_Broadcast();   //0x39  每隔5秒  丟系統狀態 

@@ -4,6 +4,7 @@
 #include "structDef.h"
 #include "SystemStick.h"
 
+
 GPIO_PinState   PB_1_spdUP;
 GPIO_PinState   PB_2_spdDown;
 
@@ -94,44 +95,48 @@ unsigned char R_KeyContinueProcess(KeyName_Def KeyName){
     return 0;
 }
 
-
+extern System_Mode_Def System_Mode;
 //Step 1     在其他按鍵沒有在動作的時候 去讀取按鍵GPIO
 void RealityKey_PressDetect(){
     
-    if(Debounce_Time == 0){
-        PB_1_spdUP        = HAL_GPIO_ReadPin( GPIOB  , GPIO_PIN_1);
-        PB_2_spdDown  = HAL_GPIO_ReadPin( GPIOB  , GPIO_PIN_2);
-        PE_7_incUP          = HAL_GPIO_ReadPin( GPIOE  , GPIO_PIN_7);
-        PE_8_inc_Down  = HAL_GPIO_ReadPin( GPIOE  , GPIO_PIN_8);
-        
-        if(PB_1_spdUP | PB_2_spdDown | PE_7_incUP | PE_8_inc_Down){
+    if((System_Mode != Ready) && (System_Mode != Paused)){
+    
+        if(Debounce_Time == 0){
+            PB_1_spdUP        = HAL_GPIO_ReadPin( GPIOB  , GPIO_PIN_1);
+            PB_2_spdDown  = HAL_GPIO_ReadPin( GPIOB  , GPIO_PIN_2);
+            PE_7_incUP          = HAL_GPIO_ReadPin( GPIOE  , GPIO_PIN_7);
+            PE_8_inc_Down  = HAL_GPIO_ReadPin( GPIOE  , GPIO_PIN_8);
             
-            Buzzer_Btn();        //4個按鍵有一個按鍵被觸發 ,蜂鳴器就先B一聲
+            if(PB_1_spdUP | PB_2_spdDown | PE_7_incUP | PE_8_inc_Down){
+                
+                Buzzer_Btn();        //4個按鍵有一個按鍵被觸發 ,蜂鳴器就先B一聲
+                
+                //紀錄 按下的 按鍵 名稱  儲存到   Catch_Key_Name  
+                if(PB_1_spdUP == GPIO_PIN_SET){
+                    Catch_Key_Name = Spd_Up;    
+                }else if(PB_2_spdDown ==GPIO_PIN_SET ){
+                    Catch_Key_Name = Spd_Down;
+                }else if(PE_7_incUP ==GPIO_PIN_SET ){
+                    Catch_Key_Name = Inc_Up;
+                }else if(PE_8_inc_Down ==GPIO_PIN_SET ){
+                    Catch_Key_Name = Inc_Down;
+                }  
+                
+                Catch_Key_Save = Catch_Key_Name;   //先把目前按的按鍵存起來 
+                
+                //清掉 GPIO狀態      當有按鍵按下時   Debounce_Time ! =  0 不會再去確認HAL_GPIO_ReadPin  所以要先清掉狀態
+                PB_1_spdUP    = GPIO_PIN_RESET; 
+                PB_2_spdDown  = GPIO_PIN_RESET;
+                PE_7_incUP    = GPIO_PIN_RESET;  
+                PE_8_inc_Down = GPIO_PIN_RESET;
+                
+                //設定除彈跳時間
+                Debounce_Time = Debounce_Time_ADJ;
+                __asm("NOP");
+            }
             
-            //紀錄 按下的 按鍵 名稱  儲存到   Catch_Key_Name  
-            if(PB_1_spdUP == GPIO_PIN_SET){
-                Catch_Key_Name = Spd_Up;    
-            }else if(PB_2_spdDown ==GPIO_PIN_SET ){
-                Catch_Key_Name = Spd_Down;
-            }else if(PE_7_incUP ==GPIO_PIN_SET ){
-                Catch_Key_Name = Inc_Up;
-            }else if(PE_8_inc_Down ==GPIO_PIN_SET ){
-                Catch_Key_Name = Inc_Down;
-            }  
-            
-            Catch_Key_Save = Catch_Key_Name;   //先把目前按的按鍵存起來 
-            
-            //清掉 GPIO狀態      當有按鍵按下時   Debounce_Time ! =  0 不會再去確認HAL_GPIO_ReadPin  所以要先清掉狀態
-            PB_1_spdUP    = GPIO_PIN_RESET; 
-            PB_2_spdDown  = GPIO_PIN_RESET;
-            PE_7_incUP    = GPIO_PIN_RESET;  
-            PE_8_inc_Down = GPIO_PIN_RESET;
-            
-            //設定除彈跳時間
-            Debounce_Time = Debounce_Time_ADJ;
-            __asm("NOP");
         }
-        
+    
     }
       
 }
