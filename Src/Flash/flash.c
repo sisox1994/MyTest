@@ -157,7 +157,10 @@ void OTA_Mode_Check(){
     Read_EE_Flash( OTA_Mode_Flag_Address , 16 , FlagCheck);
     
     if( str_check( OTA_Flag , FlagCheck , sizeof(OTA_Flag) ) ){
+        //進入OTA模式 先把OTA_Mode_Flag設起來  然後就可以把flash標誌改回Application 避免更新失敗重開機又進入OTA mode
         OTA_Mode_Flag = 1;    
+        Flash_Write_Applicantion_Mode();  
+        HAL_Delay(15);
     }
     if(str_check( Bootloader_Flag , FlagCheck , sizeof(Bootloader_Flag))){
         while(1){

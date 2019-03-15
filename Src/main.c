@@ -207,7 +207,11 @@ int main(void)
             #endif   
             
             RealityKey_PressDetect();
-            SafeKey_Detect();
+            
+            if(System_Mode != Sys_OTA_Mode){
+                SafeKey_Detect();
+            }
+            
             BTM_background_Task(); // 藍芽 任務排程器
             
             if( OTA_Mode_Flag == 0){   //如果是OTA 模式就不做其他背景執行動作
