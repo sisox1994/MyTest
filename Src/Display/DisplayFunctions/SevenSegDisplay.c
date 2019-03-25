@@ -1192,9 +1192,11 @@ void TIME_SET_Display( Seg_Display_ITEM_Def Item  , unsigned int Value , unsigne
                 SevenSegmentBuffer[COLON/4] = 0xFF;
             }
             
-            Blink_Flag = 0;
-            ClearBlinkCnt2();
-            
+            if(Item == TIME){  //只有運動中調整時間完成 將閃爍停止 才要清counter和flag
+                Blink_Flag = 0;
+                ClearBlinkCnt2();
+            }
+                  
         }else if(Force == 0){
             
             if(T500ms_Blink_Flag){
