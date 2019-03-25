@@ -2899,12 +2899,14 @@ void F_Btm_FTMS_B2_Read(){
     
     }
     
+#if FTMS_Activated_Permission   //防止被Zwift隨機啟動
     if(FTMS_OP_Code == start_or_resume){
         if(System_Mode == Idle){
             Quick_Start_Init();       //Zwift 沒事就會一直下這個cmd (包括掃描裝置時)
             IntoReadyMode_Process();
         }
     }
+#endif
     
     if(FTMS_OP_Code == set_target_resistance_level){
         FTMS_Control_Value.target_R_Level = (unsigned char)ucBtmRxData[3];  

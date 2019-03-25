@@ -44,7 +44,8 @@
 #define FAKE_RM6T6_Mode   0
 #define SpdIncSegBlink    0
 #define RM6_Param_Debug   0
- 
+
+#define FTMS_Activated_Permission 0
 //-------------------------------
 
 extern unsigned char L_Mode;
