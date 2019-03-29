@@ -1120,56 +1120,51 @@ void F_BtmReply36Cmd(void){
 
 //-------------------------------------------0x37  存速度 table  Start-----------------------------------------------------------
 
+unsigned char ucNextPage;
 void F_BtmRead37Cmd(void){
     
     unsigned char  uci;
     unsigned short temp1;
     
     ucAppErrflag = 0;
+    
     ucCmdPage = ucBtmRxData[2];
     
-   /* if(CloudRun_Init_INFO.Stage%16 != 0){
-        if(ucCmdPage == CloudRun_Init_INFO.Stage/16){
-            Btm_Task_Adder(C_37Val);
-        }
-    }else if(CloudRun_Init_INFO.Stage%16 == 0){  //如果是16的倍數就 Page 要-1
-        if(ucCmdPage == CloudRun_Init_INFO.Stage/16 - 1){
-            Btm_Task_Adder(C_37Val);
-        }
-    }*/
+    if(ucCmdPage == 0){
+        ucNextPage = 1;
+    }else if(ucCmdPage != ucNextPage){
+        ucAppErrflag = 1;          //丟錯包 或是掉包的情況發生 回0x41
+        ucCmdPage = ucNextPage;    //告訴APP要重傳     回傳應該要傳的page
+    }else{
+        ucNextPage = ucCmdPage + 1;
+    }
     
-  
-
-    
-    switch(ucAppTypeMode){
-        
-      case Digital_Watch:    //電子錶
-        // 一般模式不接受APP的Profile
-        break;
-      case App:     //ALA Fitness
-        //暫時不支援
-        break;
-      case Cloud_Run:   //雲跑
-        // ucAppTypeMode = 2
-        // cSPDBuffer[uci] = ucSpeedMin;
-        break;
-        
-      case void_Run:   //虛跑
-      case Train_Run_Dist:  //訓練(距離)
-      case Train_Run_Time:  //訓練(時間)
-        if(ucCmdPage < ucAppDataPage){        // 限制<432筆資料(420)
-            temp1 = 16 * ucCmdPage;
-            for(uci = 0 ;uci < 16;uci++){
-                F_BtmGetSpd( 0 ,temp1 + uci ,ucBtmRxData[uci+3]);
-                CloudRun_Init_INFO.CloudRun_Spd_Buffer[temp1 + uci] = ucBtmRxData[uci+3];
+    if(ucAppErrflag != 1){
+        switch(ucAppTypeMode){
+            
+          case Digital_Watch:    //電子錶
+            // 一般模式不接受APP的Profile
+            break;
+          case App:     //ALA Fitness
+            //暫時不支援
+            break;
+          case Cloud_Run:   //雲跑
+            break;
+            
+          case void_Run:   //虛跑
+          case Train_Run_Dist:  //訓練(距離)
+          case Train_Run_Time:  //訓練(時間)
+            if(ucCmdPage < ucAppDataPage){        // 限制<432筆資料(420)
+                temp1 = 16 * ucCmdPage;
+                for(uci = 0 ;uci < 16;uci++){
+                    F_BtmGetSpd( 0 ,temp1 + uci ,ucBtmRxData[uci+3]);
+                    CloudRun_Init_INFO.CloudRun_Spd_Buffer[temp1 + uci] = ucBtmRxData[uci+3];
+                }
+            }else{
+                ucAppErrflag = 1;
             }
-
-#if AppErrChk
-        }else{
-            ucAppErrflag = 1;
-#endif
+            break;
         }
-        break;
     }
     
     
@@ -1187,53 +1182,47 @@ void F_BtmRead38Cmd(void){
   
   ucAppErrflag = 0;
   ucCmdPage = ucBtmRxData[2];
-  //
- 
-  /*
-  if(CloudRun_Init_INFO.Stage%16 != 0){
-      if(ucCmdPage == CloudRun_Init_INFO.Stage/16){
-          Btm_Task_Adder(C_38Val);
-      }
-  }else if(CloudRun_Init_INFO.Stage%16 == 0){  //如果是16的倍數就 Page 要-1
-      if(ucCmdPage == CloudRun_Init_INFO.Stage/16 - 1){
-          Btm_Task_Adder(C_38Val);
-      }
-  }*/
+
+  if(ucCmdPage == 0){
+      ucNextPage = 1;
+  }else if(ucCmdPage != ucNextPage){
+      ucAppErrflag = 1;          //丟錯包 或是掉包的情況發生 回0x41
+      ucCmdPage = ucNextPage;    //告訴APP要重傳     回傳應該要傳的page
+  }else{
+      ucNextPage = ucCmdPage + 1;
+  }
   
-  
-  
-  switch(ucAppTypeMode)
-  {
-    case Digital_Watch:   //電子錶
-      // 一般模式不接受APP的Profile
-      break;
-    case App:   //ALA Fitness
-      //暫時不支援
-      break;
-    case Cloud_Run:   //雲跑
-    case void_Run:    //虛跑
-    case Train_Run_Dist:  //訓練(距離)
-    case Train_Run_Time:  //訓練(時間)
-      if(ucCmdPage < ucAppDataPage){        // 限制<432筆資料
-          temp1 = 16*ucCmdPage;
-          for(uci = 0 ;uci < 16;uci++){
-              if(ucBtmRxData[uci+3] <= Machine_Data.System_INCLINE_Max){ 
-                  CloudRun_Init_INFO.CloudRun_Inc_Buffer[temp1 + uci] = ucBtmRxData[uci+3];
-              }else{
-                  CloudRun_Init_INFO.CloudRun_Inc_Buffer[temp1 + uci] = 0;
+  if(ucAppErrflag != 1){
+      switch(ucAppTypeMode){
+          
+        case Digital_Watch:   //電子錶
+          // 一般模式不接受APP的Profile
+          break;
+        case App:   //ALA Fitness
+          //暫時不支援
+          break;
+        case Cloud_Run:   //雲跑
+        case void_Run:    //虛跑
+        case Train_Run_Dist:  //訓練(距離)
+        case Train_Run_Time:  //訓練(時間)
+          if(ucCmdPage < ucAppDataPage){        // 限制<432筆資料
+              temp1 = 16*ucCmdPage;
+              for(uci = 0 ;uci < 16;uci++){
+                  if(ucBtmRxData[uci+3] <= Machine_Data.System_INCLINE_Max){ 
+                      CloudRun_Init_INFO.CloudRun_Inc_Buffer[temp1 + uci] = ucBtmRxData[uci+3];
+                  }else{
+                      CloudRun_Init_INFO.CloudRun_Inc_Buffer[temp1 + uci] = 0;
+                  }
               }
+          }else{
+              ucAppErrflag = 1;
           }
-
-
-#if AppErrChk
-      }else{
-          ucAppErrflag = 1;
-#endif
+          break;
       }
-      break;
   }
   
   F_BtmReplyCmd(0x38);
+  
 }
 
 //---------------------------0x38 END----------------------------------------------
@@ -1329,9 +1318,9 @@ void F_BtmReply39Cmd(void){
     
     usSegmentNumber = (Cloud_0x39_Info.c_Distance / uiAppStageDist);
     
-    if(usSegmentNumber> 40){     // 參展先這樣處理(只處理40行以內資料)
+    /*if(usSegmentNumber> 40){     // 參展先這樣處理(只處理40行以內資料)  190329 取消限制
         usSegmentNumber &= 0xFF;
-    }
+    }*/
     
     ucBtmTxBuf[7] = (usSegmentNumber%256);
     ucBtmTxBuf[8] = (usSegmentNumber/256);
@@ -1408,8 +1397,8 @@ void F_BtmReply39Cmd(void){
         //---------------
         Cloud_0x39_Info.c_ALTI = ulAltitude;
         
-        ucBtmTxBuf[17] =  1;  //usStepFrequencyFlag
-        Cloud_0x39_Info.c_SPFreq = 1;
+        ucBtmTxBuf[17] =  Pace_Freq;  //usStepFrequencyFlag
+        Cloud_0x39_Info.c_SPFreq = Pace_Freq;
     
     }
     //--------------------------
