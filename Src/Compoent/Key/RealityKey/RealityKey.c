@@ -10,9 +10,10 @@ GPIO_PinState   PB_2_spdDown;
 
 GPIO_PinState   PE_7_incUP;
 GPIO_PinState   PE_8_inc_Down;
+
 unsigned short Debounce_Time;
 unsigned short Debounce_Time_ADJ = 50;  //除彈跳時間
-unsigned int Holding_Cnt;    //偵測按住多久用的Counter
+unsigned int   Holding_Cnt;    //偵測按住多久用的Counter
 
 void Reality_Key_Init(){
 

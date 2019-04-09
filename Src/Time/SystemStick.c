@@ -3,8 +3,8 @@
 
 Flags_32bit TimeFlag;
 
-unsigned int TimerCnt;
-unsigned int NeverClearCnt;
+unsigned int   TimerCnt;
+unsigned int   NeverClearCnt;
 unsigned short BlinkCnt;
 unsigned short BlinkCnt2;
 unsigned short BlinkCnt3;
@@ -14,28 +14,28 @@ unsigned short MarqueeCnt = 75;
 unsigned short Ble_Icon_Display_Cnt;
 unsigned short ANT_Icon_Display_Cnt;
 
-unsigned char APP_Connected_Display_Cnt;
+unsigned char  APP_Connected_Display_Cnt;
 
-unsigned char DIST_Icon_Display_Cnt;
-unsigned char ALTI_Icon_Display_Cnt;
+unsigned char  DIST_Icon_Display_Cnt;
+unsigned char  ALTI_Icon_Display_Cnt;
+              
+unsigned char  CAL_Icon_Display_Cnt;
+unsigned char  CALH_Icon_Display_Cnt;
+              
+unsigned char  ELAPSED_Icon_Display_Cnt;
+unsigned char  REMAINNING_Icon_Display_Cnt;
+              
+unsigned char  PACE_Icon_Display_Cnt;
+unsigned char  STEP_Icon_Display_Cnt;
+              
+unsigned char  MET_Icon_Display_Cnt;
+unsigned char  HR_Icon_Display_Cnt;
 
-unsigned char CAL_Icon_Display_Cnt;
-unsigned char CALH_Icon_Display_Cnt;
-
-unsigned char ELAPSED_Icon_Display_Cnt;
-unsigned char REMAINNING_Icon_Display_Cnt;
-
-unsigned char PACE_Icon_Display_Cnt;
-unsigned char STEP_Icon_Display_Cnt;
-
-unsigned char MET_Icon_Display_Cnt;
-unsigned char HR_Icon_Display_Cnt;
-
-unsigned char HR_BlinkOneTime_Cnt;  //心跳 七段顯示器閃一下 
+unsigned char  HR_BlinkOneTime_Cnt;  //心跳 七段顯示器閃一下 
 
 
-unsigned short  BTSPK_Icon_Display_Cnt;
-unsigned short  BTSPK_OFF_Icon_Display_Cnt;
+unsigned short BTSPK_Icon_Display_Cnt;
+unsigned short BTSPK_OFF_Icon_Display_Cnt;
 
 unsigned short Ble_wait_disconnect_Time_out_Cnt;
 unsigned short Btm_Timer_Cnt;
@@ -43,57 +43,43 @@ unsigned short RM6t6_Timer_Cnt;
 unsigned short BarArrayBlinkCnt;
 unsigned int   standard_1_Sec_Cnt;
 
-
 unsigned short ONE_SEC_Cnt_Value = 1000;
 //unsigned char T500ms_Matrix_Blink_Flag;
 
 void ClearBlinkCnt(){
-    
     BlinkCnt = 0;
     T500ms_Matrix_Blink_Flag = 1;
 }
 
 void ClearBlinkCnt2(){
-    
     BlinkCnt2 = 0;
     T500ms_Blink_Flag = 1; 
     MatrixBlink_Flag  = 0;
 }
 
 void Rst_Speed_Blink(){
-    
     BlinkCnt4 = 0;
     T500ms_Blink_SPEED_Flag = 1;
-    
 }
 
-void Rst_Incline_Blink(){
-    
+void Rst_Incline_Blink(){    
     BlinkCnt3 = 0;
     T500ms_Blink_INCL_Flag = 1;
-
 }
 
-void ClearBlinkCnt_BarArray(){
-    
+void ClearBlinkCnt_BarArray(){    
     BarArrayBlinkCnt = 0;
     T500ms_BarArray_Blink_Flag = 1; 
     
 }
 
-void ClearStd_1_Sec_Cnt(){
-    
+void ClearStd_1_Sec_Cnt(){    
     standard_1_Sec_Cnt = 0;
     T1s_Flag = 0;  
 }
-
-
-
-
 void time(){
-
-    BuzzerCheck();
-  
+    
+    BuzzerCheck();  
     //------------------------------------------------//
     if(Btm_Timer_Cnt%200 == 0){    //BTM 排程器用
         T100ms_Btm_Task_Flag = 1;
@@ -148,30 +134,22 @@ void time(){
         } 
         if(HR_BlinkOneTime_Cnt > 0){
             HR_BlinkOneTime_Cnt--;
-        }
-             
-        //------------------------------------------------
-        
+        }             
+        //------------------------------------------------        
     }
     
     if((Btm_Timer_Cnt + 100)%300 == 0 ){  //RM6t6_Timer_Cnt%150 ==0){  //與下控 RM6T6溝通用 刻意與BTM 差 50 ms
         T100ms_RM6T6_Task_Flag = 1;
-    }
-    
+    }    
     //---------------------------------------------------//
-    
-
-    //------------   5K 心跳  + 手握 --------------------//
-    
+    //------------   5K 心跳  + 手握 --------------------//   
 
     if(NeverClearCnt % 100 == 0){   //每隔10ms 算5k心跳數值 
 #if configUSE_WHR  
         F_HRProcess();    // 5K心跳數值計算
 #endif  
     
-    }
-    
-    
+    }    
     //-----------------------------------------//
 
     if(TimerCnt%1000 == 0){ //偵測按鈕按住多少(秒)
@@ -225,14 +203,11 @@ void time(){
     if(NeverClearCnt%100 == 0){  //偵測pauseKey用
         T100ms_PauseKey_Flag = 1;
     }
-    //-------------------------------------------------------------------//
-    
+    //-------------------------------------------------------------------//    
     if(standard_1_Sec_Cnt % ONE_SEC_Cnt_Value == 0){  //標準一秒
         T1s_Flag = 1;
-    }
-    
-    //---------------------------------------------------------------------//
-    
+    }    
+    //---------------------------------------------------------------------//    
     if(BlinkCnt%600 == 0){             //LED 矩陣  閃爍
         T500ms_Matrix_Blink_Flag = 1;
     }
@@ -245,13 +220,10 @@ void time(){
     if(BlinkCnt4%500 == 0){            //速度 七段專用
         T500ms_Blink_SPEED_Flag = 1;
     }
-    //--------------------------------------------------------------------//
-    
-    
+    //--------------------------------------------------------------------//   
     if(BarArrayBlinkCnt%500 == 0){
         T500ms_BarArray_Blink_Flag = 1;  //BarArray0.5秒閃爍用
     }
-    
     
     KeyDelay();
     Debounce();
@@ -273,8 +245,7 @@ void time(){
     else BlinkCnt3++;
     
     if(BlinkCnt4 == 9999) BlinkCnt4 = 0;
-    else BlinkCnt4++;
-    
+    else BlinkCnt4++;    
     
     if(BarArrayBlinkCnt == 9999) BarArrayBlinkCnt = 0;
     else BarArrayBlinkCnt++;
@@ -290,7 +261,5 @@ void time(){
       
     if(NeverClearCnt == 99999) NeverClearCnt = 0;
     else NeverClearCnt++;
-    
-    
+        
 }
-

@@ -2,8 +2,7 @@
 #define    __KEY_H__
 
 typedef enum{
-
-  
+    
     Inc_15  = 44,
     Inc_12  = 43,
     Inc_9  = 42,

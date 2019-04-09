@@ -3,6 +3,10 @@
 Program_Type_Def Program_Select = Quick_start;
 Program_Data_Def Program_Data;
 
+//
+#define GoSleepTime 1200  //1200sec = 20分鐘沒有操作進入省電
+unsigned short Go_Sleep_cnt;
+
 
 void IntoIdleMode_Process(){
 
@@ -728,10 +732,19 @@ void Idle_Func(){
     if(T1s_Flag){     //時間計數  單位:秒
         T1s_Flag = 0;
         
+        if(Go_Sleep_cnt == GoSleepTime){            
+            GoToSleepFlag = 1;            
+        }else if(Go_Sleep_cnt < GoSleepTime){
+            Go_Sleep_cnt++;
+        }    
+        
         Btm_Task_Adder(FTMS_Data_Broadcast);
     }
     
-
+    //if( KeyCatch(0,1 , Key_Time) ){  //睡眠模式測試 按Time直接進入
+       // GoToSleepFlag = 1;
+    //}
+    
     
     if(GoToSleepFlag == 1){
         GoToSleepFlag = 0;

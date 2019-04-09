@@ -2,7 +2,7 @@
 #define REALITYKEY_H_
 
 typedef enum{
-
+    
     Spd_Up   = 1,
     Spd_Down = 2,
     

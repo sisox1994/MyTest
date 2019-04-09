@@ -2,7 +2,8 @@
 #include "system.h"
 
 char ucProductionSerialNumber[14];
-System_Mode_Def System_Mode;
+
+System_Mode_Def   System_Mode;
 SafeKey_State_def safekey;
 
 Time_Display_Def       Time_Display_Type;
@@ -11,8 +12,8 @@ Dist_Display_Def       Dist_Display_Type;
 HeartRate_Display_Def  HeartRate_Display_Type;
 unsigned char str_cNt = 0;
 
-unsigned short System_INCLINE; //0~150   => 0.0~15.0 %   =>0~30
-unsigned short System_SPEED;   //0 ~ 120 
+unsigned short  System_INCLINE; //0~150   => 0.0~15.0 %   =>0~30
+unsigned short  System_SPEED;   //0 ~ 120 
 
 System_Unit_Def System_Unit;
 
@@ -44,7 +45,6 @@ void F_HeartRate_Supervisor(){
     }
 }
 
-short Move_X = 52;
 unsigned char charArrayEquals( char A1[], char A2[]){
     
     unsigned int A1_len = strlen(A1);

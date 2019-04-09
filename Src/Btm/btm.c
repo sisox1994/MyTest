@@ -4,14 +4,11 @@
 #include "btm.h"
 
 #define FTMS_Test 0
-
 #define configUSE_SPDRamSize 32
 #define BtmData 20
 
 unsigned char FW_Transmiting_03_Flag;
-
 unsigned char ucRFVersion[3];          //FTMS SetFeature B0 cmd ¨ú±oRFª©¥» 
-
 unsigned short EepromVer_3;       // V1.2  
 unsigned short EepromVer_4;        // A01
 
@@ -46,8 +43,6 @@ BLE_Paired_Device_Addr_List_def  BLE_Paired_device_list; // ¦¨¥\°t¹ï ´N§â¸ê°T¥[¤
 
 Now_Linked_HR_Sensor_Info_Def Linked_HR_info;
 
-
-
 Btm_Task_Def btmTask_List[Task_Amount];
 
 unsigned char btm_Task_Cnt = 0;
@@ -60,7 +55,6 @@ Btm_Task_Def   btm_HRC_disconnect_Task_Temp;
 
 unsigned char Ble_wait_HR_value_First_IN_Flag;
 
-
 void BTM_UART_Transmit(){
     
     if(btm_Rx_is_busy == 0){
@@ -72,8 +66,6 @@ void BTM_UART_Transmit(){
     btm_Rx_is_busy = 0;
 
 }
-
-
 
 //---------------------0x02  Firmware Update §ó·s ¤¹³\½T»{-------------------------
 void F_BtmReply02Cmd(){

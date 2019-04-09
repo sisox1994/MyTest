@@ -3,16 +3,14 @@
 #include "Buzzer.h"
 
 //------------------------------Debug專用 只能從Live Watch關掉
-unsigned char Debug_BuzzerOFf;
-
+unsigned char  Debug_BuzzerOFf;
 unsigned short BuzzerCnt;
-unsigned char BuzzerON_Flag;
+unsigned char  BuzzerON_Flag;
 
-unsigned char ContuineBeepFlag;  //連續 bb叫
+unsigned char  ContuineBeepFlag;  //連續 bb叫
 unsigned short Buzzer_BB_Period;
 
-unsigned char Buzzer_Interval_Time;  //讓buzzer 響完有緩衝時間
-
+unsigned char  Buzzer_Interval_Time;  //讓buzzer 響完有緩衝時間
 
 void SetBuzzer_Interval(){
     Buzzer_Interval_Time = 100;
@@ -24,7 +22,6 @@ void Buzzer_Btn();
 
 //------------------按鍵回饋音
 void Buzzer_Btn(){
-    
     
     if(Buzzer_Interval_Time == 0){
     //----------------------------------------------------  
@@ -56,9 +53,6 @@ if(Debug_BuzzerOFf == 0){
        
     //------------------------------------------    
     }
-    
-
-    
 }
 
 void Buzzer_Set(unsigned short setValue){
@@ -138,8 +132,6 @@ void BuzzerCheck(){
     if(Buzzer_Interval_Time>0){
         Buzzer_Interval_Time--;
     }
-    
-    
 }
 void Buzzer_Init(){
     

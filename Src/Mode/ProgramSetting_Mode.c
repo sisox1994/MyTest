@@ -2176,6 +2176,7 @@ void ProgSet_Display(){
 
 //--------------30秒沒有操作回到IDLE--------------
 unsigned char ret_Idle_cnt;
+
 void Idel_detect(){
     
         if(T1s_Idle == 1){

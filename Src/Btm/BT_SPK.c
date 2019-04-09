@@ -8,7 +8,6 @@
 #define SPK_DET_PIN   GPIO_PIN_2
 
 typedef enum{
-    
     SPK_OFF =0,
     SPK_ON =1,
     

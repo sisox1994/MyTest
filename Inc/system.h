@@ -21,29 +21,26 @@
 #ifndef __SYSTEM_H__
 #define __SYSTEM_H__
 
-
-#define System_Version "V13"        //APP 只判斷這個
-#define Modify_Version "A02"        // AXX 細分版本 V10A01 V10A02 代表都是V10 但是 有稍微修改
-
-
+#define System_Version "V14"        //APP 只判斷這個
+#define Modify_Version "A00"        // AXX 細分版本 V10A01 V10A02 代表都是V10 但是 有稍微修改
 
 
 //--------功能開關---------  1 開   0關
-#define Use_BTSPK      0
-#define Use_FAN        0
+#define Use_BTSPK   0
+#define Use_FAN     0
 
 #define Use_SafeKey    1
 #define Use_Buzzer     1     
 #define RM6T6_IN_USE   1
 
-#define configUSE_WHR   1
-#define configUSE_HHR   1
+#define configUSE_WHR  1
+#define configUSE_HHR  1
 
-#define AutoPause       1
+#define AutoPause  1
 
-#define FAKE_RM6T6_Mode   0
-#define SpdIncSegBlink    0
-#define RM6_Param_Debug   0
+#define FAKE_RM6T6_Mode  0
+#define SpdIncSegBlink   0
+#define RM6_Param_Debug  0
 
 #define FTMS_Activated_Permission 0
 //-------------------------------
@@ -72,10 +69,8 @@ extern void Power_5V_ON();
 extern void Power_5V_OFF();
 
 //---  5K WHR  hand HHR-----
-
 extern unsigned char ucWhr;	
 extern unsigned char HR5KPairOkFlag;
-
 extern unsigned char ucHhr;
 
 void HR_5K_Init();
@@ -84,17 +79,15 @@ void Hand_HR__Init();
 extern void F_HR(void);
 extern void F_HRProcess(void);
 
-
 //----  Safe Key  -----
 void SafeKey_Init();
 void SafeKey_Detect();
 extern SafeKey_State_def safekey;
 unsigned char PauseKey();
 extern unsigned short Time_Set;
-extern unsigned char Cnt_Set;
+extern unsigned char  Cnt_Set;
 
-
-//      Flash
+//  --- Flash  -----
 extern void Write_SerialNumber_To_Flash(char *Data);
 extern void Read_SerialNumber_From_Flash(char *Data);
 
@@ -143,18 +136,16 @@ extern Time_Display_Def       Time_Display_Type;
 extern Calories_Display_Def   Calories_Display_Type;
 extern Dist_Display_Def       Dist_Display_Type;
 extern HeartRate_Display_Def  HeartRate_Display_Type;
-
-extern unsigned char         Pace_Display_Switch;
-
+extern unsigned char          Pace_Display_Switch;
 
 extern unsigned char ContuineBeepFlag;  //連續 bb叫
 
 extern System_Mode_Def System_Mode;
 extern System_Unit_Def System_Unit;
-extern unsigned char str_cNt;
-extern short Move_X;
+extern unsigned char   str_cNt;
 
-extern unsigned char ret_Idle_cnt;
+extern unsigned char  ret_Idle_cnt;
+extern unsigned short Go_Sleep_cnt;
 
 extern unsigned short System_INCLINE; //0~150   => 0.0~15.0 %   =>0~31
 extern unsigned short System_SPEED;   //0 ~ 120 
@@ -165,9 +156,9 @@ extern unsigned int uiAvgHeartRate;
 
 extern unsigned short usMET;
 
-extern unsigned int Pace_Freq;  //步頻
-extern unsigned int Pace_Dist;  //步幅
-extern unsigned int Pace_Spd;   //步速
+extern unsigned int  Pace_Freq;  //步頻
+extern unsigned int  Pace_Dist;  //步幅
+extern unsigned int  Pace_Spd;   //步速
 extern unsigned long ulAltitude;
 
 unsigned char charArrayEquals( char A1[], char A2[]);

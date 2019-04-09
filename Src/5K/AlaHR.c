@@ -30,10 +30,10 @@ unsigned char WhrFlag;
 unsigned char WPulseFlag;
 
 #define Pulse_5K_GPIO  GPIOD
-#define Pulse_5K_PIN     GPIO_PIN_3
+#define Pulse_5K_PIN   GPIO_PIN_3
 
 #define HHR_GPIO       GPIOE
-#define HHR_PIN          GPIO_PIN_1
+#define HHR_PIN        GPIO_PIN_1
 
 
 void HR_5K_Init(){

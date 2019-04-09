@@ -7,7 +7,6 @@ void HAL_TIM_MspPostInit(TIM_HandleTypeDef *htim);
      
 void FAN_PWM_Init(){
     
-
     TIM_MasterConfigTypeDef sMasterConfig;
     TIM_OC_InitTypeDef sConfigOC;
     
@@ -44,9 +43,8 @@ void FAN_PWM_Init(){
 
 void FAN_SET_PWM_DUTY(unsigned char duty){
     
-
     unsigned int PWM_Value;
-    
+   
     if(duty>100){
         duty = 100;
     }
@@ -54,6 +52,5 @@ void FAN_SET_PWM_DUTY(unsigned char duty){
     PWM_Value =  duty * 10;
     
     TIM2->CCR3 = PWM_Value;
-
 }
 #endif

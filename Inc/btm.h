@@ -3,64 +3,51 @@
 
 
 typedef enum{
-
-
   ASLEEP   = 1,
   READY    = 2,
   IN_USE   = 3,
   FINISHED = 4
-
 }FEC_State_Def;
 
 typedef enum{
-
     others = 0,
     IDLE   = 1, 
     Warming_up = 2, 
-    Low_intensity_interval = 3,
+    Low_intensity_interval  = 3,
     High_intensity_interval = 4,
     Recovery_interval = 5,
     Isometric = 6,
     Heart_rate_control = 7,
     Fitness_test = 8,
-    Speed_outside_of_control_region_Low = 9,
+    Speed_outside_of_control_region_Low  = 9,
     Speed_outside_of_control_region_High = 10,
-    Cool_down = 11,
+    Cool_down    = 11,
     Watt_control = 12,
-    Manual_mode = 13,
-    Pre_workout = 14,
+    Manual_mode  = 13,
+    Pre_workout  = 14,
     Post_workout = 15,
-
 }Training_status_Def;
 
 
 typedef enum{
-    
     Digital_Watch  = 0,
     App            = 1, 
     Cloud_Run      = 2,
     void_Run       = 3,
     Train_Run_Dist = 4,
     Train_Run_Time = 5,
-    
-    
     C_App_UserVal      = 9,
     C_App_Dist1Val     = 10,
     C_App_Dist2Val     = 11,
     C_App_Training_Val = 13,
-        
 }ucAppTypeModeDef;
 
-
 typedef enum{
-
     No_Task  = 0,
     Scan_BLE_HRC_Sensor  = 1,    
     Scan_ANT_HRC_Sensor  = 2,
-    
     BLE_HRC_Disconnect   = 3,
     ANT_HRC_Disconnect   = 4,
-    
     BLE_HRC_Pairing      = 5,
     BLE_HRC_Link         = 6,
     
@@ -81,27 +68,18 @@ typedef enum{
     C_46Val = 46,
     C_50Val = 50,
     
-    
     Feature_FTMS = 70,
-    
     Type_FTMS     = 71,
     Flag_FTMS     = 72,
-    
-    
-    FTMS_Data_Broadcast   = 73,
-    
+  
+    FTMS_Data_Broadcast = 73,
     //FTMS_HR_Connect    = 74,
     //FTMS_HR_Disconnect = 75,
-    
     FEC_SET_SN = 76,
-    
     FEC_Data_Config_Page_0 = 77,
     FEC_Data_Config_Page_1 = 78,
- 
-    
+
 }Btm_Task_Def;
-
-
 
 typedef enum{
     
@@ -114,25 +92,21 @@ typedef enum{
    
 }FTMS_Machine_Type_Def;
 
-
 typedef struct{
-
     System_Mode_Def c_System_Mode;
-    unsigned int   c_Times;
-    unsigned short c_HeartRate;
-    unsigned short c_Stage;
-    unsigned short c_Speed;
-    unsigned short c_Incline;
-    unsigned int   c_Distance;
-    unsigned int   c_Calories;
-    unsigned int   c_Step;
-    unsigned long  c_ALTI;
-    unsigned char  c_SPFreq;    
-
+    unsigned int    c_Times;
+    unsigned short  c_HeartRate;
+    unsigned short  c_Stage;
+    unsigned short  c_Speed;
+    unsigned short  c_Incline;
+    unsigned int    c_Distance;
+    unsigned int    c_Calories;
+    unsigned int    c_Step;
+    unsigned long   c_ALTI;
+    unsigned char   c_SPFreq;    
 }Cmd_39_outData_Def;
 
 typedef enum{
-
     BLE_HR  = 0x180D,    
     ANT_HR  = 0xF80D,    
     BLE_CSC = 0x1816,  
@@ -142,21 +116,17 @@ typedef enum{
     ANT_CSC_SPEED       = 0xE816,  
     ANT_CSC_CADENCE     = 0xD816,   
     SCAN_ALL_BLE_SENSOR = 0xFFFF      
-       
 }Sensor_UUID_Type_Def;
 
 typedef enum{
-
       Scaning   = 0x40,
       Scaning2  = 0x4C,
       Paired_OK = 0x41,
       No_Device = 0x42,
       Scan_Time_Out = 0x4F,
-      
 }Scan_State_Def;
 
 typedef enum{
-
       Linked     = 0x40,
       Linked_2   = 0x42,
       connected  = 0x44,
@@ -173,24 +143,18 @@ typedef enum{
       ble_researching = 0xFC,
       wait_disconnect = 0xFD,
       wait_hr_value   = 0xFE,
-      hr_disconnect   = 0xFF
-             
+      hr_disconnect   = 0xFF            
 }Linking_State_Def;
 
-
 typedef enum{
-
     Txx = 0,
-    Rxx = 1
-    
+    Rxx = 1    
 }Trans_Dir_Def;
 
-typedef struct{
-    
+typedef struct{    
     Trans_Dir_Def         TransDir;
     Sensor_UUID_Type_Def  ScanType;    
-    Scan_State_Def        Scan_State;
-    
+    Scan_State_Def        Scan_State;    
     //--------------------ANT+
     unsigned short ANT_ID;
     //-------------------BLE
@@ -198,85 +162,70 @@ typedef struct{
     unsigned char  RSSI;
     unsigned short UUID;
     Sensor_UUID_Type_Def Type_Check;
-    char DeviceName[13];
-    
-    
+    char DeviceName[13];       
 }Scan_Meseseage_def;
 
 
-typedef struct{
-    
+typedef struct{    
     Sensor_UUID_Type_Def  Pairing_Sensor_Type;
     char BLE_Addrs[6];
-    unsigned char BLE_ADDR_TYPE;
-       
+    unsigned char BLE_ADDR_TYPE;       
 }Pairing_Meseseage_def;
 
 
-typedef struct{
-    
+typedef struct{    
     unsigned char Paired_Device_Cnt;
     Pairing_Meseseage_def BLE_Paired_Device_Addr_List[10]; //儲存已經成功配對到的藍芽裝置地址
-    
+
 }BLE_Paired_Device_Addr_List_def;
 
 
 typedef struct{
-    
     unsigned char       Device_Cnt;
     Scan_Meseseage_def  messeage_List[10];
-    
 }BLE_Device_List_def;
 
 
-typedef struct{
+typedef struct{    
     
     Sensor_UUID_Type_Def SensorType;    
     char DeviceName[13];
     unsigned short ANT_ID;
     unsigned short usHR_bpm;
-    Linking_State_Def Link_state;
-    
+    Linking_State_Def Link_state;    
     char BLE_Addrs[6];
 
 }Now_Linked_HR_Sensor_Info_Def;
 
-typedef struct{
-    
+typedef struct{    
     ucAppTypeModeDef TypeMode;
     unsigned short  Stage;
     Switch_def       AutoPause;
     unsigned char CloudRun_Inc_Buffer[432];
-    unsigned char CloudRun_Spd_Buffer[432];
-    
+    unsigned char CloudRun_Spd_Buffer[432];    
     unsigned short C_Time;
     unsigned char  C_Age;
     unsigned short C_Weight;
     unsigned char  PlayGround;
     unsigned short Total_Dist;
     unsigned short Stage_Dist;
-
+    
 }CloudRun_Init_INFO_Def;
 
 typedef enum{
-
     No_Error   = 0,
     Data_Lost  = 1,
-    Size_Error = 2,
-    
+    Size_Error = 2,    
 }Error_Type_Def;
 
-typedef struct{
-    
+typedef struct{    
     unsigned int  total_Size;
     unsigned int  Byte_Cnt;
     unsigned short total_Page;
     unsigned short Transmit_Page;
     unsigned short Error_Cnt;
     Error_Type_Def  Error_Type;
-
 }OTA_FW_Transmit_Info_Def;
-
 
 #define Task_Amount  6
 
@@ -291,16 +240,14 @@ extern BLE_Paired_Device_Addr_List_def  BLE_Paired_device_list; // 成功配對 就把
 extern Now_Linked_HR_Sensor_Info_Def Linked_HR_info;
 extern unsigned char btm_Task_Cnt;
 extern Scan_Meseseage_def Scan_Msg;
-extern unsigned char Ble_wait_HR_value_First_IN_Flag;
-extern unsigned char wait_HR_disconnect_Flag;
+extern unsigned char  Ble_wait_HR_value_First_IN_Flag;
+extern unsigned char  wait_HR_disconnect_Flag;
 extern unsigned short disconnect_buffer_0xFF_Cnt;
-extern Btm_Task_Def btmTask_List[Task_Amount];
+extern Btm_Task_Def   btmTask_List[Task_Amount];
 extern Btm_Task_Def   btm_HRC_disconnect_Task_Temp;
 
 extern unsigned char btm_is_ready;
 extern unsigned char btm_Rx_is_busy;
-
-
 extern unsigned char NearestDevieNumber;
 
 void ble_disconnect_wait_Process();
@@ -329,7 +276,6 @@ extern unsigned char Cloud_Run_Initial_Busy_Flag;
 
 void APP_background_Broadcast();
 void CloudRun_Workout_Data_Broadcast();
-
 void F_BtmReplyCmd(unsigned char data);
 
 void F_BtmReply02Cmd(void);
@@ -344,7 +290,6 @@ void F_BtmReply46Cmd(void);
 void F_BtmReply50Cmd(void);
 
 //FTMS
-
 void F_Btm_FTMS_B0(unsigned char ucPage);
 void F_Btm_FTMS_B1();
 void F_Btm_FTMS_B0_HR_Switch(unsigned char SW);
@@ -352,16 +297,13 @@ void F_Btm_FTMS_B0_HR_Switch(unsigned char SW);
 //FEC
 void F_Btm_FEC_B5_SET_ANT_ID(void);
 void F_Btm_FEC_B4_SET_Data(unsigned char page);
-
 void F_SetFEC_State(FEC_State_Def FEC_State);
 
 
 //0xB3 SpinDown
-
 void Set_Spindown_SPEED(unsigned short Speed_Low, unsigned short Speed_High );
 void Set_Spindown_Success(unsigned short SpindownTime);
 void Set_Spindown_Error();
 void Set_Spindown_StopPedaling();
-
 
 #endif

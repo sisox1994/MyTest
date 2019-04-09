@@ -10,20 +10,17 @@ void KeyTest(){
     
     if(KeyCatch(0,1,Inc_9) ){
         INCL_CMD( Write , InclineADTable[20] );   
-        HAL_Delay(20);
-        
+        HAL_Delay(20);  
     }
     
     if(KeyCatch(0,1,Inc_6) ){
         INCL_CMD( Write , InclineADTable[10] );   
         HAL_Delay(20);
-        
     }
     
     if(KeyCatch(0,1,Inc_0) ){
         INCL_CMD( Write , InclineADTable[0] );   
         HAL_Delay(20);
-        
     }
     
     //---------------------------------------------

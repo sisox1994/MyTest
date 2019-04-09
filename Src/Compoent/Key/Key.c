@@ -1,12 +1,12 @@
 #include "stm32f4xx_hal.h"
 #include "system.h"
 //--------------------------------KD --Input----------------
-#define  KeyDetect_GPIO  GPIOD
-uint16_t       Detect_Pin_Array[7] = {GPIO_PIN_14 , GPIO_PIN_13 ,GPIO_PIN_12 , GPIO_PIN_11 ,GPIO_PIN_10 ,GPIO_PIN_9 ,GPIO_PIN_8};
+#define   KeyDetect_GPIO  GPIOD
+uint16_t  Detect_Pin_Array[7] = {GPIO_PIN_14 , GPIO_PIN_13 ,GPIO_PIN_12 , GPIO_PIN_11 ,GPIO_PIN_10 ,GPIO_PIN_9 ,GPIO_PIN_8};
 
 //--------------------------------Key  ---Output--------------
-uint16_t       Key_Pin_Array[7] = {GPIO_PIN_15 , GPIO_PIN_14 ,GPIO_PIN_13 , GPIO_PIN_12 ,GPIO_PIN_11 ,GPIO_PIN_10 ,GPIO_PIN_9};
-GPIO_TypeDef*  Key_GPIO_Array[7] = {GPIOE , GPIOE ,GPIOE , GPIOE ,GPIOE ,GPIOE ,GPIOE};
+uint16_t      Key_Pin_Array[7]  = {GPIO_PIN_15 , GPIO_PIN_14 ,GPIO_PIN_13 , GPIO_PIN_12 ,GPIO_PIN_11 ,GPIO_PIN_10 ,GPIO_PIN_9};
+GPIO_TypeDef* Key_GPIO_Array[7] = {GPIOE , GPIOE ,GPIOE , GPIOE ,GPIOE ,GPIOE ,GPIOE};
 //------------------------------------------------------------
 
 unsigned short KDC_Value = 150; //按鍵 除彈跳 緩衝時間
@@ -28,9 +28,7 @@ void Key_GPIO_Init(){
     GPIO_InitStruct.Pull = GPIO_NOPULL;
     HAL_GPIO_Init(GPIOD, &GPIO_InitStruct);
     
-    
 }
-
 void Key_GPIO_DeInit(){
     //------------------        OUTPUT    -----------------------------------   
     //Key0 ~ Key6  --:     PE15 - PE14 - PE13 - PE12 - PE11 - PE10 - PE9
@@ -41,7 +39,6 @@ void Key_GPIO_DeInit(){
     GPIO_InitStruct.Pull = GPIO_NOPULL;
     GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
     HAL_GPIO_Init(GPIOE, &GPIO_InitStruct);
-    
     
     //-----------------       INPUT     ---------------------------------------
     __HAL_RCC_GPIOD_CLK_ENABLE();
@@ -54,19 +51,21 @@ void Key_GPIO_DeInit(){
     GPIO_InitStruct.Pull = GPIO_NOPULL;
     HAL_GPIO_Init(GPIOD, &GPIO_InitStruct);
     
+
+    //因為GPIO   PD8  PE8 皆為Pin8 如果兩隻腳都設成中斷腳會衝突到 為了一致性 
+    //目前將 (揚 升) (速度) 黃色實體按鍵 喚醒功能取消
     
-    
-     //---   SPD+   SPD-    --------------------------------
-    GPIO_InitStruct.Pin =  GPIO_PIN_1 | GPIO_PIN_2 ;        
-    GPIO_InitStruct.Mode = GPIO_MODE_IT_FALLING;
-    GPIO_InitStruct.Pull = GPIO_NOPULL;
-    HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
-    
-    //---   INC+   INC-    --------------------------
-    GPIO_InitStruct.Pin =  GPIO_PIN_7 | GPIO_PIN_8 ;        
-    GPIO_InitStruct.Mode = GPIO_MODE_IT_FALLING;
-    GPIO_InitStruct.Pull = GPIO_NOPULL;
+    //---   INC+   INC-    --------------------------   
+    GPIO_InitStruct.Pin =  GPIO_PIN_7| GPIO_PIN_8 ;        
+    GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+    GPIO_InitStruct.Pull = GPIO_PULLDOWN;
     HAL_GPIO_Init(GPIOE, &GPIO_InitStruct);
+    
+    //---   SPD+   SPD-    --------------------------------
+    GPIO_InitStruct.Pin =  GPIO_PIN_1 | GPIO_PIN_2 ;        
+    GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+    GPIO_InitStruct.Pull = GPIO_PULLDOWN;
+    HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
     
     
     /*PD4  -->    PAUSE_KEY  IN  */ 
@@ -75,13 +74,11 @@ void Key_GPIO_DeInit(){
     GPIO_InitStruct.Pull = GPIO_NOPULL;         
     HAL_GPIO_Init(GPIOD,&GPIO_InitStruct);
     
-    
     /*PD5  -->   Safe Key  IN  */ 
     GPIO_InitStruct.Pin = GPIO_PIN_5;
-    GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING_FALLING;     
-    GPIO_InitStruct.Pull = GPIO_NOPULL;         
+    GPIO_InitStruct.Mode = GPIO_MODE_INPUT;     
+    GPIO_InitStruct.Pull = GPIO_PULLDOWN;         
     HAL_GPIO_Init(GPIOD,&GPIO_InitStruct);
-    
     
     /* EXTI interrupt init*/
     HAL_NVIC_SetPriority(EXTI1_IRQn, 0, 0);
@@ -93,14 +90,11 @@ void Key_GPIO_DeInit(){
     HAL_NVIC_SetPriority(EXTI4_IRQn, 0, 0);
     HAL_NVIC_EnableIRQ(EXTI4_IRQn);
     
-    
     HAL_NVIC_SetPriority(EXTI9_5_IRQn, 0, 0);
     HAL_NVIC_EnableIRQ(EXTI9_5_IRQn);
     
     HAL_NVIC_SetPriority(EXTI15_10_IRQn, 0, 0);
     HAL_NVIC_EnableIRQ(EXTI15_10_IRQn);
-    
-    
 }
 //-------------------------------------
 unsigned char KeyProcessingFlag;
@@ -241,6 +235,7 @@ unsigned char KeyCatch(unsigned char Sec ,uint8_t Num, ...){
                     KeyProcessFlag = 0;
                     HoldingCnt = 0;
                     ret_Idle_cnt = 0;
+                    Go_Sleep_cnt = 0;
                     return 1;
                 }
             }
@@ -262,7 +257,9 @@ unsigned char KeyCatch(unsigned char Sec ,uint8_t Num, ...){
                         memset(KeyPressRelease_Array, 0x00,10);
                         KeyDelaying_Flag = 0;
                         KeyProcessFlag = 0;
+                        
                         ret_Idle_cnt = 0;
+                        Go_Sleep_cnt = 0;
                         
                         if(BuzzerCnt>0){  //------防止 buzzer正在叫 又跟按按鈕的回饋音相撞
                             return 0;
@@ -353,9 +350,6 @@ unsigned char KeyCatch(unsigned char Sec ,uint8_t Num, ...){
         }
     }
     __asm("NOP");
-    
-    
-    
     //--------------------------------------------------
     return 0;
 }
