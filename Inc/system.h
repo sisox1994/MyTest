@@ -120,6 +120,10 @@ extern void Write_Machine_Data_Init(System_Unit_Def Unit);
 extern void Machine_Data_Update();
 extern void Flash_Machine_Data_Loading();
 
+extern unsigned short ONE_SEC_Cnt_Value;
+extern unsigned short ODO_RecordCnt;      //¬ö¿ý®É¶¡
+extern unsigned int   ODO_RecordDistance; //¬ö¿ý¶ZÂ÷
+
 
 extern Custom_Program_Data_Def MyCustom_1;
 extern Custom_Program_Data_Def MyCustom_2;

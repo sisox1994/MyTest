@@ -155,6 +155,9 @@ void SCREEN_OPTION_Key(){
 void IntoReadyMode_Process(){
 
     
+    ODO_RecordCnt      = 0;
+    ODO_RecordDistance = 0;
+    
     console_status = 4;      // 1 : stop  2¡Gpause  3: stop by safeKey   4: start 
     Btm_Task_Adder(FEC_Data_Config_Page_1);
     

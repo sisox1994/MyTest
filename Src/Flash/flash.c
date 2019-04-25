@@ -504,7 +504,7 @@ void Flash_Custom_Data_Loading(){
 void Flash_Machine_Data_Loading(){
     
     
-    CMD_READ(Sector_0 , FlashBuffer4096, 4096);
+    CMD_READ(Sector_0 , FlashBuffer4096, 0x300);
     
     //------------ 把FLASH ODO  最大最小 速度  揚升   資料解出來 ------------------------------------
   
@@ -525,7 +525,7 @@ void Flash_Machine_Data_Loading(){
                              + (unsigned int)(FlashBuffer4096[Machine_ODO_Address + 7] << 24); 
     
     
-    CMD_READ(Sector_1 , FlashBuffer4096, 4096);
+    CMD_READ(Sector_1 , FlashBuffer4096, 0x10);
     
     Machine_Data.System_INCLINE_Max = (unsigned short) FlashBuffer4096[Machine_SysSetting_Address % 4096 + 0]
                                     + (unsigned short)(FlashBuffer4096[Machine_SysSetting_Address % 4096 + 1] << 8);
@@ -639,16 +639,19 @@ void Write_Machine_Data_Init(System_Unit_Def Unit){
 void Machine_Data_Update(){
   
     if(System_Unit == Metric){  
-        Machine_Data.TotalDistance += (Program_Data.Distance/100);  //單位:公尺  Machine_Data.TotalDistance讀出來/1000 =公里       
+        Machine_Data.TotalDistance += (ODO_RecordDistance/100);  //單位:公尺  Machine_Data.TotalDistance讀出來/1000 =公里       
     }else if(System_Unit == Imperial){
-        Machine_Data.TotalDistance += (Program_Data.Distance/100) * 1.61;  //單位:公尺  Machine_Data.TotalDistance讀出來/1000 =公里
+        Machine_Data.TotalDistance += (ODO_RecordDistance/100) * 1.61;  //單位:公尺  Machine_Data.TotalDistance讀出來/1000 =公里
     }
-  
-    Machine_Data.Total_Times += (Program_Data.Goal_Time - Program_Data.Goal_Counter); //
+    
+    Machine_Data.Total_Times += ODO_RecordCnt; //
+    
     Machine_ODO_Data_To_Array();
     Write_EE_Flash( Machine_ODO_Address , 8 , Machine_ODO_DataArray);   
     Flash_Machine_Data_Loading();
     
+    ODO_RecordDistance = 0;
+    ODO_RecordCnt      = 0; 
 }
 
 void Write_SerialNumber_To_Flash(char *Data){

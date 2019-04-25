@@ -631,8 +631,26 @@ unsigned char NoStep_Cnt;
 
 unsigned short MaxHeart85Percent;//算85%心跳
 
+unsigned short ODO_RecordCnt;      //紀錄時間
+unsigned int   ODO_RecordDistance; //紀錄距離
+
 void TimeProcess(){
 
+    
+    //-----------------5分鐘寫一次ODO----------------------
+    if(ONE_SEC_Cnt_Value == 1000){
+        
+        if(ODO_RecordCnt%300==0){            
+            Machine_Data_Update();          
+        }
+        
+        ODO_RecordDistance += (System_SPEED *10000) / 3600 ;
+        ODO_RecordCnt++;
+    }
+    //--------------------------------------------------------------------------------------
+    
+     
+    
 #if AutoPause
     
     //---------跑帶上無人判斷 30s 沒有增加步數   進入暫停 ----------
