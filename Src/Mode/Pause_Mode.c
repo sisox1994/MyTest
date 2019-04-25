@@ -6,6 +6,10 @@ unsigned short PauseTimeOut_Cnt = 180;
 void IntoPauseMode_Process(){
     
     
+    console_status = 2;      // 1 : stop  2：pause  3: stop by safeKey   4: start 
+    Btm_Task_Adder(FEC_Data_Config_Page_1);
+    
+    
     //如果是fit test模式 按 暫停  或  30s沒步數 直接停止運動測試
     if( (Program_Select == FIT_ARMY)     || (Program_Select == FIT_NAVY) ||
         (Program_Select == FIT_AIRFORCE) || (Program_Select == FIT_USMC) ||

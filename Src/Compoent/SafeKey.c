@@ -24,8 +24,20 @@ void SafeKey_Init(){
     GPIO_InitStruct.Pull = GPIO_NOPULL ;         
     HAL_GPIO_Init(SAFETY_GPIO,&GPIO_InitStruct); 
 }
-
+unsigned char In_SafeMode_Flag;
 void SafeKey_Detect(){
+    
+    
+    if(In_SafeMode_Flag == 0){
+        if(safekey == Plug_Out){
+            In_SafeMode_Flag = 1;
+            
+            console_status = 3;      // 1 : stop  2¡Gpause  3: stop by safeKey   4: start 
+            Btm_Task_Adder(FEC_Data_Config_Page_1);
+        }
+    }
+    
+
     
     Pause_State =  HAL_GPIO_ReadPin(PAUSE_KEY_GPIO,PAUSE_KEY_PIN);
     
@@ -39,6 +51,7 @@ void SafeKey_Detect(){
         System_Mode = Safe;
 #endif
     }else{
+        In_SafeMode_Flag = 0;
         safekey = Plug_IN;
     }
 }

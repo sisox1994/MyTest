@@ -686,6 +686,9 @@ void Idle_Key(){
     
     if( KeyCatch(0,1 , Start)){
         
+
+        
+        
         if(Program_Select == User_1 || Program_Select == User_2){
             Program_Select = Program_Data.Like_Program; 
         }else if(Program_Select == Quick_start){

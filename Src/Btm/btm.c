@@ -2364,9 +2364,12 @@ void Treadmill_B1(){
         ucBtmTxBuf[12] = (Program_Data.Goal_Time - Program_Data.Goal_Counter)/256;  // elapsed time H
         //--------------------------------------------------------------------------
 
+        
+        
+        
         //---Remaining Time------------------------------------------------------------ 
-        ucBtmTxBuf[13] = (unsigned char) sim_Remain_Time;       //remaining time L
-        ucBtmTxBuf[14] = (unsigned char)(sim_Remain_Time>>8);   //remaining time H
+        ucBtmTxBuf[13] = (unsigned char)sim_Remain_Time;       //remaining time L     sim_Remain_Time
+        ucBtmTxBuf[14] = (unsigned char)(sim_Remain_Time>>8);   //remaining time H    sim_Remain_Time>>8
         //--------------------------------------------------------------------------
         
         //----Force on Belt-------------------------------------------------------------------------------------------------
@@ -3097,7 +3100,7 @@ unsigned short minimum_power = 0;
 unsigned short maximum_power = 500;		
 unsigned short minimum_power_increment = 5;	
 
-unsigned char  console_status = 1;	
+unsigned char  console_status = 1;	//1 : stop  2¡Gpause  3: stop by safeKey   4: start 
 unsigned char  cycle_length_for_FEC = 0;
 
 

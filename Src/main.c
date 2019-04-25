@@ -101,6 +101,8 @@ typedef struct{
 RM6T6_Par_Task_Def MyParTask;
 #endif
 
+unsigned char Set_B4_Page0_Flag;
+
 int main(void)
 {
     
@@ -172,6 +174,14 @@ int main(void)
     while (1)
     {
         
+        if(Set_B4_Page0_Flag){
+            Set_B4_Page0_Flag = 0;
+            
+            Btm_Task_Adder(FEC_Data_Config_Page_0);
+        }
+         
+        
+        
         #if RM6_Param_Debug
         if(MyParTask.AddTask_Flag == 1){
             MyParTask.AddTask_Flag = 0;
@@ -204,7 +214,7 @@ int main(void)
                 F_HeartRate_Supervisor(); 
                 
                 if(RM_Task_Switch == 1){
-                    if(System_Mode != Safe){ //safe模式下不要再執行任務了
+                    if( (System_Mode != Safe) && (System_Mode != Engineer)){ //Engineera , safe模式下不要再執行任務了
                         RM6_background_Task(); // 變頻器 任務排程器
                     }                    
                 }

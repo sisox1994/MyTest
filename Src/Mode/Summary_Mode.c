@@ -30,6 +30,14 @@ void Summary_Key(){
  
     if( KeyCatch(0,1 , Stop) || PauseKey() ){
         IntoIdleMode_Process();
+        
+        Training_status = IDLE;
+        Btm_Task_Adder(FEC_Data_Config_Page_0);
+        
+        console_status = 1;      // 1 : stop  2¡Gpause  3: stop by safeKey   4: start 
+        Btm_Task_Adder(FEC_Data_Config_Page_1);
+        
+        
     }
     SCREEN_OPTION_Key();
     HR_SENSOR_LINK_Key(); 

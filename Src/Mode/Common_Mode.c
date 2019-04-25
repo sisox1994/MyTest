@@ -155,6 +155,14 @@ void SCREEN_OPTION_Key(){
 void IntoReadyMode_Process(){
 
     
+    console_status = 4;      // 1 : stop  2¡Gpause  3: stop by safeKey   4: start 
+    Btm_Task_Adder(FEC_Data_Config_Page_1);
+    
+    
+    Training_status = Manual_mode;
+    Btm_Task_Adder(FEC_Data_Config_Page_0);
+    
+    
     //-------------------¶³¶]APP Program ªì©l¤Æ-----------------------
     if(Program_Select == APP_Cloud_Run){
         Cloud_Run_Program_Init();

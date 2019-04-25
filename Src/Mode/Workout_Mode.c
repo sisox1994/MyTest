@@ -25,6 +25,10 @@ extern void NumberInsert_Time(unsigned int* Time_Modify);
 
 void IntoWorkoutModeProcess(){
     
+    console_status = 4;      // 1 : stop  2：pause  3: stop by safeKey   4: start 
+    Btm_Task_Adder(FEC_Data_Config_Page_1);
+    
+    
     //-----重置  平均心跳  平均速度  平均揚升---------
     ResetWorkoutAvgParam(); 
     
