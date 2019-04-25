@@ -548,13 +548,15 @@ unsigned char F_String_buffer_Auto( Direction_Def Dir, unsigned char *StrArray ,
     
     if((Dir == Left) || (Dir == Left_and_Stay)){
         
-        if(Shift_X >= 0){
+        /*if(Shift_X >= 0){   多餘的判斷式 會導致LUBE無法正常跑燈顯示  190425
             if(Shift_X > width ){
                // Shift_X = width;
                 Shift_X = 32;
                 return 1;
             }
-        }else if(Shift_X < 0){
+        }else */
+            
+        if(Shift_X < 0){
             if( ( 0 - Shift_X) > width ){
                 //Shift_X = width;
                 Shift_X = 32;

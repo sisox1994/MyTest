@@ -97,7 +97,7 @@ void StartUp_Func(){
       case 2:  //LUBE   一直循環 直到按下Stop Key
         if(T_Marquee_Flag){
             T_Marquee_Flag = 0;             
-            F_String_buffer_Auto( Left, "LUBE" ,50 ,0);
+            F_String_buffer_Auto( Left, "LUBE" ,50 ,0);  //Left
             writeLEDMatrix();    
         }
         LUBE_Mode_Key();

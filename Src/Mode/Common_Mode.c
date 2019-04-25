@@ -163,6 +163,9 @@ void IntoReadyMode_Process(){
     Btm_Task_Adder(FEC_Data_Config_Page_0);
     
     
+    //-----重置  平均心跳  平均速度  平均揚升---------
+    ResetWorkoutAvgParam(); 
+    
     //-------------------雲跑APP Program 初始化-----------------------
     if(Program_Select == APP_Cloud_Run){
         Cloud_Run_Program_Init();
@@ -231,11 +234,25 @@ void Next_Mode_Process(){
 
     ClassCnt = 0;
     
-    switch(Program_Select){            
-      case Quick_start:
+    switch(Program_Select){  
       case APP_Cloud_Run:
+        //-------------雲跑   初始揚升設置--------------------------//
+        System_INCLINE = Program_Data.INCLINE_Table_96[0] * 5;
+        RM6_Task_Adder(Set_INCLINE);
+       //-----------------------------------------------------------//
+        IntoWorkoutModeProcess();
+        break;
       case APP_Train_Dist_Run:
       case APP_Train_Time_Run:
+        //-------------訓練計畫 初始揚升速度設置--------------------------//
+        System_INCLINE = Program_Data.INCLINE_Table_96[0] * 5;
+        System_SPEED   = CloudRun_Init_INFO.CloudRun_Spd_Buffer[0];    
+        RM6_Task_Adder(Set_INCLINE);
+        RM6_Task_Adder(Set_SPEED);    
+        //---------------------------------------------------------------//
+        IntoWorkoutModeProcess();
+        break;
+      case Quick_start:
       case FIT_ARMY:
       case FIT_NAVY:
       case FIT_AIRFORCE: 

@@ -976,7 +976,7 @@ void F_BtmRead35Cmd(void){
     
     
     //取得Stage Number
-    usAppStageNumber         = ucBtmRxData[4]+(256*ucBtmRxData[5]);       // Stage:20 ~ 400
+    usAppStageNumber         = ucBtmRxData[4]+(256*ucBtmRxData[5]);       // Stage:20 ~ 432
     CloudRun_Init_INFO.Stage = (unsigned short)(ucBtmRxData[5]<<8) + (unsigned short)ucBtmRxData[4];
     
     //--清掉 速度  揚升 TABLE

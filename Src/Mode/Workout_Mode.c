@@ -28,24 +28,7 @@ void IntoWorkoutModeProcess(){
     console_status = 4;      // 1 : stop  2：pause  3: stop by safeKey   4: start 
     Btm_Task_Adder(FEC_Data_Config_Page_1);
     
-    
-    //-----重置  平均心跳  平均速度  平均揚升---------
-    ResetWorkoutAvgParam(); 
-    
-    if(Program_Select == APP_Cloud_Run){
-        System_INCLINE = Program_Data.INCLINE_Table_96[0] * 5;
-        RM6_Task_Adder(Set_INCLINE);
-    }
-    
-    
-    if(Program_Select == APP_Train_Dist_Run || Program_Select == APP_Train_Time_Run){
-        System_INCLINE = Program_Data.INCLINE_Table_96[0] * 5;
-        System_SPEED   = CloudRun_Init_INFO.CloudRun_Spd_Buffer[0];
-            
-        RM6_Task_Adder(Set_INCLINE);
-        RM6_Task_Adder(Set_SPEED);
-    }
-      
+  
     WarmUp_3_Minute_Cnt = 0;
     System_Mode = Workout;
     F_SetFEC_State(IN_USE);
@@ -927,6 +910,10 @@ void TimeProcess(){
           case Quick_start:
           case APP_Train_Time_Run:       //訓練計畫  (時間)  
           case FIT_WFI:
+            //-----------Nick 發現的Bug  時間訓練模式達成目標 跑帶沒有停下來------------
+            Set_SPEED_Value(0);
+            RM6_Task_Adder(Set_SPEED);
+            //------------------------------
             IntoSummaryMode_Process();
             break;
           default:
