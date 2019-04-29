@@ -22,7 +22,7 @@
 #define __SYSTEM_H__
 
 #define System_Version "V14"        //APP 只判斷這個
-#define Modify_Version "A02"        // AXX 細分版本 V10A01 V10A02 代表都是V10 但是 有稍微修改
+#define Modify_Version "A04"        // AXX 細分版本 V10A01 V10A02 代表都是V10 但是 有稍微修改
 
 
 //--------功能開關---------  1 開   0關
@@ -118,10 +118,11 @@ extern unsigned char OTA_Mode_Flag;
 extern Machine_Data_Def  Machine_Data;
 extern void Write_Machine_Data_Init(System_Unit_Def Unit);
 extern void Machine_Data_Update();
+extern void Clear_LUBE_Times();
 extern void Flash_Machine_Data_Loading();
 
 extern unsigned short ONE_SEC_Cnt_Value;
-extern unsigned short ODO_RecordCnt;      //紀錄時間
+extern unsigned int ODO_RecordCnt;      //紀錄時間
 extern unsigned int   ODO_RecordDistance; //紀錄距離
 
 

@@ -23,6 +23,13 @@ void EnterEngineerMode_Key(){
         EngineerTestItem = 24;
     }
     
+    
+    if(KeyCatch(1 ,2, Start , Stop)){
+        System_Mode = Engineer;
+        
+        EngineerTestItem = 25;
+    }
+    
 }
 
 void LUBE_Mode_Key(){
@@ -81,7 +88,7 @@ void StartUp_Func(){
         if(T1s_Flag){
             T1s_Flag = 0;
             if(ucSecondCnt == 2){
-                if((Machine_Data.Total_Times/3600) >=180){  //跑步機使用超過 180小時  顯示LUBE加油提示
+                if((Machine_Data.LUBE_Times/3600) >=180){  //跑步機使用超過 180小時  顯示LUBE加油提示
                     ucStartUpFlow = 2;
                 }else{                                               
                     ucStartUpFlow = 3;           //ATTACUS  FITNESS  跑一回

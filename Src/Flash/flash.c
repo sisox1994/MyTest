@@ -524,6 +524,12 @@ void Flash_Machine_Data_Loading(){
                              + (unsigned int)(FlashBuffer4096[Machine_ODO_Address + 6] << 16)
                              + (unsigned int)(FlashBuffer4096[Machine_ODO_Address + 7] << 24); 
     
+    Machine_Data.LUBE_Times = (unsigned int)FlashBuffer4096[Machine_ODO_Address + 8]
+                            + (unsigned int)(FlashBuffer4096[Machine_ODO_Address + 9] << 8)
+                            + (unsigned int)(FlashBuffer4096[Machine_ODO_Address + 10] << 16)
+                            + (unsigned int)(FlashBuffer4096[Machine_ODO_Address + 11] << 24);
+    
+    
     
     CMD_READ(Sector_1 , FlashBuffer4096, 0x10);
     
@@ -541,6 +547,8 @@ void Flash_Machine_Data_Loading(){
             
     Machine_Data.System_UNIT = (System_Unit_Def)FlashBuffer4096[Machine_SysSetting_Address % 4096 + 8];
     
+
+    
     System_Unit = Machine_Data.System_UNIT;
 
 //----------------------------------------------------------
@@ -550,7 +558,7 @@ void Flash_Machine_Data_Loading(){
 
 
 //盢 Machine_Data 戈糶既皚..
-unsigned char Machine_ODO_DataArray[8];
+unsigned char Machine_ODO_DataArray[12];
 unsigned char Machine_Sys_Set_Array[9];
 
 
@@ -565,6 +573,11 @@ void Machine_ODO_Data_To_Array(){
     Machine_ODO_DataArray[5] = (unsigned char)(Machine_Data.Total_Times >> 8);
     Machine_ODO_DataArray[6] = (unsigned char)(Machine_Data.Total_Times >> 16);
     Machine_ODO_DataArray[7] = (unsigned char)(Machine_Data.Total_Times >> 24);
+    
+    Machine_ODO_DataArray[8] = (unsigned char)Machine_Data.LUBE_Times;
+    Machine_ODO_DataArray[9] = (unsigned char)(Machine_Data.LUBE_Times >> 8);
+    Machine_ODO_DataArray[10] = (unsigned char)(Machine_Data.LUBE_Times >> 16);
+    Machine_ODO_DataArray[11] = (unsigned char)(Machine_Data.LUBE_Times >> 24);
    
 }
 
@@ -594,6 +607,7 @@ void Write_Machine_Data_Init(System_Unit_Def Unit){
     //-----------计﹍て----------
     Machine_Data.TotalDistance = 0;
     Machine_Data.Total_Times   = 0;
+    Machine_Data.LUBE_Times    = 0;
     //-------------------------------
         
     //-------------╰参砞﹚把计-----------//
@@ -645,14 +659,25 @@ void Machine_Data_Update(){
     }
     
     Machine_Data.Total_Times += ODO_RecordCnt; //
+    Machine_Data.LUBE_Times  += ODO_RecordCnt; //
     
     Machine_ODO_Data_To_Array();
-    Write_EE_Flash( Machine_ODO_Address , 8 , Machine_ODO_DataArray);   
+    Write_EE_Flash( Machine_ODO_Address , 12 , Machine_ODO_DataArray);   
     Flash_Machine_Data_Loading();
     
     ODO_RecordDistance = 0;
     ODO_RecordCnt      = 0; 
 }
+
+//禲˙诀 传猳Ч拨 LUBE 丁 耴箂
+void Clear_LUBE_Times(){
+  
+    Machine_Data.LUBE_Times  = 0; //
+     Machine_ODO_Data_To_Array();
+    Write_EE_Flash( Machine_ODO_Address , 12 , Machine_ODO_DataArray);   
+    Flash_Machine_Data_Loading(); 
+}
+
 
 void Write_SerialNumber_To_Flash(char *Data){
     Write_EE_Flash( Serial_Number_Address , 14 , (unsigned char*) Data); 

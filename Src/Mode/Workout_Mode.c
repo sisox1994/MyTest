@@ -631,8 +631,8 @@ unsigned char NoStep_Cnt;
 
 unsigned short MaxHeart85Percent;//ºâ85%¤ß¸õ
 
-unsigned short ODO_RecordCnt;      //¬ö¿ý®É¶¡
-unsigned int   ODO_RecordDistance; //¬ö¿ý¶ZÂ÷
+unsigned int ODO_RecordCnt;      //¬ö¿ý®É¶¡
+unsigned int ODO_RecordDistance; //¬ö¿ý¶ZÂ÷
 
 void TimeProcess(){
 

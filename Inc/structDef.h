@@ -109,6 +109,8 @@ typedef struct{
     unsigned short  System_INCLINE_Min;
     unsigned short  System_SPEED_Min;    
     System_Unit_Def System_UNIT;
+    
+    unsigned int    LUBE_Times;             //180¤p®É ´«¾÷ªoCounter 
 }Machine_Data_Def;
 
 typedef struct{
