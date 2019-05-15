@@ -877,9 +877,6 @@ ucAppTypeModeDef    ucAppTypeMode;
 
 CloudRun_Init_INFO_Def CloudRun_Init_INFO;
 
-unsigned char ucSPDBuffer[16];
-
-
 void F_BtmReplyCmd(unsigned char data){
     
     memset(ucBtmTxBuf,0x00,20);
@@ -899,15 +896,6 @@ void F_BtmReplyCmd(unsigned char data){
     
 }
 
-void F_BtmGetSpd(unsigned char Addr,unsigned char num,unsigned char data){
-    
-    if(data < (Machine_Data.System_SPEED_Min) && data > (Machine_Data.System_SPEED_Max)){
-        ucSPDBuffer[Addr+num] = (Machine_Data.System_SPEED_Min);
-    }else{
-        ucSPDBuffer[Addr+num] = data;
-    }
-    
-}
 
 
 
@@ -1149,7 +1137,6 @@ void F_BtmRead37Cmd(void){
             if(ucCmdPage < ucAppDataPage){        // ­­¨î<432µ§¸ê®Æ(420)
                 temp1 = 16 * ucCmdPage;
                 for(uci = 0 ;uci < 16;uci++){
-                    F_BtmGetSpd( 0 ,temp1 + uci ,ucBtmRxData[uci+3]);
                     CloudRun_Init_INFO.CloudRun_Spd_Buffer[temp1 + uci] = ucBtmRxData[uci+3];
                 }
             }else{
