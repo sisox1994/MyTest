@@ -816,14 +816,83 @@ void Engineer_Func(){
                  EngineerTestItem = 23;
             }  
         }
+        
+        //----------------------   E7   手握心跳測試------------------
         if(EngineerTestItem == 23){         
+            memset(LedMatrixBuffer,0x00,32);
+            F_String_buffer_Auto_Middle( Stay, "E7" ,50 ,0);
+            
+            if( KeyCatch(0,1 , Start) ){
+                EngineerTestItem = 26;
+            }  
+        }
+        if(EngineerTestItem == 26){         
+            memset(LedMatrixBuffer,0x00,32);
+            F_String_buffer_Auto_Middle( Stay, "HHR" ,50 ,0);
+            
+            if(ucHhr > 0){
+                EngineerTestItem = 27;
+            }
+            
+        }
+        
+        if(EngineerTestItem == 27){         
+            memset(LedMatrixBuffer,0x00,32);
+            F_String_buffer_Auto_Middle( Stay, "OK" ,50 ,0);
+            
+            
+            SET_Seg_Display(HEARTRATE  , ucHhr , ND , DEC );
+            writeSegmentBuffer();  
+            
+            if( KeyCatch(0,1 , Start) ){
+                Turn_OFF_All_Segment();
+                EngineerTestItem = 28;
+            }  
+ 
+        }
+        
+        //------------------- E8   5k HR----------------
+        if(EngineerTestItem == 28){         
+            memset(LedMatrixBuffer,0x00,32);
+            F_String_buffer_Auto_Middle( Stay, "E8" ,50 ,0);
+            
+            if( KeyCatch(0,1 , Start) ){
+                EngineerTestItem = 29;
+            }  
+        }
+        if(EngineerTestItem == 29){         
+            memset(LedMatrixBuffer,0x00,32);
+            F_String_buffer_Auto_Middle( Stay, "5K HR" ,50 ,0);
+            
+            if(ucWhr > 0){
+                EngineerTestItem = 30;
+            }
+            
+        }
+        if(EngineerTestItem == 30){         
+            memset(LedMatrixBuffer,0x00,32);
+            F_String_buffer_Auto_Middle( Stay, "OK" ,50 ,0);
+            
+            
+            SET_Seg_Display(HEARTRATE  , ucWhr , ND , DEC );
+            writeSegmentBuffer();  
+            
+            if( KeyCatch(0,1 , Start) ){
+                EngineerTestItem = 31;
+                Turn_OFF_All_Segment();
+            }  
+ 
+        }
+        
+        
+        if(EngineerTestItem == 31){         
             memset(LedMatrixBuffer,0x00,32);
             F_String_buffer_Auto_Middle( Stay, "END" ,50 ,0);
             
             if( KeyCatch(0,1 , Start) ){
                 HAL_NVIC_SystemReset();
             }  
-        } 
+        }
         
         //----------------Flash 重置------------------------
         if(EngineerTestItem == 24){       
