@@ -967,6 +967,13 @@ void F_BtmRead35Cmd(void){
     usAppStageNumber         = ucBtmRxData[4]+(256*ucBtmRxData[5]);       // Stage:20 ~ 432
     CloudRun_Init_INFO.Stage = (unsigned short)(ucBtmRxData[5]<<8) + (unsigned short)ucBtmRxData[4];
     
+    //　Auto Pause  "約跑 30s 自動暫停  0:開啟    1:關閉"
+    if(ucBtmRxData[6] == 0){  
+       AutoPause_Flag = 1;
+    }else if(ucBtmRxData[6] == 1){
+       AutoPause_Flag = 0;
+    }
+    
     //--清掉 速度  揚升 TABLE
     memset(CloudRun_Init_INFO.CloudRun_Spd_Buffer,0x00,432);
     memset(CloudRun_Init_INFO.CloudRun_Inc_Buffer,0x00,432);

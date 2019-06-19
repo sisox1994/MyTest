@@ -517,10 +517,12 @@ void Idle_Key(){
            
         if(AutoPause_Flag == 0){
             AutoPause_Flag = 1;
+            Buzzer_BeeBee(400, 2);  //開啟B2聲
         }else{
-            AutoPause_Flag = 0;
+            AutoPause_Flag = 0;    //關掉B1聲
+            Buzzer_Btn(); 
         }
-        Buzzer_Btn(); 
+        
         
     }
     
