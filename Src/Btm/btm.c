@@ -1302,7 +1302,11 @@ void F_BtmReply39Cmd(void){
     
     //------------------- 階段 ---------------------------------------
     
-    usSegmentNumber = (Cloud_0x39_Info.c_Distance / uiAppStageDist);
+    if(ucAppTypeMode == Train_Run_Time){
+        usSegmentNumber = Program_Data.NowPeriodIndex;
+    }else{
+        usSegmentNumber = (Cloud_0x39_Info.c_Distance / uiAppStageDist);
+    }
     
     /*if(usSegmentNumber> 40){     // 參展先這樣處理(只處理40行以內資料)  190329 取消限制
         usSegmentNumber &= 0xFF;
