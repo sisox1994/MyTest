@@ -59,7 +59,9 @@ void BTM_UART_Transmit(){
     
     if(btm_Rx_is_busy == 0){
         __HAL_UART_DISABLE_IT(&huart2, UART_IT_RXNE);           //禁止Uart 中斷收資料
-        HAL_UART_Transmit(&huart2,ucBtmTxBuf, BtmData,10);      // Tx 資料發送
+        //HAL_UART_Transmit(&huart2,ucBtmTxBuf, BtmData,10);      // Tx 資料發送
+        
+         HAL_UART_Transmit_IT(&huart2,ucBtmTxBuf, BtmData);
         __HAL_UART_ENABLE_IT(&huart2, UART_IT_RXNE);            //啟動Uart 中斷收資料
     }
     
@@ -151,10 +153,9 @@ void F_BtmReply03Cmd(unsigned short page){
     ucBtmTxBuf[4] = (unsigned char)(page>>8);
     
     
-
     __HAL_UART_ENABLE_IT(&huart2, UART_IT_RXNE); //----------------
     HAL_UART_Transmit(&huart2,ucBtmTxBuf, BtmData,10);
-
+    
 } 
 
 void F_BtmRead03Cmd(){
