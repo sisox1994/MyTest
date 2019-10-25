@@ -567,6 +567,8 @@ void GetRM6T6_state_status(){
 }
 
 
+unsigned char pace_cnt_diff;
+
 void GetResponseInfo(){
     
     Response_Message_Clear();  //先清掉前一個回復的 Messeage
@@ -729,8 +731,13 @@ void GetResponseInfo(){
    
         RM6T6_state.Foot_cnt = Response_Message.Data;
         if(RM6T6_state.Foot_cnt != foot_Cnt_Temp){
+            
+           
+            pace_cnt_diff = RM6T6_state.Foot_cnt - foot_Cnt_Temp;    
+            
             foot_Cnt_Temp = RM6T6_state.Foot_cnt;
-            Program_Data.Pace += 1; 
+    
+            Program_Data.Pace += pace_cnt_diff; 
         }
         //RM6T6_state.status   = Response_Message.Status;
         GetRM6T6_state_status();

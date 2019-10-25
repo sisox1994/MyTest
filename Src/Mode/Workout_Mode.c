@@ -718,8 +718,22 @@ void TimeProcess(){
     ALTI_Calculate();
     //計算消耗卡路里
     Calorie_Calculate(); 
-    Program_Data.Distance += (System_SPEED *10000) / 3600 ;   //每+1秒
     
+    if(Program_Select == APP_Cloud_Run){
+        
+         if((Program_Data.Distance + (System_SPEED *10000) / 3600 )/100  >= Program_Data.Distance_Goal){
+           Program_Data.Distance = Program_Data.Distance_Goal*100;
+          
+        }else{
+           Program_Data.Distance += (System_SPEED *10000) / 3600 ;
+        }
+        
+    }else{
+        Program_Data.Distance += (System_SPEED *10000) / 3600 ;   //每+1秒
+    
+    }
+    
+
     //---------------------------運動結束條件判斷-----------------------------------------//
     
     if(Program_Select == APP_Cloud_Run){   //雲跑模式
@@ -880,6 +894,8 @@ void TimeProcess(){
        (Program_Select == Distance_Goal_10K) ){
            
         if((Program_Data.Distance / 100) >= Program_Data.Distance_Goal){
+            
+            Program_Data.Distance = Program_Data.Distance_Goal *100; //防止爆掉
             
             //運動結束  揚升歸0
             System_INCLINE = 0;

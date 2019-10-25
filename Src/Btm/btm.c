@@ -2475,7 +2475,13 @@ void OLDTreadmill_B1__(){
         ucBtmTxBuf[5] = (unsigned char)sim_Aspeed;        //(unsigned char)uiAvgSpeed;          // average speed L   //先丟0
         ucBtmTxBuf[6] = (unsigned char)(sim_Aspeed >>8);  //(unsigned char)(uiAvgSpeed >> 8);   // average speed H
         //---------------
-        uiDistance_1m = Program_Data.Distance/100;                  //  單位 1公尺
+        if(Program_Data.Distance/100  >= Program_Data.Distance_Goal){
+          Program_Data.Distance = Program_Data.Distance_Goal*100;
+          uiDistance_1m = Program_Data.Distance_Goal*100;
+        }else{
+          uiDistance_1m = Program_Data.Distance/100;                  //  單位 1公尺  
+        }
+        
         
         ucBtmTxBuf[7] =  (unsigned char)(sim_Distance_1m);          //(unsigned char)(uiDistance_1m);          // total distance L     
         ucBtmTxBuf[8] =  (unsigned char)(sim_Distance_1m >> 8) ;    //(unsigned char)(uiDistance_1m >> 8) ;    // total distance M     
