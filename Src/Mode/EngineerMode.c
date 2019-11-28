@@ -918,6 +918,8 @@ void Engineer_Func(){
                 FlashErase(0);
                 HAL_NVIC_SystemReset();
             }  
+
+            
         } 
         
         
@@ -948,11 +950,34 @@ void Engineer_Func(){
             }  
         } 
         
-
+        //-------切換成英制  ODO  會洗掉-----------------
+        if(EngineerTestItem == 32){ 
+            
+           Turn_OFF_All_Segment();
+            
+            memset(LedMatrixBuffer,0x00,32);
+            
+              if(T_Marquee_Flag){
+                T_Marquee_Flag = 0; 
+                F_String_buffer_Auto_Middle( Left, "SET  IMPERIAL" ,40 ,0);
+                writeLEDMatrix();
+             }        
+            
+             if( KeyCatch(0,1 , Start) ){
+                memset(LedMatrixBuffer,0x00,32);
+                F_String_buffer_Auto_Middle( Stay, "OK" ,50 ,0);
+                writeLEDMatrix();
+                HAL_Delay(1000);
+                
+                Write_Machine_Data_Init(Imperial);
+                 
+                HAL_NVIC_SystemReset();
+            }
+        }
 
         if(T250ms_Flag){
             T250ms_Flag = 0;
-            if(EngineerTestItem != 20 && EngineerTestItem != 24 && EngineerTestItem != 25){
+            if(EngineerTestItem != 20 && EngineerTestItem != 24 && EngineerTestItem != 25 && EngineerTestItem != 32){
                 writeLEDMatrix();
             }
             if(EngineerTestItem == 21){
