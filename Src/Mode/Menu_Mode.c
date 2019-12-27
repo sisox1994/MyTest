@@ -242,154 +242,221 @@ void Idle_Display(){
     if(T_Marquee_Flag){
         T_Marquee_Flag = 0;
         
-        
-        switch(Program_Select){
-
+        if(Response_Message.Status.STALL == YES){
+            if(F_String_buffer_Auto( Left, "ERR       STALL" ,60 ,0)==1){
+                Response_Message.Status.STALL = NO;
+            }  
             
-          case Quick_start:
-            //F_String_buffer_Auto( Left, "ATTACUS       FITNESS  " ,50 ,0);
-            F_String_buffer_Auto( Left, "WELCOME" ,60 ,0);
-            break;
-          case Manual:
-          case Random: 
-          case CrossCountry: 
-          case WeightLoss:   
-          case Interval_1_1: 
-          case Interval_1_2:
-          case Hill: 
-            DrawBarArray(Program_Data.BarArray_Display);
-            break;
+        }else if(Response_Message.Status.IF == YES){
+            if(F_String_buffer_Auto( Left, "ERR       IF" ,60 ,0)==1){
+                Response_Message.Status.IF = NO;
+            }  
             
-            
-          case Target_HeartRate_Goal:
-            F_String_buffer_Auto_Middle( Stay, "THR" ,35 ,0);
-            break;
-          case Fat_Burn:
-            Draw(21 ,0 ,Heart_Solid ,35);
-            F_String_buffer_Auto(Stay,"     65" ,35 ,0);
-            /*
-            switch(str_cNt){
-              case 0:
-                Draw(21 ,0 ,Heart_Empty ,500);
-                F_String_buffer_Auto(Stay,"     65" ,500 ,0);
-                str_cNt++;
-                str_cNt = str_cNt%2;
-                break; 
-              case 1:
-                Draw(21 ,0 ,Heart_Solid ,500);
-                F_String_buffer_Auto(Stay,"     65" ,500 ,0);
-                str_cNt++;
-                str_cNt = str_cNt%2;
-                break; 
-            }*/
-            break;
-          case Cardio:    
-            Draw(21 ,0 ,Heart_Solid ,35);
-            F_String_buffer_Auto(Stay,"     80" ,35 ,0);
-            
-            /*
-            switch(str_cNt){
-              case 0:
-                Draw(21 ,0 ,Heart_Empty ,500);
-                F_String_buffer_Auto(Stay,"     80" ,500 ,0);
-                str_cNt++;
-                str_cNt = str_cNt%2;
-                break; 
-              case 1:
-                Draw(21 ,0 ,Heart_Solid ,500);
-                F_String_buffer_Auto(Stay,"     80" ,500 ,0);
-                str_cNt++;
-                str_cNt = str_cNt%2;
-                break; 
-            }*/
-            break;
-            
-          case Heart_Rate_Hill:
-          case Heart_Rate_Interval:
-          case Extreme_Heart_Rate: 
-            DrawBarArray(Program_Data.BarArray_Display);
-            break;
-            
-            
-          case Hill_Climb:
-          case Aerobic:     
-          case Interval_1_4: 
-          case Interval_2_1: 
-            DrawBarArray(Program_Data.BarArray_Display);
-            break;
-          case EZ_INCLINE:   
-             Draw(7 ,0 ,EZ_I_Icon ,30);
-             break;
-          case MARATHON_Mode:
-            F_String_buffer_Auto_Middle(Stay,"MAR" ,30 ,0);
-            break;
+        }else if(Erroe_Disp_Once != No_error){
             
 
-          case Calorie_Goal:
-            F_String_buffer_Auto_Middle(Stay,"CAL" ,30 ,0);
-            break;
-          case Distance_Goal_160M:
             
-            if(System_Unit == Metric){  
-                F_String_buffer_Auto_Middle(Stay,"1.6K" ,30 ,0);
-            }else if(System_Unit == Imperial){
-                F_String_buffer_Auto_Middle(Stay,"1M" ,30 ,0);
+            if(Erroe_Disp_Once == Framing_error){        
+                if(F_String_buffer_Auto( Left, "ERR       FRAM" ,60 ,0)==1){
+                    Erroe_Disp_Once = No_error;
+                }        
+            } 
+            if(Erroe_Disp_Once == Overrun_error){        
+                if(F_String_buffer_Auto( Left, "ERR       OVERRUN" ,60 ,0)==1){
+                    Erroe_Disp_Once = No_error;
+                }        
+            }      
+            if(Erroe_Disp_Once == Format_error){        
+                if(F_String_buffer_Auto( Left, "ERR       FORMAT" ,60 ,0)==1){
+                    Erroe_Disp_Once = No_error;
+                }        
+            }  
+            if(Erroe_Disp_Once == CRC_error){        
+                if(F_String_buffer_Auto( Left, "ERR       CRC" ,60 ,0)==1){
+                    Erroe_Disp_Once = No_error;
+                }        
             }
-            
-            break;
-          case Distance_Goal_5K:
-            
-            if(System_Unit == Metric){  
-                F_String_buffer_Auto_Middle(Stay,"5K" ,30 ,0);
-            }else if(System_Unit == Imperial){
-                F_String_buffer_Auto_Middle(Stay,"3M" ,30 ,0);
+            if(Erroe_Disp_Once == Data_error){        
+                if(F_String_buffer_Auto( Left, "ERR       DATA" ,60 ,0)==1){
+                    Erroe_Disp_Once = No_error;
+                }        
+            } 
+            if(Erroe_Disp_Once == Instruction_error){        
+                if(F_String_buffer_Auto( Left, "ERR       INS" ,60 ,0)==1){
+                    Erroe_Disp_Once = No_error;
+                }        
+            } 
+            if(Erroe_Disp_Once == Pr_process_error){        
+                if(F_String_buffer_Auto( Left, "ERR       PRPRO" ,60 ,0)==1){
+                    Erroe_Disp_Once = No_error;
+                }        
             }
+            if(Erroe_Disp_Once == Pr_write_protection){        
+                if(F_String_buffer_Auto( Left, "ERR       PRWR" ,60 ,0)==1){
+                    Erroe_Disp_Once = No_error;
+                }        
+            }         
+            if(Erroe_Disp_Once == Pr_data_error){        
+                if(F_String_buffer_Auto( Left, "ERR       PRDATA" ,60 ,0)==1){
+                    Erroe_Disp_Once = No_error;
+                }        
+            }              
+        }else{
+            switch(Program_Select){
             
+                
+              case Quick_start:
+                //F_String_buffer_Auto( Left, "ATTACUS       FITNESS  " ,50 ,0);
+                if(Tx_No_Response_Cnt>=30){
+                    F_String_buffer_Auto( Left, "ERROR       LCB       NO       RESPONSE" ,60 ,0);
+                }else{
+                    F_String_buffer_Auto( Left, "WELCOME" ,60 ,0);
+                }            
+                break;
+              case Manual:
+              case Random: 
+              case CrossCountry: 
+              case WeightLoss:   
+              case Interval_1_1: 
+              case Interval_1_2:
+              case Hill: 
+                DrawBarArray(Program_Data.BarArray_Display);
+                break;
+                
+                
+              case Target_HeartRate_Goal:
+                F_String_buffer_Auto_Middle( Stay, "THR" ,35 ,0);
+                break;
+              case Fat_Burn:
+                Draw(21 ,0 ,Heart_Solid ,35);
+                F_String_buffer_Auto(Stay,"     65" ,35 ,0);
+                /*
+                switch(str_cNt){
+                  case 0:
+                    Draw(21 ,0 ,Heart_Empty ,500);
+                    F_String_buffer_Auto(Stay,"     65" ,500 ,0);
+                    str_cNt++;
+                    str_cNt = str_cNt%2;
+                    break; 
+                  case 1:
+                    Draw(21 ,0 ,Heart_Solid ,500);
+                    F_String_buffer_Auto(Stay,"     65" ,500 ,0);
+                    str_cNt++;
+                    str_cNt = str_cNt%2;
+                    break; 
+                }*/
+                break;
+              case Cardio:    
+                Draw(21 ,0 ,Heart_Solid ,35);
+                F_String_buffer_Auto(Stay,"     80" ,35 ,0);
+                
+                /*
+                switch(str_cNt){
+                  case 0:
+                    Draw(21 ,0 ,Heart_Empty ,500);
+                    F_String_buffer_Auto(Stay,"     80" ,500 ,0);
+                    str_cNt++;
+                    str_cNt = str_cNt%2;
+                    break; 
+                  case 1:
+                    Draw(21 ,0 ,Heart_Solid ,500);
+                    F_String_buffer_Auto(Stay,"     80" ,500 ,0);
+                    str_cNt++;
+                    str_cNt = str_cNt%2;
+                    break; 
+                }*/
+                break;
+                
+              case Heart_Rate_Hill:
+              case Heart_Rate_Interval:
+              case Extreme_Heart_Rate: 
+                DrawBarArray(Program_Data.BarArray_Display);
+                break;
+                
+                
+              case Hill_Climb:
+              case Aerobic:     
+              case Interval_1_4: 
+              case Interval_2_1: 
+                DrawBarArray(Program_Data.BarArray_Display);
+                break;
+              case EZ_INCLINE:   
+                 Draw(7 ,0 ,EZ_I_Icon ,30);
+                 break;
+              case MARATHON_Mode:
+                F_String_buffer_Auto_Middle(Stay,"MAR" ,30 ,0);
+                break;
+                
             
-            break;
-          case Distance_Goal_10K:
-            
-            if(System_Unit == Metric){  
-                F_String_buffer_Auto_Middle(Stay,"10K" ,30 ,0);
-            }else if(System_Unit == Imperial){
-                F_String_buffer_Auto_Middle(Stay,"6M" ,30 ,0);
-            }
-            
-            break;
-            
-            
-          case Custom_1: 
-            //F_String_buffer_Auto_Middle(Stay,"CSTM1" ,30 ,0);
-            DrawBarArray(Program_Data.BarArray_Display);
-            break; 
-          case Custom_2: 
-            //F_String_buffer_Auto_Middle(Stay,"CSTM2" ,30 ,0);
-            DrawBarArray(Program_Data.BarArray_Display);
-            break; 
-          case User_1: 
-            F_String_buffer_Auto_Middle(Stay,"USER1" ,30 ,0);
-            break; 
-          case User_2:   
-            F_String_buffer_Auto_Middle(Stay,"USER2" ,30 ,0);
-            break; 
-            
-          case FIT_ARMY: 
-            F_String_buffer_Auto_Middle(Stay,"ARMY" ,30 ,0);
-            break; 
-          case FIT_NAVY: 
-            F_String_buffer_Auto_Middle(Stay,"NAVY" ,30 ,0);
-            break; 
-          case FIT_AIRFORCE: 
-            F_String_buffer_Auto_Middle(Stay,"USAF" ,30 ,0);
-            break; 
-          case FIT_USMC:   
-            F_String_buffer_Auto_Middle(Stay,"USMC" ,30 ,0);
-            break; 
-          case FIT_WFI:   
-            F_String_buffer_Auto_Middle(Stay,"WFI" ,30 ,0);
-            break; 
-            
+              case Calorie_Goal:
+                F_String_buffer_Auto_Middle(Stay,"CAL" ,30 ,0);
+                break;
+              case Distance_Goal_160M:
+                
+                if(System_Unit == Metric){  
+                    F_String_buffer_Auto_Middle(Stay,"1.6K" ,30 ,0);
+                }else if(System_Unit == Imperial){
+                    F_String_buffer_Auto_Middle(Stay,"1M" ,30 ,0);
+                }
+                
+                break;
+              case Distance_Goal_5K:
+                
+                if(System_Unit == Metric){  
+                    F_String_buffer_Auto_Middle(Stay,"5K" ,30 ,0);
+                }else if(System_Unit == Imperial){
+                    F_String_buffer_Auto_Middle(Stay,"3M" ,30 ,0);
+                }
+                
+                
+                break;
+              case Distance_Goal_10K:
+                
+                if(System_Unit == Metric){  
+                    F_String_buffer_Auto_Middle(Stay,"10K" ,30 ,0);
+                }else if(System_Unit == Imperial){
+                    F_String_buffer_Auto_Middle(Stay,"6M" ,30 ,0);
+                }
+                
+                break;
+                
+                
+              case Custom_1: 
+                //F_String_buffer_Auto_Middle(Stay,"CSTM1" ,30 ,0);
+                DrawBarArray(Program_Data.BarArray_Display);
+                break; 
+              case Custom_2: 
+                //F_String_buffer_Auto_Middle(Stay,"CSTM2" ,30 ,0);
+                DrawBarArray(Program_Data.BarArray_Display);
+                break; 
+              case User_1: 
+                F_String_buffer_Auto_Middle(Stay,"USER1" ,30 ,0);
+                break; 
+              case User_2:   
+                F_String_buffer_Auto_Middle(Stay,"USER2" ,30 ,0);
+                break; 
+                
+              case FIT_ARMY: 
+                F_String_buffer_Auto_Middle(Stay,"ARMY" ,30 ,0);
+                break; 
+              case FIT_NAVY: 
+                F_String_buffer_Auto_Middle(Stay,"NAVY" ,30 ,0);
+                break; 
+              case FIT_AIRFORCE: 
+                F_String_buffer_Auto_Middle(Stay,"USAF" ,30 ,0);
+                break; 
+              case FIT_USMC:   
+                F_String_buffer_Auto_Middle(Stay,"USMC" ,30 ,0);
+                break; 
+              case FIT_WFI:   
+                F_String_buffer_Auto_Middle(Stay,"WFI" ,30 ,0);
+                break; 
+                
+            } 
         }
+        
+        
+
         
         
         switch(Program_Select){

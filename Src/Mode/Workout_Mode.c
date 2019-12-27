@@ -1478,65 +1478,149 @@ void Workout_Func(){
     if(T5ms_Workout_Display_Flag){
         T5ms_Workout_Display_Flag = 0;
         //bar Εγ₯ά + °{Γ{
-
-        switch(Program_Select){
-          case Quick_start:
-          case Manual:
-          case Random: 
-          case CrossCountry: 
-          case WeightLoss:   
-          case Interval_1_1: 
-          case Interval_1_2:
-          case Hill: 
-          case Heart_Rate_Hill:  
-          case Heart_Rate_Interval: 
-          case Extreme_Heart_Rate:   
-          case Hill_Climb:   
-          case Aerobic:      
-          case Interval_1_4: 
-          case Interval_2_1:
-          case EZ_INCLINE:  
-          case MARATHON_Mode:
-          case Calorie_Goal:
-          case Distance_Goal_160M:
-          case Distance_Goal_5K:
-          case Distance_Goal_10K:
-          case Custom_1: 
-          case Custom_2:
-          case APP_Cloud_Run:
-          case FIT_ARMY:
-          case FIT_NAVY:
-          case FIT_AIRFORCE: 
-          case FIT_USMC:
-            DrawBarArray_Workout(Program_Data.BarArray_Display ,Program_Data.PeriodIndex_After_Shift , 1 );
-            break;
-          case FIT_WFI: 
-            if(Hint_Disp_Flag == 0){
-                 DrawBarArray_Workout(Program_Data.BarArray_Display ,Program_Data.PeriodIndex_After_Shift , 1 );
-            }
-            break;
-          case APP_Train_Dist_Run:
-          case APP_Train_Time_Run:
-            if(Incline_Speed_BarArrayDisplay_Switch == 0){
-                DrawBarArray_Workout(Program_Data.BarArray_Display_Speed ,Program_Data.PeriodIndex_After_Shift , 1 );
-            }else{
-                DrawBarArray_Workout(Program_Data.BarArray_Display ,Program_Data.PeriodIndex_After_Shift , 1 );
-            }
-            break;
+        if(Erroe_Disp_Once == No_error && Response_Message.Status.IF != YES && Response_Message.Status.STALL != YES){
+            if(Tx_No_Response_Cnt < 30){
+              
+                switch(Program_Select){
+                  case Quick_start:
+                  case Manual:
+                  case Random: 
+                  case CrossCountry: 
+                  case WeightLoss:   
+                  case Interval_1_1: 
+                  case Interval_1_2:
+                  case Hill: 
+                  case Heart_Rate_Hill:  
+                  case Heart_Rate_Interval: 
+                  case Extreme_Heart_Rate:   
+                  case Hill_Climb:   
+                  case Aerobic:      
+                  case Interval_1_4: 
+                  case Interval_2_1:
+                  case EZ_INCLINE:  
+                  case MARATHON_Mode:
+                  case Calorie_Goal:
+                  case Distance_Goal_160M:
+                  case Distance_Goal_5K:
+                  case Distance_Goal_10K:
+                  case Custom_1: 
+                  case Custom_2:
+                  case APP_Cloud_Run:
+                  case FIT_ARMY:
+                  case FIT_NAVY:
+                  case FIT_AIRFORCE: 
+                  case FIT_USMC:
+                    DrawBarArray_Workout(Program_Data.BarArray_Display ,Program_Data.PeriodIndex_After_Shift , 1 );
+                    break;
+                  case FIT_WFI: 
+                    if(Hint_Disp_Flag == 0){
+                         DrawBarArray_Workout(Program_Data.BarArray_Display ,Program_Data.PeriodIndex_After_Shift , 1 );
+                    }
+                    break;
+                  case APP_Train_Dist_Run:
+                  case APP_Train_Time_Run:
+                    if(Incline_Speed_BarArrayDisplay_Switch == 0){
+                        DrawBarArray_Workout(Program_Data.BarArray_Display_Speed ,Program_Data.PeriodIndex_After_Shift , 1 );
+                    }else{
+                        DrawBarArray_Workout(Program_Data.BarArray_Display ,Program_Data.PeriodIndex_After_Shift , 1 );
+                    }
+                    break;
+                    
+                  case Target_HeartRate_Goal:
+                  case Fat_Burn:
+                  case Cardio:    
+                    Basic_HRC_Display();
+                    break;   
+                }
             
-          case Target_HeartRate_Goal:
-          case Fat_Burn:
-          case Cardio:    
-            Basic_HRC_Display();
-            break;   
+            }
         }
-  
+
+        
         if(Program_Select == FIT_WFI){
             
             if(Hint_Disp_Flag == 0){
                 writeLEDMatrix();
             }
           
+        }else if(Response_Message.Status.STALL == YES){
+            if(T_Marquee_Flag){
+               T_Marquee_Flag = 0;
+               
+               if(F_String_buffer_Auto( Left, "ERR  STALL" ,60 ,0)==1){
+                   Response_Message.Status.STALL = NO;
+               }
+               writeLEDMatrix();
+            }
+        }else if(Response_Message.Status.IF == YES){
+            if(T_Marquee_Flag){
+               T_Marquee_Flag = 0;
+               
+               if(F_String_buffer_Auto( Left, "ERR  IF" ,60 ,0)==1){
+                   Response_Message.Status.IF = NO;
+               }
+               writeLEDMatrix();
+            }
+        }else if(Erroe_Disp_Once != No_error){
+            if(T_Marquee_Flag){
+               T_Marquee_Flag = 0;
+               
+               if(Erroe_Disp_Once == Framing_error){        
+                   if(F_String_buffer_Auto( Left, "ERR       FRAM" ,60 ,0)==1){
+                       Erroe_Disp_Once = No_error;
+                   }        
+               } 
+               if(Erroe_Disp_Once == Overrun_error){        
+                   if(F_String_buffer_Auto( Left, "ERR       OVERRUN" ,60 ,0)==1){
+                       Erroe_Disp_Once = No_error;
+                   }        
+               }      
+               if(Erroe_Disp_Once == Format_error){        
+                   if(F_String_buffer_Auto( Left, "ERR       FORMAT" ,60 ,0)==1){
+                       Erroe_Disp_Once = No_error;
+                   }        
+               }  
+               if(Erroe_Disp_Once == CRC_error){        
+                   if(F_String_buffer_Auto( Left, "ERR       CRC" ,60 ,0)==1){
+                       Erroe_Disp_Once = No_error;
+                   }        
+               }
+               if(Erroe_Disp_Once == Data_error){        
+                   if(F_String_buffer_Auto( Left, "ERR       DATA" ,60 ,0)==1){
+                       Erroe_Disp_Once = No_error;
+                   }        
+               } 
+               if(Erroe_Disp_Once == Instruction_error){        
+                   if(F_String_buffer_Auto( Left, "ERR       INS" ,60 ,0)==1){
+                       Erroe_Disp_Once = No_error;
+                   }        
+               } 
+               if(Erroe_Disp_Once == Pr_process_error){        
+                   if(F_String_buffer_Auto( Left, "ERR       PRPRO" ,60 ,0)==1){
+                       Erroe_Disp_Once = No_error;
+                   }        
+               }
+               if(Erroe_Disp_Once == Pr_write_protection){        
+                   if(F_String_buffer_Auto( Left, "ERR       PRWR" ,60 ,0)==1){
+                       Erroe_Disp_Once = No_error;
+                   }        
+               }         
+               if(Erroe_Disp_Once == Pr_data_error){        
+                   if(F_String_buffer_Auto( Left, "ERR       PRDATA" ,60 ,0)==1){
+                       Erroe_Disp_Once = No_error;
+                   }        
+               }    
+               writeLEDMatrix();
+            }
+            
+        }else if(Tx_No_Response_Cnt>=30){
+            
+            if(T_Marquee_Flag){
+               T_Marquee_Flag = 0;
+               F_String_buffer_Auto( Left, "ERROR       LCB       NO       RESPONSE" ,60 ,0);
+               writeLEDMatrix();
+            }
+            
         }else{
             writeLEDMatrix();
         }

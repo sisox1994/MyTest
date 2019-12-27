@@ -5,6 +5,11 @@
 UART_HandleTypeDef huart1;
 
 //---Tx
+unsigned char Tx_Transform_flag;
+unsigned int Tx_No_Response_Cnt;
+Error_code_Def  Erroe_Disp_Once;
+unsigned char IF_Occur_flag;
+
 unsigned char TXData_Length;
 unsigned char ucUART_TxBuf[UART_TxBufDataLength];
 
@@ -148,8 +153,11 @@ uint16_t F_SpeedToHz(uint16_t Speed)  // dsp_spd change to speed_Hz
         SpdTemp_KM = Speed;                //speed :  km
     }
     
-    if(SpdTemp_KM<5){
+    if(SpdTemp_KM<4){
         R_Speed_Hz = 0;
+    }else if(SpdTemp_KM >=4 && SpdTemp_KM <5){
+       R_Speed_Hz = SpeedHzTab_CreateByBruce[SpdTemp_KM - 4];
+        
     }else if(SpdTemp_KM >=5 &&  SpdTemp_KM <= 240){
         
         R_Speed_Hz = SpeedHzTab_CreateByBruce[SpdTemp_KM - 5];
@@ -280,6 +288,13 @@ void RM6_background_Task(){
     
     if(T100ms_RM6T6_Task_Flag){
         T100ms_RM6T6_Task_Flag = 0;
+        
+        if(Tx_Transform_flag == 1){
+            Tx_No_Response_Cnt++;
+        }else{
+            Tx_No_Response_Cnt = 0;
+        }
+        
         
         if(Task_execute_Flag == 1){
         //--------------------------------------------------------------------------------  
@@ -512,45 +527,55 @@ void Response_Message_Clear(){
     Response_Message.Parameter_Number   = 0x00;
 }
 
+unsigned char status_shift_temp;
 void StatusDecode(unsigned char StatusByte){
 
     Response_Message.Status.Status_Byte = StatusByte;
     
-    if((StatusByte>>7)&&0x01){
+    status_shift_temp = StatusByte>>7;
+    if((status_shift_temp)&0x01 == 0x01){
         Response_Message.Status.ESP = YES;
     }else{
         Response_Message.Status.ESP = NO;
     }
     
-    if((StatusByte>>6)&&0x01){
+    status_shift_temp = StatusByte>>6;
+    if((status_shift_temp)&0x01 == 0x01){
         Response_Message.Status.Run = YES;
     }else{
         Response_Message.Status.Run = NO;
     }
     
-    if((StatusByte>>5)&&0x01){
+     
+    status_shift_temp = StatusByte>>5;
+    if((status_shift_temp)&0x01 == 0x01){
         Response_Message.Status.FWD = CW;
     }else{
         Response_Message.Status.FWD = CCW;
     }
     
-    if((StatusByte>>4)&&0x01){
+    status_shift_temp = StatusByte>>4;
+    if((status_shift_temp)&0x01 == 0x01){
         Response_Message.Status.STALL = YES;
     }else{
         Response_Message.Status.STALL = NO;
     }
     
-    if((StatusByte>>3)&&0x01){
+    
+    status_shift_temp = StatusByte>>3;
+    if((status_shift_temp)&0x01 == 0x01){
         Response_Message.Status.READY = YES;
     }else{
         Response_Message.Status.READY = NO;
     } 
     
-    if((StatusByte>>2)&&0x01){
+    status_shift_temp = StatusByte>>2;
+    if((status_shift_temp)&0x01 == 0x01){
         Response_Message.Status.IF = YES;
     }else{
         Response_Message.Status.IF = NO;
     } 
+       
 }
 
 
@@ -592,6 +617,9 @@ void GetResponseInfo(){
             Response_Message.Error_Code       = (Error_code_Def)ucUART_RxData[3];
             StatusDecode(ucUART_RxData[4]); 
         }
+        
+
+        
     }else if(ucUART_RxData[0] ==0xF1){       
         //Response(10)  ANS  INS  Data(H)   Data(L)  STU 
         if(ucUART_RxData[1] ==0x10 || ucUART_RxData[1] ==0x11 || ucUART_RxData[1] ==0x12 || ucUART_RxData[1] ==0x13 || ucUART_RxData[1] ==0x16 ||      
@@ -814,6 +842,7 @@ void Inveter_UART_IT_Recive(){
                 ucRxAdderss++;
             }
         }
+        Tx_Transform_flag = 0;
     }
 }
 
@@ -834,6 +863,7 @@ void UART_TX_Transform(){
     DEControl(High);
     __asm("NOP");
     HAL_UART_Transmit(&huart1,ucUART_TxBuf, TXData_Length,10);
+    Tx_Transform_flag = 1;
     //HAL_UART_Transmit_IT(&huart1, ucUART_TxBuf, TXData_Length);
     __asm("NOP");
     DEControl(Low);  

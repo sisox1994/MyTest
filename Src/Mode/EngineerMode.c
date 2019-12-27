@@ -16,6 +16,7 @@ unsigned char Key_Press_Record_5;
 unsigned char Key_Press_Record_6;
 unsigned char Key_Press_Record_7;
 
+unsigned char Err_msg[30];
 
 void RestStepValue(){
 
@@ -957,7 +958,7 @@ void Engineer_Func(){
             
             memset(LedMatrixBuffer,0x00,32);
             
-              if(T_Marquee_Flag){
+             if(T_Marquee_Flag){
                 T_Marquee_Flag = 0; 
                 F_String_buffer_Auto_Middle( Left, "SET  IMPERIAL" ,40 ,0);
                 writeLEDMatrix();
@@ -974,14 +975,50 @@ void Engineer_Func(){
                 HAL_NVIC_SystemReset();
             }
         }
+        
+        if(EngineerTestItem == 33){ 
+            Turn_OFF_All_Segment();
+            memset(LedMatrixBuffer,0x00,32);
+            
+             if(T_Marquee_Flag){
+                T_Marquee_Flag = 0; 
+                
+                
+                
+                if(Response_Message.Instruction_code == 0x1A){                    
+                    
+                    if(Response_Message.Data == 0x00){
+                       sprintf((char*)Err_msg,"NO  ERR  %d",Response_Message.Data);
+                       F_String_buffer_Auto( Stay, Err_msg ,40 ,0);
+                    }else{
+                       sprintf((char*)Err_msg,"ERR  %d",Response_Message.Data);
+                       F_String_buffer_Auto( Stay, Err_msg ,40 ,0);
+                    }
+                    
+                }else{
+                    F_String_buffer_Auto( Left, "TROBLE    MSG" ,40 ,0);
+                }
+                
+                
+                writeLEDMatrix();
+             }
+             
+             if( KeyCatch(0,1 , Start) ){
+                   HAL_NVIC_SystemReset();
+             }
+        }
 
         if(T250ms_Flag){
             T250ms_Flag = 0;
-            if(EngineerTestItem != 20 && EngineerTestItem != 24 && EngineerTestItem != 25 && EngineerTestItem != 32){
+            if(EngineerTestItem != 20 && EngineerTestItem != 24 && EngineerTestItem != 25 
+                                      && EngineerTestItem != 32 && EngineerTestItem != 33){
                 writeLEDMatrix();
             }
             if(EngineerTestItem == 21){
                 F_CMD(Write,87);  //¥á´ú¸ÕCMD µ¹¤U±±
+            }
+            if(EngineerTestItem == 33){
+                TROBLE_MSG();
             } 
         }
 

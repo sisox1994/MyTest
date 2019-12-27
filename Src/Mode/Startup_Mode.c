@@ -35,7 +35,10 @@ void EnterEngineerMode_Key(){
         EngineerTestItem = 32;
     }
     
-    
+    if(KeyCatch(1 ,2, Key_Pace , Key_Met)){
+        System_Mode = Engineer;        
+        EngineerTestItem = 33;
+    }
 }
 
 void LUBE_Mode_Key(){

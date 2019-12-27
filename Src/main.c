@@ -189,7 +189,12 @@ int main(void)
         }
         #endif
     
-  
+        if(Response_Message.Error_Code != No_error){           
+           Erroe_Disp_Once = Response_Message.Error_Code;
+           Response_Message.Error_Code = No_error;
+        }
+        
+
         if(System_Mode != System_Sleep){
             //------------------------------------------
             #if Use_FAN     

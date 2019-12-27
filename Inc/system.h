@@ -21,7 +21,7 @@
 #ifndef __SYSTEM_H__
 #define __SYSTEM_H__
 
-#define System_Version "V16"        //APP 只判斷這個
+#define System_Version "V17"        //APP 只判斷這個
 #define Modify_Version "A00"        // AXX 細分版本 V10A01 V10A02 代表都是V10 但是 有稍微修改
 
 
@@ -44,6 +44,9 @@
 
 #define FTMS_Activated_Permission 1
 //-------------------------------
+extern unsigned int Tx_No_Response_Cnt;
+extern Error_code_Def  Erroe_Disp_Once;
+
 
 extern unsigned char L_Mode;
 extern unsigned char R_Mode;
