@@ -382,9 +382,9 @@ void GPIO_CLK_Enable(){
 void _Error_Handler(char *file, int line)
 {
 
-  while(1)
-  {
-  }
+  //  while(1)
+  //{
+  //}
  
 }
 

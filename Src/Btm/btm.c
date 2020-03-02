@@ -171,7 +171,7 @@ void F_BtmRead03Cmd(){
     
     
     if(FW.Transmit_Page > (FW.total_Page + 2) ){ //  iOS 會有2個page的落差
-        while(1){}
+        //while(1){}
           
     }
     
