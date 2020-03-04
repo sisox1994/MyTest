@@ -24,7 +24,11 @@
 #define System_Version "V17"        //APP 只判斷這個
 #define Modify_Version "A00"        // AXX 細分版本 V10A01 V10A02 代表都是V10 但是 有稍微修改
 
-
+void LOG_Uart6_Init();
+void LOG_UART6_Transmit();
+extern uint8_t  NOW_POSITION_Num; //看現在程式跑到哪裡了
+extern unsigned char ucLog_data[10];
+extern uint8_t  tx_flag;
 //--------功能開關---------  1 開   0關
 #define Use_BTSPK   0
 #define Use_FAN     0

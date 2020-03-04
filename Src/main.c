@@ -2,7 +2,9 @@
 #include "stm32f4xx_hal.h"
 #include "system.h"
 
-UART_HandleTypeDef huart6;
+uint8_t  NOW_POSITION_Num; //看現在程式跑到哪裡了
+uint8_t  tx_flag;
+
 TIM_HandleTypeDef htim1;
 
 /* TIM1 init function */
@@ -121,6 +123,9 @@ int main(void)
     Read_SerialNumber_From_Flash(ucProductionSerialNumber);  //Read  BTM  Serial Number
     
     OTA_Mode_Check();
+    
+    LOG_Uart6_Init();
+    
     BLE_Init();
     Buzzer_Init();
     LED_Matrix_Init();
@@ -173,6 +178,9 @@ int main(void)
     
     while (1)
     {
+        //char str[] = "(1)while\n";        
+        // memcpy(ucLog_data,str,sizeof(str));       
+        //LOG_UART6_Transmit();
         
         if(Set_B4_Page0_Flag){
             Set_B4_Page0_Flag = 0;

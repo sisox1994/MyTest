@@ -13,6 +13,7 @@ unsigned short EepromVer_3;       // V1.2
 unsigned short EepromVer_4;        // A01
 
 UART_HandleTypeDef huart2;
+UART_HandleTypeDef huart6;
 
 unsigned char btm_is_ready;      //等待BTM F1
 unsigned char btm_Rx_is_busy;    
@@ -3276,6 +3277,14 @@ uint32_t Uart2Srflags;
 
 void Btm_Recive(){
     
+    if(btm_is_ready == 1){
+        ucLog_data[0]='q';
+        tx_flag = 1;
+        //char str[] = "B\n";        
+        //memcpy(ucLog_data,str,sizeof(str));       
+        //LOG_UART6_Transmit();
+    }
+    
     if(HAL_UART_Receive_IT(&huart2,&ucBtmRxTemp,1) == HAL_OK){
         ucBtmRxBuf[ucRxAddrs] = ucBtmRxTemp;
         
@@ -3341,35 +3350,69 @@ void Btm_Recive(){
         //-----------------------------------------------------心跳裝置------------------------
         
         if(ucBtmRxData[1] ==0xE0){  // 裝置掃描解碼
-            Scan_Re_E0();        
+            Scan_Re_E0();  
+            
+            if(btm_is_ready == 1){
+                ucLog_data[0]='s';
+                tx_flag = 1;                
+            }
+            
         }
         
         if(ucBtmRxData[1] ==0xE1){  // 裝置配對解碼
-            BLE_Pairing_Re_E1();        
+            BLE_Pairing_Re_E1(); 
+            if(btm_is_ready == 1){
+                ucLog_data[0]='p';
+                tx_flag = 1;                
+            }
         }
         
         if(ucBtmRxData[1] == 0xE2){  // 裝置連線解碼
-            Link_Sensor_Re_E2();        
+            Link_Sensor_Re_E2();
+            if(btm_is_ready == 1){
+                ucLog_data[0]='L';
+                tx_flag = 1;                
+            }
         }
         
         if(ucBtmRxData[1] == 0xCB){  // BLE裝置數值回傳解碼
-            SensorReceive_CB();        
+            SensorReceive_CB();    
+            if(btm_is_ready == 1){
+                ucLog_data[0]='B';
+                tx_flag = 1;                
+            }
         }
         
         if(ucBtmRxData[1] == 0xCE){  // BLE連線狀態回傳解碼
-            LinkStateReceive_CE();  
+            LinkStateReceive_CE(); 
+            if(btm_is_ready == 1){
+                ucLog_data[0]='e';
+                tx_flag = 1;                
+            }
             
         }
         
         if(ucBtmRxData[1] == 0xCC){  // ANT裝置數值回傳解碼
-            SensorReceive_CC();        
+            SensorReceive_CC();   
+            if(btm_is_ready == 1){
+                ucLog_data[0]='c';
+                tx_flag = 1;                
+            }
         } 
         
         if(ucBtmRxData[1] == 0xCF){  // ANT 連線狀態回傳解碼
-            LinkStateReceive_CF();        
+            LinkStateReceive_CF(); 
+            if(btm_is_ready == 1){
+                ucLog_data[0]='f';
+                tx_flag = 1;                
+            }
         }
         
         if(ucBtmRxData[1] == 0xE4){  // 解除連線
+            if(btm_is_ready == 1){
+                ucLog_data[0]='d';
+                tx_flag = 1;                
+            }
             disconnect_Sensor_Re_E4();     
         }
         
@@ -3434,13 +3477,29 @@ void Btm_Recive(){
         }
         //---------------------------------------------------------  FTMS  -----------
         if((ucBtmRxData[1] == 0xB0)&&(ucBtmRxData[2] <= 0x40)){
+            if(btm_is_ready == 1){
+                ucLog_data[0]='t';
+                tx_flag = 1;                
+            }
             F_Btm_FTMS_B0_Read();
+        }
+        if(ucBtmRxData[1] == 0xB1){
+             if(btm_is_ready == 1){
+                ucLog_data[0]='T';
+                tx_flag = 1;                
+            }
+            F_Btm_FTMS_B1_Read();
         }
         if( ucBtmRxData[1] == 0xB2 ){
             F_Btm_FTMS_B2_Read();
+            if(btm_is_ready == 1){
+                ucLog_data[0]='2';
+                tx_flag = 1;                
+            }
         }
         btm_Rx_is_busy = 0;
     }
+    
     
 }
 
@@ -3449,6 +3508,48 @@ BLE_RST  --> PA1
 BLE_TX   --> PA2
 BLE_RX   --> PA3
 */
+unsigned char ucLog_data[10];
+extern uint16_t ore_err_cnt;
+void LOG_UART6_Transmit(){
+    
+    //ucLog_data[0] = ore_err_cnt + 0x30;
+    ucLog_data[1] = ore_err_cnt + 0x30;
+    ucLog_data[2] = '\n';
+      
+    __HAL_UART_DISABLE_IT(&huart6, UART_IT_RXNE);    //禁止Uart 中斷收資料
+    HAL_UART_Transmit(&huart6,ucLog_data, 3,5);     // Tx 資料發送
+    __HAL_UART_ENABLE_IT(&huart6, UART_IT_RXNE);      //啟動Uart 中斷收資料
+    
+}
+
+
+void LOG_Uart6_Init(){
+    
+
+    huart6.Instance = USART6;
+    huart6.Init.BaudRate = 115200;
+    huart6.Init.WordLength = UART_WORDLENGTH_8B;
+    huart6.Init.StopBits = UART_STOPBITS_1;
+    huart6.Init.Parity = UART_PARITY_NONE;
+    huart6.Init.Mode = UART_MODE_TX_RX;
+    huart6.Init.HwFlowCtl = UART_HWCONTROL_NONE;
+    huart6.Init.OverSampling = UART_OVERSAMPLING_16;  
+    if (HAL_UART_Init(&huart6) != HAL_OK)
+    {
+        Error_Handler();
+    }
+    HAL_UART_MspDeInit(&huart6); 
+    HAL_UART_MspInit(&huart6);    
+   
+    __HAL_UART_ENABLE_IT(&huart6, UART_IT_RXNE);
+    
+    
+    LOG_UART6_Transmit();
+}
+
+
+
+
 
 void BLE_Init(){
     

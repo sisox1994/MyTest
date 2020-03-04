@@ -175,10 +175,20 @@ void time(){
     }
     
     if(TimerCnt%100 == 0){     //跑馬燈用
-        T100ms_Flag = 1;  
+        T100ms_Flag = 1;      
     }
+    if(TimerCnt%10 == 0){
+        if(tx_flag == 1){
+            tx_flag = 0;
+            LOG_UART6_Transmit();
+        }
+    }
+    
     if(TimerCnt%5 == 0){      //按鍵掃描
-        T5ms_Flag = 1;        
+        T5ms_Flag = 1;  
+        
+        
+        
     }
     //-------------------------------------------------------------------//
     if(NeverClearCnt%5000 == 0){  //五秒丟一次廣播訊號給雲跑APP (閒置)

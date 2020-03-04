@@ -167,6 +167,10 @@ void TIM1_CC_IRQHandler(void)
 
 void I2C1_EV_IRQHandler(void)
 {
+    char str[] = "(2)I2C1\n";        
+    memcpy(ucLog_data,str,sizeof(str));       
+    LOG_UART6_Transmit();
+    
   HAL_I2C_EV_IRQHandler(&hi2c1);
 }
 
@@ -177,6 +181,7 @@ void SPI2_IRQHandler(void)
 
 void USART1_IRQHandler(void)
 {
+
     
     HAL_UART_IRQHandler(&huart1);
     Inveter_UART_IT_Recive();
@@ -184,8 +189,10 @@ void USART1_IRQHandler(void)
 
 void USART2_IRQHandler(void)
 {
-  HAL_UART_IRQHandler(&huart2);
-  Btm_Recive();
+
+    
+    HAL_UART_IRQHandler(&huart2);
+    Btm_Recive();
 }
 
 void USART6_IRQHandler(void)
@@ -194,23 +201,43 @@ void USART6_IRQHandler(void)
 }
 
 void EXTI1_IRQHandler(void){
+    
+    char str[] = "(5)EXTI1\n";        
+    memcpy(ucLog_data,str,sizeof(str));       
+    LOG_UART6_Transmit();
+    
     HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_1);
-     NVIC_SystemReset();
+    NVIC_SystemReset();
 }
 
 void EXTI2_IRQHandler(void){
+    
+    char str[] = "(6)EXTI2\n";        
+    memcpy(ucLog_data,str,sizeof(str));       
+    LOG_UART6_Transmit();
+    
     HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_2);
      NVIC_SystemReset();
 }
 
 void EXTI4_IRQHandler(void){
+    
+    char str[] = "(7)EXTI4\n";        
+    memcpy(ucLog_data,str,sizeof(str));       
+    LOG_UART6_Transmit();
+    
+    
     HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_4);
-     NVIC_SystemReset();
+    NVIC_SystemReset();
 }
 void EXTI9_5_IRQHandler(void)
 {
   /* USER CODE BEGIN EXTI9_5_IRQn 0 */
 
+    char str[] = "(8)EXTI9\n";        
+    memcpy(ucLog_data,str,sizeof(str));       
+    LOG_UART6_Transmit();
+    
   /* USER CODE END EXTI9_5_IRQn 0 */
   HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_5);
   HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_7);
@@ -229,6 +256,10 @@ void EXTI15_10_IRQHandler(void)
 {
   /* USER CODE BEGIN EXTI15_10_IRQn 0 */
 
+    char str[] = "(9)EXT15\n";        
+    memcpy(ucLog_data,str,sizeof(str));       
+    LOG_UART6_Transmit();
+    
   /* USER CODE END EXTI15_10_IRQn 0 */
   HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_10);
   HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_11);

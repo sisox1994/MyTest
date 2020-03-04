@@ -780,6 +780,13 @@ void GetResponseInfo(){
 
 void Inveter_UART_IT_Recive(){
     
+     ucLog_data[0]='6';
+     tx_flag = 1;
+    //char str[] = "R\n";        
+    //memcpy(ucLog_data,str,sizeof(str));       
+    //LOG_UART6_Transmit();
+    
+    
     if(HAL_UART_Receive_IT(&huart1,&ucUART_RxTemp,1) == HAL_OK){
         ucUART_RxBuf[ucRxAdderss] = ucUART_RxTemp;   
         __asm("NOP");
@@ -844,6 +851,9 @@ void Inveter_UART_IT_Recive(){
         }
         Tx_Transform_flag = 0;
     }
+    
+
+    
 }
 
 //---------------------------------     TX              -----------------------------------------
