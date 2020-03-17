@@ -2279,13 +2279,22 @@ void Treadmill_B1(){
     Test_Data_Brocast();
 #else
     
+    unsigned short SpeedTmp;
+  
+    if(System_Unit == Metric){  
+      SpeedTmp = System_SPEED;
+    }else if(System_Unit == Imperial){
+      SpeedTmp = (System_SPEED * 16)/10;
+    }
+    
+    
     if(PageSwitch == 0){
         
         
         //------SPEED--------
         //Kinomap  Indoor Bike  吃這筆 i-speed ------------------------------------
-        ucBtmTxBuf[3] =   (unsigned char)(System_SPEED*10);       // instantaeous speed L      
-        ucBtmTxBuf[4] =   (unsigned char)((System_SPEED*10)>>8);  // instantaeous speed H      
+        ucBtmTxBuf[3] =   (unsigned char)(SpeedTmp*10);       // instantaeous speed L      
+        ucBtmTxBuf[4] =   (unsigned char)((SpeedTmp*10)>>8);  // instantaeous speed H      
         //-------------------------------------------------------------------------
         
         //------INCLINE---------------------------------------------------
@@ -2309,7 +2318,7 @@ void Treadmill_B1(){
         //--------------------------------------------------------
        
         //----Instantaneous Pace-----------------------------------------------------------
-        ucBtmTxBuf[18] =  System_SPEED/60;  //sim_I_Pace;  // treadmill instantaneous pace  // (瞬間步伐) (0.1km per minute)
+        ucBtmTxBuf[18] =  SpeedTmp/60;  //sim_I_Pace;  // treadmill instantaneous pace  // (瞬間步伐) (0.1km per minute)
         //-------------------------------------------------------------------------------
 
         //---Total Distance---------------------------------------------------------------------------------
@@ -2322,7 +2331,7 @@ void Treadmill_B1(){
     }else if(PageSwitch == 1){
         
         //----Average Pace--------------------------------------------------------------------
-        ucBtmTxBuf[3] = System_SPEED/60;  ///(600*usAvgCount)/uiAvgSpd;  // treadmill average pace // (平均步伐) (0.1km per minute)
+        ucBtmTxBuf[3] = SpeedTmp/60;  ///(600*usAvgCount)/uiAvgSpd;  // treadmill average pace // (平均步伐) (0.1km per minute)
         //------------------------------------------------------------------------------------
 
         //------Total Calorie---------------------------------------------------------------------------
