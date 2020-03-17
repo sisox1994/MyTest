@@ -3094,6 +3094,7 @@ void Set_Spindown_StopPedaling(){
 
 
 Training_status_Def  Training_status = IDLE;
+FEC_State_Def        FE_Status       = READY;
 unsigned short minimum_speed;
 unsigned short maximum_speed;	
 unsigned short mimimum_increment_speed = 20;	
@@ -3127,7 +3128,7 @@ void F_Btm_FEC_B4_SET_Data(unsigned char page){
     minimum_inclination = Machine_Data.System_INCLINE_Min;
     
     
-    FEC_State_Def FEC_State = READY; // IN_USE  READY
+    //FEC_State_Def FEC_State = READY; // IN_USE  READY
 
     ucBtmTxBuf[0] = '[';
     ucBtmTxBuf[1] = 0xB4;
@@ -3182,7 +3183,7 @@ void F_Btm_FEC_B4_SET_Data(unsigned char page){
         ucBtmTxBuf[15] = console_status;
         
         ucBtmTxBuf[16] = cycle_length_for_FEC;
-        ucBtmTxBuf[17] = (unsigned char)FEC_State;
+        ucBtmTxBuf[17] = (unsigned char)FE_Status;
         ucBtmTxBuf[18] = 0;
               
     }

@@ -1,5 +1,5 @@
 #include "system.h"
-
+#include "btm.h"
 void ClearAllOPTION_KeyDisplayCnt();
 void HR_SENSOR_LINK_Key(){
     
@@ -159,6 +159,7 @@ void IntoReadyMode_Process(){
     ODO_RecordDistance = 0;
     
     console_status = 4;      // 1 : stop  2¡Gpause  3: stop by safeKey   4: start 
+    FE_Status = IN_USE;
     Btm_Task_Adder(FEC_Data_Config_Page_1);
     
     

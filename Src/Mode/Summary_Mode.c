@@ -14,6 +14,8 @@ void IntoSummaryMode_Process(){
     Machine_Data_Update();
     
     System_Mode = Summary;
+    
+    FE_Status = FINISHED;
     F_SetFEC_State(FINISHED);
         
     ClearStd_1_Sec_Cnt(); 

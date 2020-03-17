@@ -1,4 +1,5 @@
 #include "system.h"
+#include "btm.h"
 
 Program_Type_Def Program_Select = Quick_start;
 Program_Data_Def Program_Data;
@@ -21,6 +22,7 @@ void IntoIdleMode_Process(){
     System_Mode = Idle;
     F_BtmReply39Cmd();//立馬告訴APP 進入Idle了 
     
+    FE_Status = READY;
     F_SetFEC_State(READY);
     
     Program_Select = Quick_start;

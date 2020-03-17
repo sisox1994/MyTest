@@ -24,8 +24,9 @@ void IntoPauseMode_Process(){
         RM6_Task_Adder(Set_INCLINE);
         
     }else{
-        
+        FE_Status = FINISHED;
         F_SetFEC_State(FINISHED);
+       
         PauseTimeOut_Cnt = 180;
         System_Mode = Paused;
         ClearStd_1_Sec_Cnt(); 

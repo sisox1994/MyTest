@@ -46,7 +46,7 @@
 //-------------------------------
 extern unsigned int Tx_No_Response_Cnt;
 extern Error_code_Def  Erroe_Disp_Once;
-
+extern FEC_State_Def  FE_Status;
 
 extern unsigned char L_Mode;
 extern unsigned char R_Mode;

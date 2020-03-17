@@ -26,7 +26,8 @@ extern void NumberInsert_Time(unsigned int* Time_Modify);
 void IntoWorkoutModeProcess(){
     
     console_status = 4;      // 1 : stop  2¡Gpause  3: stop by safeKey   4: start 
-    Btm_Task_Adder(FEC_Data_Config_Page_1);
+     FE_Status = IN_USE;
+     Btm_Task_Adder(FEC_Data_Config_Page_1);
     
   
     WarmUp_3_Minute_Cnt = 0;
