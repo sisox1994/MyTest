@@ -34,6 +34,13 @@ void F_HeartRate_Supervisor(){
             
             if(usNowHeartRate > 0){
                 HeartRate_Is_Exist_Flag = 1; 
+                
+                if(Linked_HR_info.SensorType == ANT_HR){
+                    ANT_Icon_Display_Cnt = 10;
+                }else if(Linked_HR_info.SensorType == BLE_HR){
+                    Ble_Icon_Display_Cnt = 10;
+                }
+                
             } 
         }
         else if(HeartRate_Is_Exist_Flag == 1){
@@ -42,6 +49,17 @@ void F_HeartRate_Supervisor(){
                 HeartRate_Is_Exist_Flag = 0;
             } 
         }
+        
+        //ANT 斷線重新連線 (只連原本連住的那一個)
+        if( (HeartRate_Is_Exist_Flag == 0) && Scan_Msg.ScanType == ANT_HR ){
+        
+          if((System_Mode == WarmUp) || (System_Mode == Workout)  || (System_Mode == CooolDown) ||  (System_Mode == Paused)){
+            //如果是正在運動中的情況下要去連原本連線的那一個
+             Btm_Task_Adder(Connect_Paired_ANT_HR_E2);
+          }          
+        }
+        
+        
     }
 }
 

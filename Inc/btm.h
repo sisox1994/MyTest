@@ -51,6 +51,8 @@ typedef enum{
     BLE_HRC_Pairing      = 5,
     BLE_HRC_Link         = 6,
     
+    Connect_Paired_ANT_HR_E2 = 7,
+    
     C_02Val = 12,
     C_04Val = 14,
     
@@ -156,7 +158,7 @@ typedef struct{
     Sensor_UUID_Type_Def  ScanType;    
     Scan_State_Def        Scan_State;    
     //--------------------ANT+
-    unsigned short ANT_ID;
+    unsigned int ANT_ID;
     //-------------------BLE
     unsigned char  DeviceNumber;
     unsigned char  RSSI;
@@ -190,12 +192,15 @@ typedef struct{
     
     Sensor_UUID_Type_Def SensorType;    
     char DeviceName[13];
-    unsigned short ANT_ID;
+    unsigned int ANT_ID;
     unsigned short usHR_bpm;
     Linking_State_Def Link_state;    
     char BLE_Addrs[6];
 
 }Now_Linked_HR_Sensor_Info_Def;
+
+
+
 
 typedef struct{    
     ucAppTypeModeDef TypeMode;
@@ -248,7 +253,7 @@ extern Btm_Task_Def   btm_HRC_disconnect_Task_Temp;
 
 extern unsigned char btm_is_ready;
 extern unsigned char btm_Rx_is_busy;
-extern unsigned char NearestDevieNumber;
+extern unsigned char NearestDevieIndex;
 
 void ble_disconnect_wait_Process();
 void ble_ReSearching_TimeOut();
@@ -265,7 +270,7 @@ void ScanSensorE0(Sensor_UUID_Type_Def  Sensor_Type);
 void Pairing_BLE_Sensor_E1(unsigned char DeviceNumber);
 
 void Link_Sensor_E2_BLE(Pairing_Meseseage_def paired_msg);
-void Link_Sensor_E2_ANT( unsigned short ANT_ID);
+void Link_Sensor_E2_ANT( unsigned int ANT_ID);
 void Ask_Link_State_CE();
 void Ask_Link_State_CF();
 void disconnect_Sensor_E4(Sensor_UUID_Type_Def  Sensor_Type);

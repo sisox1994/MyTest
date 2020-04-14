@@ -43,6 +43,9 @@ BLE_Paired_Device_Addr_List_def  BLE_Paired_device_list; // ¦¨¥\°t¹ï ´N§â¸ê°T¥[¤
 
 Now_Linked_HR_Sensor_Info_Def Linked_HR_info;
 
+
+
+
 Btm_Task_Def btmTask_List[Task_Amount];
 
 unsigned char btm_Task_Cnt = 0;
@@ -358,9 +361,9 @@ void ScanSensorE0(Sensor_UUID_Type_Def  Sensor_Type){
 
 
 
-unsigned char NearestDevieNumber;
+unsigned char NearestDevieIndex;
 unsigned char RSSI_Compare;
-
+unsigned int ANT_ID_Paired_legacy;
 void Scan_Re_E0(){
 
 
@@ -376,10 +379,14 @@ void Scan_Re_E0(){
         Scan_Msg.Scan_State = (Scan_State_Def)ucBtmRxData[2];
    
         if(Scan_Msg.Scan_State == Paired_OK){
-            Scan_Msg.ANT_ID = ((unsigned short)ucBtmRxData[4]<< 8)  + ucBtmRxData[3]  ;
+            Scan_Msg.ANT_ID = ((unsigned int)ucBtmRxData[5]<< 16) +((unsigned int)ucBtmRxData[4]<< 8)  + ucBtmRxData[3]  ;
             
             Linked_HR_info.ANT_ID = Scan_Msg.ANT_ID; 
             Linked_HR_info.SensorType = ANT_HR;
+            
+            //Àx¦sE0 ±½´y³s½u¨ìªº ANT_HR ID ¦b¹B°Ê¤¤Â_½u´N¥i¥H³s³o¤@­Ó
+            ANT_ID_Paired_legacy = Scan_Msg.ANT_ID;
+            
             
             ANT_Icon_Display_Cnt = 10;
             
@@ -424,12 +431,12 @@ void Scan_Re_E0(){
             
                 //´M§ä°T¸¹³Ì±jªº¸Ë¸m  Brian »¡ RSSI¶V¤j °T¸¹·U±j
                 if(BLE_Scan_Device_List.Device_Cnt == 0){
-                    NearestDevieNumber = Scan_Msg.DeviceNumber;
+                    NearestDevieIndex = BLE_Scan_Device_List.Device_Cnt;
                     RSSI_Compare = Scan_Msg.RSSI;
                 }else if(BLE_Scan_Device_List.Device_Cnt>0){
                     if(Scan_Msg.RSSI > RSSI_Compare){
                         RSSI_Compare = Scan_Msg.RSSI;
-                        NearestDevieNumber = Scan_Msg.DeviceNumber;
+                        NearestDevieIndex = BLE_Scan_Device_List.Device_Cnt;
                     }  
                 }
                 
@@ -560,9 +567,9 @@ void Link_Sensor_E2_BLE(Pairing_Meseseage_def paired_msg){
 }
 
 //-----------------------E2  ANT+  Tx  -------------------------------------------------------
-void Link_Sensor_E2_ANT( unsigned short ANT_ID){
+void Link_Sensor_E2_ANT( unsigned int ANT_ID){
 
-    
+  if(ANT_ID != 0){
     memset(ucBtmTxBuf,0x00,20);
     ucBtmTxBuf[0] = '[';	
     ucBtmTxBuf[19] = ']';
@@ -574,14 +581,16 @@ void Link_Sensor_E2_ANT( unsigned short ANT_ID){
     
     ucBtmTxBuf[4] = (unsigned char)ANT_ID;
     ucBtmTxBuf[5] = (unsigned char)(ANT_ID >>8);
-    
+    ucBtmTxBuf[6] = (unsigned char)(ANT_ID >>16);
     
     Linked_HR_info.SensorType = ANT_HR;
     
-
+    
     __HAL_UART_ENABLE_IT(&huart2, UART_IT_RXNE); //----------------
     HAL_UART_Transmit(&huart2,ucBtmTxBuf, BtmData,10);
     
+  }
+  
 }
 
 
@@ -594,24 +603,31 @@ void Link_Sensor_Re_E2(){
 
     if(ucBtmRxData[2] == 0x40 || ucBtmRxData[2] == 0x42){  //if -- [OK]
 
-        Linked_HR_info.Link_state = (Linking_State_Def)ucBtmRxData[2];
-        
-        // Linked  info ¶ñ¤J¥Ø«e³s½uªº¸Ë¸m¦WºÙ   ¸ò ÂÅªÞ¦ì§}       
-        memcpy( Linked_HR_info.DeviceName,BLE_Scan_Device_List.messeage_List[NearestDevieNumber].DeviceName,13);
-        memcpy( Linked_HR_info.BLE_Addrs,  Pairing_Msg.BLE_Addrs , 6); 
-       
-        
-        //--------------------ÂÅªÞ±½´y²M³æªì©l¤Æ-----------------------
-        Clear_BLE_Scan_Device_List();
-        //-------------------------------------------------------
-        Clear_Scan_Msg();
-        //----------------------------------------------
-        
-        
-        Ble_Icon_Display_Cnt = 10;
-        Ble_wait_HR_value_First_IN_Flag = 1;
-        FirstCB_Time_Cnt = 0;
-        
+      if(Linked_HR_info.SensorType == ANT_HR){
+                  
+          if(Linked_HR_info.usHR_bpm>0){
+              Linked_HR_info.Link_state = (Linking_State_Def)ucBtmRxData[2];   
+              Linked_HR_info.ANT_ID = Scan_Msg.ANT_ID;             
+          }
+
+          
+      }else if(Linked_HR_info.SensorType == BLE_HR){          
+          Linked_HR_info.Link_state = (Linking_State_Def)ucBtmRxData[2];        
+          // Linked  info ¶ñ¤J¥Ø«e³s½uªº¸Ë¸m¦WºÙ   ¸ò ÂÅªÞ¦ì§}       
+          memcpy( Linked_HR_info.DeviceName,BLE_Scan_Device_List.messeage_List[NearestDevieIndex].DeviceName,13);
+          memcpy( Linked_HR_info.BLE_Addrs,  Pairing_Msg.BLE_Addrs , 6);      
+          
+          //--------------------ÂÅªÞ±½´y²M³æªì©l¤Æ-----------------------
+          Clear_BLE_Scan_Device_List();
+          //-------------------------------------------------------
+          Clear_Scan_Msg();
+          //----------------------------------------------      
+          //Ble_Icon_Display_Cnt = 10;
+          Ble_wait_HR_value_First_IN_Flag = 1;
+          FirstCB_Time_Cnt = 0;        
+      }
+      
+
     }
     
 }
@@ -1449,8 +1465,8 @@ void F_BtmReply44Cmd(void){
     ucBtmTxBuf[16] = ucProductionSerialNumber[13];  // Serial Number
     
     //SN  Tool³s½u¤~¯à¦b Serial ¬Ýªº¨ì³o¨â½X    ³o¨â½X¶Ã¥á IOS ¶³¶]³s½u·|°{°h
-    ucBtmTxBuf[17] = '0';  
-    ucBtmTxBuf[18] = '0'; 
+    ucBtmTxBuf[17] = 0;  
+    ucBtmTxBuf[18] = 0; 
     
     ucBtmTxBuf[19] = ']';
     

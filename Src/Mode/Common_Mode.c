@@ -5,7 +5,25 @@ void HR_SENSOR_LINK_Key(){
     
     if( KeyCatch(0,1 , ANT) ){
         ClearAllOPTION_KeyDisplayCnt();
-        Btm_Task_Adder(Scan_ANT_HRC_Sensor);
+        
+        if((System_Mode == WarmUp) || (System_Mode == Workout)  || (System_Mode == CooolDown) ||  (System_Mode == Paused)){
+            //如果是正在運動中的情況下要去連原本連線的那一個
+            if(Scan_Msg.ANT_ID != 0){
+               Btm_Task_Adder(Connect_Paired_ANT_HR_E2);
+            }else{
+                //如果運動開始前沒有連到心跳裝置 就破例讓他使用E0連線
+                Btm_Task_Adder(Scan_ANT_HRC_Sensor);
+            }
+          
+            
+        }else{
+           //其他狀況下就是直接重新E0搜尋ANT HR 並連線
+           Btm_Task_Adder(Scan_ANT_HRC_Sensor);
+        }
+
+          
+       
+        
         __asm("NOP");
     }   
     

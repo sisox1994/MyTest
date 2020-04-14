@@ -21,7 +21,7 @@
 #ifndef __SYSTEM_H__
 #define __SYSTEM_H__
 
-#define System_Version "V18"        //APP 只判斷這個
+#define System_Version "V20"        //APP 只判斷這個
 #define Modify_Version "A00"        // AXX 細分版本 V10A01 V10A02 代表都是V10 但是 有稍微修改
 
 
@@ -135,6 +135,7 @@ extern Custom_Program_Data_Def MyCustom_2;
 extern User_Program_Data_Def MyUser_1;
 extern User_Program_Data_Def MyUser_2;
 
+extern unsigned int ANT_ID_Paired_legacy;
 extern unsigned short usNowHeartRate;    //使用者心跳 
 extern unsigned char  HeartRate_Is_Exist_Flag;
 extern void F_HeartRate_Supervisor();

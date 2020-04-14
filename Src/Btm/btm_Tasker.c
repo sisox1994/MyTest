@@ -142,7 +142,9 @@ void BTM_background_Task(){
               
                 //------------------------------------------------------------
                 switch(btmTask_List[0]){
-                    
+                  case Connect_Paired_ANT_HR_E2:  
+                    Link_Sensor_E2_ANT( ANT_ID_Paired_legacy);
+                    break;
                   case Scan_BLE_HRC_Sensor:
                     ScanSensorE0(BLE_HR);
                     break;
@@ -157,7 +159,7 @@ void BTM_background_Task(){
                     break;
                     
                   case BLE_HRC_Pairing:
-                    Pairing_BLE_Sensor_E1(NearestDevieNumber);
+                    Pairing_BLE_Sensor_E1(BLE_Scan_Device_List.messeage_List[NearestDevieIndex].DeviceNumber);
                     break;
                   case BLE_HRC_Link:
                     Link_Sensor_E2_BLE(BLE_Paired_device_list.BLE_Paired_Device_Addr_List[0]);
