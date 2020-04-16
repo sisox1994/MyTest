@@ -3,35 +3,120 @@
 void ClearAllOPTION_KeyDisplayCnt();
 void HR_SENSOR_LINK_Key(){
     
+  
+  
     if( KeyCatch(0,1 , ANT) ){
         ClearAllOPTION_KeyDisplayCnt();
         
         if((System_Mode == WarmUp) || (System_Mode == Workout)  || (System_Mode == CooolDown) ||  (System_Mode == Paused)){
             //如果是正在運動中的情況下要去連原本連線的那一個
-            if(Scan_Msg.ANT_ID != 0){
-               Btm_Task_Adder(Connect_Paired_ANT_HR_E2);
+            if(ANT_ID_Paired_legacy != 0){
+              
+              
+                if(Linked_HR_info.SensorType == BLE_HR ){     
+                     //如果BLE已經連線的情況下要切換成ANT+
+                    ANT_ID_Paired_legacy = 0;//先清掉原本連的紀錄才能順利的重新掃描
+                    if(ant_CC_exisit_flag == 1){
+                        Btm_Task_Adder(ANT_HRC_Disconnect);
+                    }
+                    if(ble_CB_exisit_flag == 1){
+                        Btm_Task_Adder(BLE_HRC_Disconnect);
+                    }  
+                    Btm_Task_Adder(Scan_ANT_HRC_Sensor);                  
+                }else if(Linked_HR_info.SensorType == ANT_HR){
+                    //如果本來就是ANT+ 就連原本連起來的那一個
+                    Btm_Task_Adder(Connect_Paired_ANT_HR_E2);
+                }else{
+                    Btm_Task_Adder(Scan_ANT_HRC_Sensor);    
+                }
+               
+              
             }else{
                 //如果運動開始前沒有連到心跳裝置 就破例讓他使用E0連線
+              
+                if(ant_CC_exisit_flag == 1){
+                    Btm_Task_Adder(ANT_HRC_Disconnect);
+                }
+                if(ble_CB_exisit_flag == 1){
+                    Btm_Task_Adder(BLE_HRC_Disconnect);
+                }  
                 Btm_Task_Adder(Scan_ANT_HRC_Sensor);
             }
           
             
         }else{
            //其他狀況下就是直接重新E0搜尋ANT HR 並連線
-           Btm_Task_Adder(Scan_ANT_HRC_Sensor);
-        }
-
+           if(ant_CC_exisit_flag == 1){
+               Btm_Task_Adder(ANT_HRC_Disconnect);
+           }
+           if(ble_CB_exisit_flag == 1){
+               Btm_Task_Adder(BLE_HRC_Disconnect);
+           }  
           
-       
+           Btm_Task_Adder(Scan_ANT_HRC_Sensor);
+        }       
         
         __asm("NOP");
     }   
     
     if( KeyCatch(0,1 , BLE) ){
-        if(Ble_wait_HR_value_First_IN_Flag == 0){
-            ClearAllOPTION_KeyDisplayCnt();
-            Btm_Task_Adder(Scan_BLE_HRC_Sensor);
-        }
+      
+      
+      if((System_Mode == WarmUp) || (System_Mode == Workout)  || (System_Mode == CooolDown) ||  (System_Mode == Paused)){
+          //如果是正在運動中的情況下要去連原本連線的那一個
+          if(BLE_Paired_legacy_Info.BLE_Addrs[0] != 0){
+            
+                if(Linked_HR_info.SensorType == ANT_HR  ){     
+                     //如果ANT+ 已經連線的情況下要切換成BLE   
+                    memset(&BLE_Paired_legacy_Info,0x00,sizeof(Pairing_Meseseage_def));//先清掉原本連的紀錄才能順利的重新掃描
+                    if(ant_CC_exisit_flag == 1){
+                        Btm_Task_Adder(ANT_HRC_Disconnect);
+                    }
+                    if(ble_CB_exisit_flag == 1){
+                        Btm_Task_Adder(BLE_HRC_Disconnect);
+                    }  
+                    Btm_Task_Adder(Scan_BLE_HRC_Sensor);                  
+                }else if(Linked_HR_info.SensorType == BLE_HR){
+                    //如果本來就是BLE 就連原本連起來的那一個
+                    Btm_Task_Adder(Connect_Paired_BLE_HR_E2);
+                }else{
+                    Btm_Task_Adder(Scan_BLE_HRC_Sensor);    
+                }
+            
+            
+              
+          }else{
+              //如果運動開始前沒有連到心跳裝置 就破例讓他使用E0連線
+              //if(Ble_wait_HR_value_First_IN_Flag == 0){;
+                  ClearAllOPTION_KeyDisplayCnt();
+                  
+                  if(ble_CB_exisit_flag == 1){
+                      Btm_Task_Adder(BLE_HRC_Disconnect);
+                  }  
+                  if(ant_CC_exisit_flag == 1){
+                      Btm_Task_Adder(ANT_HRC_Disconnect);
+                  }
+                  
+                  Btm_Task_Adder(Scan_BLE_HRC_Sensor);
+              //}
+          }
+                
+      }else{
+          //其他狀況下就是直接重新E0搜尋ANT HR 並連線
+          //if(Ble_wait_HR_value_First_IN_Flag == 0){
+              ClearAllOPTION_KeyDisplayCnt();
+              
+              if(ble_CB_exisit_flag == 1){
+                  Btm_Task_Adder(BLE_HRC_Disconnect);
+              }
+              if(ant_CC_exisit_flag == 1){
+                  Btm_Task_Adder(ANT_HRC_Disconnect);
+              }  
+              Btm_Task_Adder(Scan_BLE_HRC_Sensor);
+          //}
+      }
+      
+
         __asm("NOP");  
     }   
     

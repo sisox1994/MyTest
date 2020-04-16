@@ -52,6 +52,7 @@ typedef enum{
     BLE_HRC_Link         = 6,
     
     Connect_Paired_ANT_HR_E2 = 7,
+    Connect_Paired_BLE_HR_E2 = 8,
     
     C_02Val = 12,
     C_04Val = 14,
@@ -199,7 +200,12 @@ typedef struct{
 
 }Now_Linked_HR_Sensor_Info_Def;
 
+typedef struct{    
+       
+    char DeviceName[13]; 
+    char BLE_Addrs[6];
 
+}Legacy_Ble_HR_Sensor_Info_Def;
 
 
 typedef struct{    

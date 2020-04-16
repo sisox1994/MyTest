@@ -42,14 +42,13 @@ Pairing_Meseseage_def Pairing_Msg;             //當下配對取得的地址資訊
 BLE_Paired_Device_Addr_List_def  BLE_Paired_device_list; // 成功配對 就把資訊加入清單裡
 
 Now_Linked_HR_Sensor_Info_Def Linked_HR_info;
-
-
-
+Pairing_Meseseage_def BLE_Paired_legacy_Info;
 
 Btm_Task_Def btmTask_List[Task_Amount];
 
 unsigned char btm_Task_Cnt = 0;
 
+unsigned char tx_timeout = 20;
 
 unsigned char wait_HR_disconnect_Flag;
 unsigned short disconnect_buffer_0xFF_Cnt;
@@ -62,7 +61,7 @@ void BTM_UART_Transmit(){
     
     if(btm_Rx_is_busy == 0){
         __HAL_UART_DISABLE_IT(&huart2, UART_IT_RXNE);           //禁止Uart 中斷收資料
-        HAL_UART_Transmit(&huart2,ucBtmTxBuf, BtmData,10);      // Tx 資料發送
+        HAL_UART_Transmit(&huart2,ucBtmTxBuf, BtmData,tx_timeout);      // Tx 資料發送
         __HAL_UART_ENABLE_IT(&huart2, UART_IT_RXNE);            //啟動Uart 中斷收資料
     }
     
@@ -82,7 +81,7 @@ void F_BtmReply02Cmd(){
     ucBtmTxBuf[2] = 0x40;
 
     __HAL_UART_ENABLE_IT(&huart2, UART_IT_RXNE); //----------------
-    HAL_UART_Transmit(&huart2,ucBtmTxBuf, BtmData,10);
+    HAL_UART_Transmit(&huart2,ucBtmTxBuf, BtmData,tx_timeout);
 
 } 
 
@@ -156,7 +155,7 @@ void F_BtmReply03Cmd(unsigned short page){
     
 
     __HAL_UART_ENABLE_IT(&huart2, UART_IT_RXNE); //----------------
-    HAL_UART_Transmit(&huart2,ucBtmTxBuf, BtmData,10);
+    HAL_UART_Transmit(&huart2,ucBtmTxBuf, BtmData,tx_timeout);
 
 } 
 
@@ -239,7 +238,7 @@ void F_BtmReply04Cmd(){
     
 
     __HAL_UART_ENABLE_IT(&huart2, UART_IT_RXNE); //----------------
-    HAL_UART_Transmit(&huart2,ucBtmTxBuf, BtmData,10);
+    HAL_UART_Transmit(&huart2,ucBtmTxBuf, BtmData,tx_timeout);
 
 } 
 
@@ -266,6 +265,25 @@ void F_BtmRead04Cmd(){
 }
 //---------------------0x04 End-----------------------------------------
 
+//設定連線參數 0XC8
+void Btm_Set_Configure_C8(){
+    
+    memset(ucBtmTxBuf,0x00,20);
+    ucBtmTxBuf[0] = '[';	
+    ucBtmTxBuf[19] = ']';
+    
+    ucBtmTxBuf[1] = 0xC8;
+    
+    ucBtmTxBuf[3] = 3; //斷掉重連次數 number of relink
+
+    
+    
+    __HAL_UART_ENABLE_IT(&huart2, UART_IT_RXNE); //----------------
+    HAL_UART_Transmit(&huart2,ucBtmTxBuf, BtmData,tx_timeout);
+
+}
+
+
 
 //設定藍芽名稱
 void Btm_SetDeviceName(char* name,unsigned char Len){
@@ -285,7 +303,7 @@ void Btm_SetDeviceName(char* name,unsigned char Len){
     
     
     __HAL_UART_ENABLE_IT(&huart2, UART_IT_RXNE); //----------------
-    HAL_UART_Transmit(&huart2,ucBtmTxBuf, BtmData,10);
+    HAL_UART_Transmit(&huart2,ucBtmTxBuf, BtmData,tx_timeout);
 
 }
 
@@ -323,7 +341,7 @@ void Clear_Scan_Msg(){
 
 }
 
-
+//Scan TX
 void ScanSensorE0(Sensor_UUID_Type_Def  Sensor_Type){
  
     
@@ -353,7 +371,7 @@ void ScanSensorE0(Sensor_UUID_Type_Def  Sensor_Type){
     
     BTM_UART_Transmit();
    // __HAL_UART_ENABLE_IT(&huart2, UART_IT_RXNE); //----------------
-    //HAL_UART_Transmit(&huart2,ucBtmTxBuf, BtmData,10);  
+    //HAL_UART_Transmit(&huart2,ucBtmTxBuf, BtmData,tx_timeout);  
 
 }
 
@@ -364,6 +382,8 @@ void ScanSensorE0(Sensor_UUID_Type_Def  Sensor_Type){
 unsigned char NearestDevieIndex;
 unsigned char RSSI_Compare;
 unsigned int ANT_ID_Paired_legacy;
+
+//Scan RX  下E0後 回傳的資訊
 void Scan_Re_E0(){
 
 
@@ -378,17 +398,16 @@ void Scan_Re_E0(){
         
         Scan_Msg.Scan_State = (Scan_State_Def)ucBtmRxData[2];
    
-        if(Scan_Msg.Scan_State == Paired_OK){
+        if(Scan_Msg.Scan_State == Paired_OK){ //0x41
             Scan_Msg.ANT_ID = ((unsigned int)ucBtmRxData[5]<< 16) +((unsigned int)ucBtmRxData[4]<< 8)  + ucBtmRxData[3]  ;
             
             Linked_HR_info.ANT_ID = Scan_Msg.ANT_ID; 
             Linked_HR_info.SensorType = ANT_HR;
             
             //儲存E0 掃描連線到的 ANT_HR ID 在運動中斷線就可以連這一個
-            ANT_ID_Paired_legacy = Scan_Msg.ANT_ID;
+            ANT_ID_Paired_legacy = Scan_Msg.ANT_ID;            
             
-            
-            ANT_Icon_Display_Cnt = 10;
+            //ANT_Icon_Display_Cnt = 10;
             
         }else if(Scan_Msg.Scan_State == No_Device){
             Scan_Msg.ANT_ID = 0;
@@ -424,8 +443,7 @@ void Scan_Re_E0(){
                 Scan_Msg.DeviceName[i-6] = ucBtmRxData[i];
             }    
             
-            
-            
+           
             char RejectDeviceName[] = {"Chandler_HRM"};
             if(!charArrayEquals(Scan_Msg.DeviceName , RejectDeviceName )){
             
@@ -444,22 +462,17 @@ void Scan_Re_E0(){
                 BLE_Scan_Device_List.messeage_List[ BLE_Scan_Device_List.Device_Cnt] = Scan_Msg;
                 BLE_Scan_Device_List.Device_Cnt++;
                 //------------------------------------------------------- 
-                
-                
-                
                 //---掃描對象類型是BLE+    ANT資料初始化   
                 Scan_Msg.ANT_ID = 0;
-                
-            
             }
 
         }         
         
     }
     
-    if(Linked_HR_info.Link_state == Linked ){ //藍芽心跳 =>0xFF時  ble會回E0 4F
-        Ask_Link_State_CE();
-    }
+    //if(Linked_HR_info.Link_state == Linked ){ //藍芽心跳 =>0xFF時  ble會回E0 4F
+        //Ask_Link_State_CE();
+    //}
  
 
     //-------------------------------------------------------------------------
@@ -485,7 +498,7 @@ void Pairing_BLE_Sensor_E1(unsigned char DeviceNumber){
         
          BTM_UART_Transmit();
         //__HAL_UART_ENABLE_IT(&huart2, UART_IT_RXNE); //----------------
-        //HAL_UART_Transmit(&huart2,ucBtmTxBuf, BtmData,10);
+        //HAL_UART_Transmit(&huart2,ucBtmTxBuf, BtmData,tx_timeout);
         
     }
 }
@@ -501,12 +514,18 @@ void BLE_Pairing_Re_E1(){
         }
         Pairing_Msg.BLE_ADDR_TYPE =  ucBtmRxData[11];
         
+        if(Scan_Msg.ScanType == BLE_HR){
+            //先把連起來的BLE心跳存起來         
+            memcpy( BLE_Paired_legacy_Info.BLE_Addrs,  Pairing_Msg.BLE_Addrs , 6);
+            BLE_Paired_legacy_Info.Pairing_Sensor_Type = BLE_HR;
+            BLE_Paired_legacy_Info.BLE_ADDR_TYPE = 0x01;
+        }                     
         
         //-------每次掃都清掉 配對清單  固定去連 最先掃到的那一個Sensor
         BLE_Paired_device_list.Paired_Device_Cnt = 0;
         
         
-        //沒有配對過
+        /*//沒有配對過
         if(BLE_Paired_device_list.Paired_Device_Cnt == 0){
             BLE_Paired_device_list.BLE_Paired_Device_Addr_List[BLE_Paired_device_list.Paired_Device_Cnt] = Pairing_Msg;
             BLE_Paired_device_list.Paired_Device_Cnt++;
@@ -519,12 +538,12 @@ void BLE_Pairing_Re_E1(){
                     BLE_Paired_device_list.Paired_Device_Cnt++;
                     break;
                 }
-            }
-            
-        }
+            }            
+        }*/
         
-        Btm_Task_Adder(BLE_HRC_Link);
-       
+        //Btm_Task_Adder(BLE_HRC_Link);
+        
+        Btm_Task_Adder(Connect_Paired_BLE_HR_E2);
         
     }
    
@@ -562,7 +581,7 @@ void Link_Sensor_E2_BLE(Pairing_Meseseage_def paired_msg){
         
      BTM_UART_Transmit();
     //__HAL_UART_ENABLE_IT(&huart2, UART_IT_RXNE); //----------------
-    //HAL_UART_Transmit(&huart2,ucBtmTxBuf, BtmData,10);
+    //HAL_UART_Transmit(&huart2,ucBtmTxBuf, BtmData,tx_timeout);
     
 }
 
@@ -587,7 +606,7 @@ void Link_Sensor_E2_ANT( unsigned int ANT_ID){
     
     
     __HAL_UART_ENABLE_IT(&huart2, UART_IT_RXNE); //----------------
-    HAL_UART_Transmit(&huart2,ucBtmTxBuf, BtmData,10);
+    HAL_UART_Transmit(&huart2,ucBtmTxBuf, BtmData,tx_timeout);
     
   }
   
@@ -616,6 +635,10 @@ void Link_Sensor_Re_E2(){
           // Linked  info 填入目前連線的裝置名稱   跟 藍芽位址       
           memcpy( Linked_HR_info.DeviceName,BLE_Scan_Device_List.messeage_List[NearestDevieIndex].DeviceName,13);
           memcpy( Linked_HR_info.BLE_Addrs,  Pairing_Msg.BLE_Addrs , 6);      
+          
+
+          
+            
           
           //--------------------藍芽掃描清單初始化-----------------------
           Clear_BLE_Scan_Device_List();
@@ -654,7 +677,7 @@ void disconnect_Sensor_E4(Sensor_UUID_Type_Def  Sensor_Type){
 
 
     __HAL_UART_ENABLE_IT(&huart2, UART_IT_RXNE); //----------------
-    HAL_UART_Transmit(&huart2,ucBtmTxBuf, BtmData,10);
+    HAL_UART_Transmit(&huart2,ucBtmTxBuf, BtmData,tx_timeout);
     
 }
 
@@ -695,54 +718,61 @@ void disconnect_Sensor_Re_E4(){
         //Linked_HR_info.Link_state = disconnect;  
     }
 }
-
+unsigned char cb_hr;
 void SensorReceive_CB(){
-    
-    if(ucBtmRxData[3]!=0xFF){                   //有心跳
-        wait_HR_disconnect_Flag = 0;
-        
-        if(Ble_wait_HR_value_First_IN_Flag == 1){
-            Ble_wait_HR_value_First_IN_Flag = 0;
-        }
-        
-        disconnect_buffer_0xFF_Cnt = 0;
-        
-        if(Linked_HR_info.Link_state != wait_disconnect){
-            Linked_HR_info.ANT_ID =0;
-            Linked_HR_info.SensorType = BLE_HR;
-            Linked_HR_info.usHR_bpm = ucBtmRxData[3];
-            Linked_HR_info.Link_state = Linked;
-        }
-        
-        
-        
-           
-    }else if(ucBtmRxData[3] == 0xFF){           //心跳0xFF    暫時離線狀態
+  
+    //只要CB有進來就清0
+    ble_hr_CB_exisit_chk_cnt = 0;  
+  
+    cb_hr = ucBtmRxData[3];
+    if(Scan_Msg.ScanType == BLE_HR){
       
-        if(Linked_HR_info.SensorType == BLE_HR){
-            
-            disconnect_buffer_0xFF_Cnt++;
-            Linked_HR_info.usHR_bpm = 0;
-            
-            if(Ble_wait_HR_value_First_IN_Flag == 1){
-                Linked_HR_info.Link_state = wait_hr_value;
-            }else{
-                Linked_HR_info.Link_state = hr_disconnect;      
-            }
-            
+        if(ucBtmRxData[3]!=0xFF){                   //有心跳
             wait_HR_disconnect_Flag = 0;
             
-            
-            if(disconnect_buffer_0xFF_Cnt == 5){
-                disconnect_Sensor_E4(Linked_HR_info.SensorType);
-          
-            }else if(disconnect_buffer_0xFF_Cnt >5){
-                Ask_Link_State_CE();
+            if(Ble_wait_HR_value_First_IN_Flag == 1){
+                Ble_wait_HR_value_First_IN_Flag = 0;
             }
-             
+            
+            disconnect_buffer_0xFF_Cnt = 0;
+            
+            if(Linked_HR_info.Link_state != wait_disconnect){
+                Linked_HR_info.ANT_ID =0;
+                Linked_HR_info.SensorType = BLE_HR;
+                Linked_HR_info.usHR_bpm = ucBtmRxData[3];
+                Linked_HR_info.Link_state = Linked;
+            }
+            
+            
+            
+              
+        }else if(ucBtmRxData[3] == 0xFF){           //心跳0xFF    暫時離線狀態
+          
+            //if(Linked_HR_info.SensorType == BLE_HR){
+                
+                //disconnect_buffer_0xFF_Cnt++;
+                Linked_HR_info.usHR_bpm = 0;
+                
+                /*if(Ble_wait_HR_value_First_IN_Flag == 1){
+                    Linked_HR_info.Link_state = wait_hr_value;
+                }else{
+                    Linked_HR_info.Link_state = hr_disconnect;      
+                }*/
+                
+              // wait_HR_disconnect_Flag = 0;
+                
+                
+                /*if(disconnect_buffer_0xFF_Cnt == 5){
+                    disconnect_Sensor_E4(Linked_HR_info.SensorType);
+              
+                }else if(disconnect_buffer_0xFF_Cnt >5){
+                    Ask_Link_State_CE();
+                }*/
+                
+            //}
+        
+          
         }
-
-       
     }
     
     Ble_wait_disconnect_Time_out_Cnt = 20;
@@ -756,37 +786,49 @@ void SensorReceive_CB(){
 
 }
 
+unsigned char ant_hr_exisit_cnt;
+
+unsigned char cc_hr;
 
 void SensorReceive_CC(){
 
-    if(ucBtmRxData[3]!=0xFF){
-        wait_HR_disconnect_Flag = 0;
+    //只要CC有進來 就清0
+    ant_hr_CC_exisit_chk_cnt = 0;  
+  
+    cc_hr = ucBtmRxData[3];
+    
+    if(Scan_Msg.ScanType == ANT_HR){
         
-        disconnect_buffer_0xFF_Cnt = 0;
-        memset(Linked_HR_info.DeviceName,0x00,13);
-        Linked_HR_info.ANT_ID = Scan_Msg.ANT_ID;
-        Linked_HR_info.SensorType = ANT_HR;
-        Linked_HR_info.usHR_bpm = ucBtmRxData[3];
-        Linked_HR_info.Link_state = Linked;
-        
-    }else if(ucBtmRxData[3] == 0xFF){                //心跳沒有數值 暫時離線狀態
-        
-        if(Linked_HR_info.SensorType == ANT_HR){
-            disconnect_buffer_0xFF_Cnt++;
-            
-            Linked_HR_info.usHR_bpm = 0;
+        if(ucBtmRxData[3]!=0xFF){
             wait_HR_disconnect_Flag = 0;
             
-            if(disconnect_buffer_0xFF_Cnt == 5){
-                disconnect_Sensor_E4(Linked_HR_info.SensorType);
-            }else if(disconnect_buffer_0xFF_Cnt >5){
-                Ask_Link_State_CF();
-            }
+            disconnect_buffer_0xFF_Cnt = 0;
+            memset(Linked_HR_info.DeviceName,0x00,13);
+            Linked_HR_info.ANT_ID = Scan_Msg.ANT_ID;
+            Linked_HR_info.SensorType = ANT_HR;
+            Linked_HR_info.usHR_bpm = ucBtmRxData[3];
+            Linked_HR_info.Link_state = Linked;
             
+        }else if(ucBtmRxData[3] == 0xFF){                //心跳沒有數值 暫時離線狀態
+            
+            //if(Linked_HR_info.SensorType == ANT_HR){
+                //disconnect_buffer_0xFF_Cnt++;
+                
+                Linked_HR_info.usHR_bpm = 0;
+                //wait_HR_disconnect_Flag = 0;
+                
+                /*if(disconnect_buffer_0xFF_Cnt == 5){
+                    disconnect_Sensor_E4(Linked_HR_info.SensorType);
+                }else if(disconnect_buffer_0xFF_Cnt >5){
+                    Ask_Link_State_CF();
+                }*/
+                
+            //}  
         }
-        
-
     }
+    
+    
+    
 
 }
 
@@ -804,7 +846,7 @@ void Ask_Link_State_CE(){
     ucBtmTxBuf[1] = 0xCE;
     
     __HAL_UART_ENABLE_IT(&huart2, UART_IT_RXNE); //----------------
-    HAL_UART_Transmit(&huart2,ucBtmTxBuf, BtmData,10);
+    HAL_UART_Transmit(&huart2,ucBtmTxBuf, BtmData,tx_timeout);
     
 }
 //------------0xCE Rx  -------------------
@@ -815,14 +857,14 @@ void LinkStateReceive_CE(){
     Linked_HR_info.Link_state = (Linking_State_Def)ucBtmRxData[4];
     
     //確定離線了 才能進行新的掃描
-    if(Linked_HR_info.Link_state == disconnect){
+    /*if(Linked_HR_info.Link_state == disconnect){
         
         wait_HR_disconnect_Flag = 0;
         //把原本還沒離線時存下來的任務拿出來執行
         
         Btm_Task_Adder(btm_HRC_disconnect_Task_Temp);
         btm_HRC_disconnect_Task_Temp = No_Task;
-    }
+    }*/
     
     
     
@@ -857,7 +899,7 @@ void Ask_Link_State_CF(){
     ucBtmTxBuf[1] = 0xCF;
     
     __HAL_UART_ENABLE_IT(&huart2, UART_IT_RXNE); //----------------
-    HAL_UART_Transmit(&huart2,ucBtmTxBuf, BtmData,10);
+    HAL_UART_Transmit(&huart2,ucBtmTxBuf, BtmData,tx_timeout);
     
 }
 
@@ -868,7 +910,7 @@ void LinkStateReceive_CF(){
     Linked_HR_info.Link_state = (Linking_State_Def)ucBtmRxData[4];
     
     //確定離線了 才能進行新的掃描
-    if(Linked_HR_info.Link_state == disconnect){
+    /*if(Linked_HR_info.Link_state == disconnect){
         wait_HR_disconnect_Flag = 0;
         //把原本還沒離線時存下來的任務拿出來執行
         
@@ -876,7 +918,7 @@ void LinkStateReceive_CF(){
         
         Btm_Task_Adder(btm_HRC_disconnect_Task_Temp);
         btm_HRC_disconnect_Task_Temp = No_Task;
-    }
+    }*/
     
 }
 
@@ -908,7 +950,7 @@ void F_BtmReplyCmd(unsigned char data){
     ucBtmTxBuf[19] = ']';
     
     __HAL_UART_ENABLE_IT(&huart2, UART_IT_RXNE); //----------------
-    HAL_UART_Transmit(&huart2,ucBtmTxBuf, BtmData,10);
+    HAL_UART_Transmit(&huart2,ucBtmTxBuf, BtmData,tx_timeout);
     
 }
 
@@ -963,7 +1005,7 @@ void F_BtmReply35Cmd(void){
     ucBtmTxBuf[19] = ']';
   
   __HAL_UART_ENABLE_IT(&huart2, UART_IT_RXNE); //----------------
-  HAL_UART_Transmit(&huart2,ucBtmTxBuf, BtmData,10);
+  HAL_UART_Transmit(&huart2,ucBtmTxBuf, BtmData,tx_timeout);
   
 }
     
@@ -1104,7 +1146,7 @@ void F_BtmReply36Cmd(void){
     ucBtmTxBuf[19] = ']';
     
     __HAL_UART_ENABLE_IT(&huart2, UART_IT_RXNE); //----------------
-    HAL_UART_Transmit(&huart2,ucBtmTxBuf, BtmData,10);
+    HAL_UART_Transmit(&huart2,ucBtmTxBuf, BtmData,tx_timeout);
 
     
     IntoReadyMode_Process(); //r進入運動
@@ -1471,7 +1513,7 @@ void F_BtmReply44Cmd(void){
     ucBtmTxBuf[19] = ']';
     
     
-    HAL_UART_Transmit(&huart2,ucBtmTxBuf, BtmData,10);
+    HAL_UART_Transmit(&huart2,ucBtmTxBuf, BtmData,tx_timeout);
     __HAL_UART_ENABLE_IT(&huart2, UART_IT_RXNE); //----------------
     
     
@@ -1571,7 +1613,7 @@ void F_BtmReply46Cmd(void){
     ucBtmTxBuf[18] = 0x00;       // NA
     ucBtmTxBuf[19] = ']';
     
-    HAL_UART_Transmit(&huart2,ucBtmTxBuf, BtmData,10);
+    HAL_UART_Transmit(&huart2,ucBtmTxBuf, BtmData,tx_timeout);
     __HAL_UART_ENABLE_IT(&huart2, UART_IT_RXNE); //-----------資料丟完再開啟中斷-----
     
 }
@@ -1616,7 +1658,7 @@ void F_BtmReply47Cmd(void){
     ucBtmTxBuf[11] = 0;//((ucProductionSerialNumber[23]/10)+0x30);
     ucBtmTxBuf[19] = ']';
     
-    HAL_UART_Transmit(&huart2,ucBtmTxBuf, BtmData,10);
+    HAL_UART_Transmit(&huart2,ucBtmTxBuf, BtmData,tx_timeout);
     
     __HAL_UART_ENABLE_IT(&huart2, UART_IT_RXNE); //----------------
     
@@ -1672,7 +1714,7 @@ void F_BtmReply50Cmd(void){
         ucBtmTxBuf[19] = ']';
         
         __HAL_UART_ENABLE_IT(&huart2, UART_IT_RXNE); //----------------
-        HAL_UART_Transmit(&huart2,ucBtmTxBuf, BtmData,10);
+        HAL_UART_Transmit(&huart2,ucBtmTxBuf, BtmData,tx_timeout);
     }
     
 }
@@ -1988,7 +2030,7 @@ void F_Btm_FTMS_B0(unsigned char ucPage){
     ucBtmTxBuf[19] = ']';
     
     __HAL_UART_ENABLE_IT(&huart2, UART_IT_RXNE); //----------------
-    HAL_UART_Transmit(&huart2,ucBtmTxBuf, BtmData,10);
+    HAL_UART_Transmit(&huart2,ucBtmTxBuf, BtmData,tx_timeout);
     
     
 }
@@ -2011,7 +2053,7 @@ void F_Btm_FTMS_B0_HR_Switch(unsigned char SW){
     ucBtmTxBuf[19] = ']';
     
     __HAL_UART_ENABLE_IT(&huart2, UART_IT_RXNE); //----------------
-    HAL_UART_Transmit(&huart2,ucBtmTxBuf, BtmData,10);
+    HAL_UART_Transmit(&huart2,ucBtmTxBuf, BtmData,tx_timeout);
     
     
 }*/
@@ -2140,7 +2182,7 @@ void IndooeBike_B1(){
     
     BTM_UART_Transmit();
     //__HAL_UART_ENABLE_IT(&huart2, UART_IT_RXNE); //----------------
-    //HAL_UART_Transmit(&huart2,ucBtmTxBuf, BtmData,10);
+    //HAL_UART_Transmit(&huart2,ucBtmTxBuf, BtmData,tx_timeout);
     
 }
 
@@ -2468,7 +2510,7 @@ void Treadmill_B1(){
     ucBtmTxBuf[19] = ']';
     
     __HAL_UART_ENABLE_IT(&huart2, UART_IT_RXNE); //----------------
-    HAL_UART_Transmit(&huart2,ucBtmTxBuf, BtmData,10);
+    HAL_UART_Transmit(&huart2,ucBtmTxBuf, BtmData,tx_timeout);
     
 }
 
@@ -2699,7 +2741,7 @@ void OLDTreadmill_B1__(){
     ucBtmTxBuf[19] = ']';
     
     __HAL_UART_ENABLE_IT(&huart2, UART_IT_RXNE); //----------------
-    HAL_UART_Transmit(&huart2,ucBtmTxBuf, BtmData,10);
+    HAL_UART_Transmit(&huart2,ucBtmTxBuf, BtmData,tx_timeout);
     
 }
 
@@ -3044,7 +3086,7 @@ void Set_Spindown_SPEED(unsigned short Speed_Low, unsigned short Speed_High ){
     ucBtmTxBuf[19] = ']';
 
     __HAL_UART_ENABLE_IT(&huart2, UART_IT_RXNE); //----------------
-    HAL_UART_Transmit(&huart2,ucBtmTxBuf, BtmData,10);
+    HAL_UART_Transmit(&huart2,ucBtmTxBuf, BtmData,tx_timeout);
 
 }
 
@@ -3065,7 +3107,7 @@ void Set_Spindown_Success(unsigned short SpindownTime){
     ucBtmTxBuf[19] = ']';
 
     __HAL_UART_ENABLE_IT(&huart2, UART_IT_RXNE); //----------------
-    HAL_UART_Transmit(&huart2,ucBtmTxBuf, BtmData,10);
+    HAL_UART_Transmit(&huart2,ucBtmTxBuf, BtmData,tx_timeout);
 
 }
 
@@ -3082,7 +3124,7 @@ void Set_Spindown_Error(){
     ucBtmTxBuf[19] = ']';
 
     __HAL_UART_ENABLE_IT(&huart2, UART_IT_RXNE); //----------------
-    HAL_UART_Transmit(&huart2,ucBtmTxBuf, BtmData,10);
+    HAL_UART_Transmit(&huart2,ucBtmTxBuf, BtmData,tx_timeout);
 }
 
 void Set_Spindown_StopPedaling(){
@@ -3098,7 +3140,7 @@ void Set_Spindown_StopPedaling(){
     ucBtmTxBuf[19] = ']';
 
     __HAL_UART_ENABLE_IT(&huart2, UART_IT_RXNE); //----------------
-    HAL_UART_Transmit(&huart2,ucBtmTxBuf, BtmData,10);
+    HAL_UART_Transmit(&huart2,ucBtmTxBuf, BtmData,tx_timeout);
 }
 
 
@@ -3207,7 +3249,7 @@ void F_Btm_FEC_B4_SET_Data(unsigned char page){
     ucBtmTxBuf[19] = ']';
 
     __HAL_UART_ENABLE_IT(&huart2, UART_IT_RXNE); //----------------
-    HAL_UART_Transmit(&huart2,ucBtmTxBuf, BtmData,10);
+    HAL_UART_Transmit(&huart2,ucBtmTxBuf, BtmData,tx_timeout);
     
 }
 
@@ -3245,7 +3287,7 @@ void F_SetFEC_State(FEC_State_Def FEC_State){
     ucBtmTxBuf[19] = ']';
     
     __HAL_UART_ENABLE_IT(&huart2, UART_IT_RXNE); //----------------
-    HAL_UART_Transmit(&huart2,ucBtmTxBuf, BtmData,10);
+    HAL_UART_Transmit(&huart2,ucBtmTxBuf, BtmData,tx_timeout);
 }
 
 //----------------------------------------0xB4 END --------------------------------------------------------
@@ -3287,7 +3329,7 @@ void F_Btm_FEC_B5_SET_ANT_ID(void){
     
     
     __HAL_UART_ENABLE_IT(&huart2, UART_IT_RXNE); //----------------
-    HAL_UART_Transmit(&huart2,ucBtmTxBuf, BtmData,10);
+    HAL_UART_Transmit(&huart2,ucBtmTxBuf, BtmData,tx_timeout);
  
 }
 

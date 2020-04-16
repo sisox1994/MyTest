@@ -36,17 +36,17 @@ void Btm_Task_Adder(Btm_Task_Def btmTask){
     if( btm_Task_Cnt == 0 ){
         
         //--如果要掃描心跳 Sensor 先確認現在連線狀態  如果連線中就先塞一個斷線指令--------
-        if((btmTask == Scan_ANT_HRC_Sensor) || (btmTask == Scan_BLE_HRC_Sensor)){  
+        //if((btmTask == Scan_ANT_HRC_Sensor) || (btmTask == Scan_BLE_HRC_Sensor)){  
             
             //剛下完E4  要等sensor 離線 才能在搜尋
-            if(wait_HR_disconnect_Flag == 0){
-                Linked_Check_For_New_Scan(btmTask);
-            }  
+            //if(wait_HR_disconnect_Flag == 0){
+                //Linked_Check_For_New_Scan(btmTask);
+            //}  
             
-        }else{
+        //}else{
             btmTask_List[btm_Task_Cnt] = btmTask;
             btm_Task_Cnt++;
-        }
+        //}
         
     }else{
         
@@ -59,23 +59,23 @@ void Btm_Task_Adder(Btm_Task_Def btmTask){
                 break;
             }
         }
-         Task_Exit_Flag = 0;  //允許重複
+        Task_Exit_Flag = 0;  //允許重複
         if(Task_Exit_Flag == 0){
             
             if(btm_Task_Cnt < Task_Amount){  //最多 N個任務在駐列清單
                 
                 //--如果要掃描心跳 Sensor 先確認現在連線狀態  如果連線中就先塞一個斷線指令--------
-                if((btmTask == Scan_ANT_HRC_Sensor) || (btmTask == Scan_BLE_HRC_Sensor)){   
+                //if((btmTask == Scan_ANT_HRC_Sensor) || (btmTask == Scan_BLE_HRC_Sensor)){   
                     
                     //剛下完E4  要等sensor 離線 才能在搜尋
-                    if(wait_HR_disconnect_Flag == 0){
-                        Linked_Check_For_New_Scan(btmTask);
-                    }   
+                    //if(wait_HR_disconnect_Flag == 0){
+                        //Linked_Check_For_New_Scan(btmTask);
+                    //}   
                         
-                }else{
+                //}else{
                     btmTask_List[btm_Task_Cnt] = btmTask;
                     btm_Task_Cnt++;   
-                }
+                //}
             }   
         } 
     }
@@ -131,9 +131,9 @@ void BTM_background_Task(){
         T100ms_Btm_Task_Flag = 0;
         
         //---藍芽 連線會比較久 斷線也比較久----
-        ble_disconnect_wait_Process();
-        ble_Wait_First_CB_Value();
-        ble_ReSearching_TimeOut();
+        //ble_disconnect_wait_Process();
+        //ble_Wait_First_CB_Value();
+        //ble_ReSearching_TimeOut();
         //-------------------------------------
         
         if(btm_is_ready == 1){  //在Btm  Rest 完成才執行任務
@@ -144,6 +144,9 @@ void BTM_background_Task(){
                 switch(btmTask_List[0]){
                   case Connect_Paired_ANT_HR_E2:  
                     Link_Sensor_E2_ANT( ANT_ID_Paired_legacy);
+                    break;
+                  case Connect_Paired_BLE_HR_E2:
+                    Link_Sensor_E2_BLE(BLE_Paired_legacy_Info);
                     break;
                   case Scan_BLE_HRC_Sensor:
                     ScanSensorE0(BLE_HR);
@@ -189,7 +192,7 @@ void BTM_background_Task(){
                     F_BtmReply36Cmd();
                     break;
                   case C_39Val:
-                    F_BtmReply39Cmd();
+                    //F_BtmReply39Cmd();
                     break;
                   case C_47Val:
                     F_BtmReply47Cmd();
@@ -217,7 +220,7 @@ void BTM_background_Task(){
                     break;     
                     
                   case FTMS_Data_Broadcast:
-                    F_Btm_FTMS_B1();
+                    //F_Btm_FTMS_B1();
                     break;
                      
                   case FEC_SET_SN:

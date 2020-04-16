@@ -55,6 +55,15 @@ extern unsigned char AutoPause_Flag; //隱藏功能
 
 extern char ucProductionSerialNumber[14];     //生產序號
 
+//用來確認0xCB 或 0xCC 有沒有進來
+extern unsigned int ant_hr_CC_exisit_chk_cnt;
+extern unsigned int ble_hr_CB_exisit_chk_cnt;
+
+//用0xCB 跟 0xCB來確認 心跳是否有斷線的Flag
+extern unsigned char ant_CC_exisit_flag;
+extern unsigned char ble_CB_exisit_flag;
+
+
 //----------IWDG ---------
 //#include "stm32f0xx_hal_iwdg.h"
 #define Config_WDG   0
@@ -136,6 +145,8 @@ extern User_Program_Data_Def MyUser_1;
 extern User_Program_Data_Def MyUser_2;
 
 extern unsigned int ANT_ID_Paired_legacy;
+extern Pairing_Meseseage_def BLE_Paired_legacy_Info;
+
 extern unsigned short usNowHeartRate;    //使用者心跳 
 extern unsigned char  HeartRate_Is_Exist_Flag;
 extern void F_HeartRate_Supervisor();
