@@ -274,8 +274,8 @@ void Btm_Set_Configure_C8(){
     
     ucBtmTxBuf[1] = 0xC8;
     
-    ucBtmTxBuf[3] = 3; //斷掉重連次數 number of relink
-
+    ucBtmTxBuf[3] = 3;      //斷掉重連次數 number of relink
+    ucBtmTxBuf[4] = 7;   //ant+ pairing proximity   1~10
     
     
     __HAL_UART_ENABLE_IT(&huart2, UART_IT_RXNE); //----------------

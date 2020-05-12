@@ -192,7 +192,7 @@ void BTM_background_Task(){
                     F_BtmReply36Cmd();
                     break;
                   case C_39Val:
-                    //F_BtmReply39Cmd();
+                    F_BtmReply39Cmd();
                     break;
                   case C_47Val:
                     F_BtmReply47Cmd();
@@ -220,7 +220,7 @@ void BTM_background_Task(){
                     break;     
                     
                   case FTMS_Data_Broadcast:
-                    //F_Btm_FTMS_B1();
+                    F_Btm_FTMS_B1();
                     break;
                      
                   case FEC_SET_SN:
@@ -233,6 +233,9 @@ void BTM_background_Task(){
                     F_Btm_FEC_B4_SET_Data(1);
                     break;  
 
+                  case Connectuin_Configure_C8:
+                    //Btm_Set_Configure_C8();
+                    break;
                   case No_Task:
                     break;
                 }

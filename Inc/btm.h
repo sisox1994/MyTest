@@ -81,7 +81,7 @@ typedef enum{
     FEC_SET_SN = 76,
     FEC_Data_Config_Page_0 = 77,
     FEC_Data_Config_Page_1 = 78,
-
+    Connectuin_Configure_C8 = 79,
 }Btm_Task_Def;
 
 typedef enum{
@@ -238,7 +238,7 @@ typedef struct{
     Error_Type_Def  Error_Type;
 }OTA_FW_Transmit_Info_Def;
 
-#define Task_Amount  6
+#define Task_Amount  8
 
 extern CloudRun_Init_INFO_Def CloudRun_Init_INFO;
 extern unsigned char FW_Transmiting_03_Flag;
@@ -284,6 +284,8 @@ void ble_Wait_First_CB_Value();
 
 // ¶³¶] func
 extern unsigned char Cloud_Run_Initial_Busy_Flag;
+
+void Btm_Set_Configure_C8();
 
 void APP_background_Broadcast();
 void CloudRun_Workout_Data_Broadcast();

@@ -1,3 +1,4 @@
+
 /**
   ******************************************************************************
   * @file    stm32f4xx_hal_uart.c
@@ -1532,14 +1533,56 @@ void Uart_error_flush(){
 }
 
 
+uint32_t error_cnt__;
+
+uint32_t isrflags;  
+uint32_t cr1its;    
+uint32_t cr3its;   
+uint32_t errorflags;
+uint32_t dmarequest;
+
+
+uint8_t RXNE_bit;
+uint8_t ORE_bit;
+uint8_t RXNEIE_bit;
+
 void HAL_UART_IRQHandler(UART_HandleTypeDef *huart)
 {
-   uint32_t isrflags   = READ_REG(huart->Instance->SR);
-   uint32_t cr1its     = READ_REG(huart->Instance->CR1);
-   uint32_t cr3its     = READ_REG(huart->Instance->CR3);
-   uint32_t errorflags = 0x00U;
-   uint32_t dmarequest = 0x00U;
+   //isrflags   = READ_REG(huart->Instance->SR);
+   //cr1its     = READ_REG(huart->Instance->CR1);
+   //cr3its     = READ_REG(huart->Instance->CR3);
+   
+  
+   isrflags   = huart->Instance->SR;
+   cr1its     = huart->Instance->CR1;
+   cr3its     = huart->Instance->CR3;
+   
+   
+   errorflags = 0x00U;
+   dmarequest = 0x00U;
 
+   if(isrflags & USART_SR_RXNE_Msk){
+       RXNE_bit = 1;
+   }else{
+       RXNE_bit = 0;
+   }
+   
+   if(isrflags & USART_SR_ORE_Msk){
+       ORE_bit = 1;       
+   }else{
+       ORE_bit = 0;       
+   }
+   
+   if(cr1its & USART_CR1_RXNEIE_Msk){
+       RXNEIE_bit = 1;
+   }else{
+       RXNEIE_bit = 0;     
+   }
+   
+   
+   
+   __asm("NOP");
+   
   /* If no error occurs */
   errorflags = (isrflags & (uint32_t)(USART_SR_PE | USART_SR_FE | USART_SR_ORE | USART_SR_NE));
   if(errorflags == RESET)
@@ -1555,6 +1598,9 @@ void HAL_UART_IRQHandler(UART_HandleTypeDef *huart)
   /* If some errors occur */
   if((errorflags != RESET) && (((cr3its & USART_CR3_EIE) != RESET) || ((cr1its & (USART_CR1_RXNEIE | USART_CR1_PEIE)) != RESET)))
   {
+      
+
+      
     /* UART parity error interrupt occurred ----------------------------------*/
     if(((isrflags & USART_SR_PE) != RESET) && ((cr1its & USART_CR1_PEIE) != RESET))
     {
@@ -1580,7 +1626,19 @@ void HAL_UART_IRQHandler(UART_HandleTypeDef *huart)
       
       Uart_error_flush();
     }
-
+    while(isrflags&0x08){
+        
+        error_cnt__++;
+        isrflags  = huart->Instance->SR;
+        huart->Instance->SR = huart->Instance->SR&0xF7; //管他3721 直接清掉 把ORE 設成0
+        Uart_error_flush();
+        
+        for(int i =0;i<100000;i++){
+         __asm("NOP");
+        }       
+    }
+    
+    
     /* Call UART Error Call back function if need be --------------------------*/    
     if(huart->ErrorCode != HAL_UART_ERROR_NONE)
     {

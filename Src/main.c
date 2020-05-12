@@ -160,6 +160,8 @@ int main(void)
         Btm_Task_Adder(FEC_SET_SN);               //0xB5
         Btm_Task_Adder(FEC_Data_Config_Page_0); // 0xB4 page 0
         Btm_Task_Adder(FEC_Data_Config_Page_1); // 0xB4 page 1
+        Btm_Task_Adder(Connectuin_Configure_C8);
+        
         
         
     }else if(OTA_Mode_Flag == 1){
