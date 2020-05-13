@@ -79,6 +79,8 @@ void F_HeartRate_Supervisor(){
             
             if(usNowHeartRate == 0){
                 HeartRate_Is_Exist_Flag = 0;
+                Linked_HR_info.SensorType = (Sensor_UUID_Type_Def)0; //防止斷線後 因為手握心跳  觸發錯誤 ICON
+                
             } 
         }
         
