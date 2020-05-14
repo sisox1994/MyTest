@@ -1522,11 +1522,14 @@ HAL_StatusTypeDef HAL_UART_AbortReceive_IT(UART_HandleTypeDef *huart)
   * @retval None
   */
 extern UART_HandleTypeDef huart2;
+extern UART_HandleTypeDef huart6;
 uint16_t ore_err_cnt = 0;
 
 void Uart_error_flush(){
 
   __HAL_UART_CLEAR_OREFLAG(&huart2);
+  __HAL_UART_CLEAR_OREFLAG(&huart6);
+  
   ore_err_cnt++;
 
    
@@ -1573,7 +1576,7 @@ void HAL_UART_IRQHandler(UART_HandleTypeDef *huart)
        ORE_bit = 0;       
    }
    
-   if(cr1its & USART_CR1_RXNEIE_Msk){
+   if((huart->Instance->CR1) & USART_CR1_RXNEIE_Msk){
        RXNEIE_bit = 1;
    }else{
        RXNEIE_bit = 0;     
@@ -1584,11 +1587,11 @@ void HAL_UART_IRQHandler(UART_HandleTypeDef *huart)
    __asm("NOP");
    
   /* If no error occurs */
-  errorflags = (isrflags & (uint32_t)(USART_SR_PE | USART_SR_FE | USART_SR_ORE | USART_SR_NE));
+  errorflags = ((huart->Instance->SR) & (uint32_t)(USART_SR_PE | USART_SR_FE | USART_SR_ORE | USART_SR_NE));
   if(errorflags == RESET)
   {
     /* UART in mode Receiver -------------------------------------------------*/
-    if(((isrflags & USART_SR_RXNE) != RESET) && ((cr1its & USART_CR1_RXNEIE) != RESET))
+    if((((huart->Instance->SR) & USART_SR_RXNE) != RESET) && (((huart->Instance->CR1) & USART_CR1_RXNEIE) != RESET))
     {
       UART_Receive_IT(huart);
       return;
@@ -1596,46 +1599,46 @@ void HAL_UART_IRQHandler(UART_HandleTypeDef *huart)
   }  
 
   /* If some errors occur */
-  if((errorflags != RESET) && (((cr3its & USART_CR3_EIE) != RESET) || ((cr1its & (USART_CR1_RXNEIE | USART_CR1_PEIE)) != RESET)))
+  if((errorflags != RESET) && ((((huart->Instance->CR3) & USART_CR3_EIE) != RESET) || (((huart->Instance->CR1) & (USART_CR1_RXNEIE | USART_CR1_PEIE)) != RESET)))
   {
       
 
       
     /* UART parity error interrupt occurred ----------------------------------*/
-    if(((isrflags & USART_SR_PE) != RESET) && ((cr1its & USART_CR1_PEIE) != RESET))
+    if((((huart->Instance->SR) & USART_SR_PE) != RESET) && (((huart->Instance->CR1) & USART_CR1_PEIE) != RESET))
     {
       huart->ErrorCode |= HAL_UART_ERROR_PE;
     }
     
     /* UART noise error interrupt occurred -----------------------------------*/
-    if(((isrflags & USART_SR_NE) != RESET) && ((cr3its & USART_CR3_EIE) != RESET))
+    if((((huart->Instance->SR) & USART_SR_NE) != RESET) && (((huart->Instance->CR3) & USART_CR3_EIE) != RESET))
     {
       huart->ErrorCode |= HAL_UART_ERROR_NE;
     }
     
     /* UART frame error interrupt occurred -----------------------------------*/
-    if(((isrflags & USART_SR_FE) != RESET) && ((cr3its & USART_CR3_EIE) != RESET))
+    if((((huart->Instance->SR) & USART_SR_FE) != RESET) && (((huart->Instance->CR3) & USART_CR3_EIE) != RESET))
     {
       huart->ErrorCode |= HAL_UART_ERROR_FE;
     }
     
     /* UART Over-Run interrupt occurred --------------------------------------*/
-    if(((isrflags & USART_SR_ORE) != RESET) && ((cr3its & USART_CR3_EIE) != RESET))
+    if((((huart->Instance->SR) & USART_SR_ORE) != RESET) && (((huart->Instance->CR3) & USART_CR3_EIE) != RESET))
     { 
       huart->ErrorCode |= HAL_UART_ERROR_ORE;
       
       Uart_error_flush();
     }
-    while(isrflags&0x08){
+    while((huart->Instance->SR)&0x08){
         
         error_cnt__++;
-        isrflags  = huart->Instance->SR;
+        (huart->Instance->SR)  = huart->Instance->SR;
         huart->Instance->SR = huart->Instance->SR&0xF7; //管他3721 直接清掉 把ORE 設成0
         Uart_error_flush();
         
-        for(int i =0;i<100000;i++){
-         __asm("NOP");
-        }       
+        //for(int i =0;i<100000;i++){
+         //__asm("NOP");
+        //}       
     }
     
     
@@ -1643,7 +1646,7 @@ void HAL_UART_IRQHandler(UART_HandleTypeDef *huart)
     if(huart->ErrorCode != HAL_UART_ERROR_NONE)
     {
       /* UART in mode Receiver -----------------------------------------------*/
-      if(((isrflags & USART_SR_RXNE) != RESET) && ((cr1its & USART_CR1_RXNEIE) != RESET))
+      if((((huart->Instance->SR) & USART_SR_RXNE) != RESET) && (((huart->Instance->CR1) & USART_CR1_RXNEIE) != RESET))
       {
         UART_Receive_IT(huart);
       }
@@ -1699,14 +1702,14 @@ void HAL_UART_IRQHandler(UART_HandleTypeDef *huart)
   } /* End if some error occurs */
 
   /* UART in mode Transmitter ------------------------------------------------*/
-  if(((isrflags & USART_SR_TXE) != RESET) && ((cr1its & USART_CR1_TXEIE) != RESET))
+  if((((huart->Instance->SR) & USART_SR_TXE) != RESET) && (((huart->Instance->CR1) & USART_CR1_TXEIE) != RESET))
   {
     UART_Transmit_IT(huart);
     return;
   }
   
   /* UART in mode Transmitter end --------------------------------------------*/
-  if(((isrflags & USART_SR_TC) != RESET) && ((cr1its & USART_CR1_TCIE) != RESET))
+  if((((huart->Instance->SR) & USART_SR_TC) != RESET) && (((huart->Instance->CR1) & USART_CR1_TCIE) != RESET))
   {
     UART_EndTransmit_IT(huart);
     return;

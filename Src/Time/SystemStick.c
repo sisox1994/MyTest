@@ -79,6 +79,8 @@ void ClearStd_1_Sec_Cnt(){
 }
 void time(){
     
+    F_NFCSendCmd();
+    
     BuzzerCheck();  
     //------------------------------------------------//
     if(Btm_Timer_Cnt%200 == 0){    //BTM 排程器用
@@ -195,7 +197,17 @@ void time(){
     }
     if(NeverClearCnt%1000 == 0){   //偵測幾秒回IDLE 模式
         T1s_Idle = 1;
+        
+        if(ucNFCCmdCnt != C_ReadCard){  //非read 模式 1s慢掃就好
+           b_NFCTXFlag = 1;
+        }      
+        
     }
+    if(NeverClearCnt % 12 == 0){       //read 直接催到12ms
+        if(ucNFCCmdCnt == C_ReadCard){
+           b_NFCTXFlag = 1;
+        } 
+    }  
     
     if(NeverClearCnt%500 == 0){  //偵測藍芽喇叭連線用
         T500ms_BTSPK_Det_Flag = 1;

@@ -49,10 +49,11 @@ typedef enum{
     BLE_HRC_Disconnect   = 3,
     ANT_HRC_Disconnect   = 4,
     BLE_HRC_Pairing      = 5,
-    BLE_HRC_Link         = 6,
     
     Connect_Paired_ANT_HR_E2 = 7,
     Connect_Paired_BLE_HR_E2 = 8,
+    Connect_Paired_NFC_BLE_HR_E2 = 9,
+    
     
     C_02Val = 12,
     C_04Val = 14,
@@ -176,11 +177,6 @@ typedef struct{
 }Pairing_Meseseage_def;
 
 
-typedef struct{    
-    unsigned char Paired_Device_Cnt;
-    Pairing_Meseseage_def BLE_Paired_Device_Addr_List[10]; //儲存已經成功配對到的藍芽裝置地址
-
-}BLE_Paired_Device_Addr_List_def;
 
 
 typedef struct{
@@ -247,7 +243,7 @@ extern unsigned int uiAppStageDist;
 extern unsigned int uiAppTotalDist;
 extern Cmd_39_outData_Def  Cloud_0x39_Info;
 extern BLE_Device_List_def BLE_Scan_Device_List;
-extern BLE_Paired_Device_Addr_List_def  BLE_Paired_device_list; // 成功配對 就把資訊加入清單裡
+
 extern Now_Linked_HR_Sensor_Info_Def Linked_HR_info;
 extern unsigned char btm_Task_Cnt;
 extern Scan_Meseseage_def Scan_Msg;
@@ -276,6 +272,7 @@ void ScanSensorE0(Sensor_UUID_Type_Def  Sensor_Type);
 void Pairing_BLE_Sensor_E1(unsigned char DeviceNumber);
 
 void Link_Sensor_E2_BLE(Pairing_Meseseage_def paired_msg);
+void Link_BLE_NFC_Pairing_E2();
 void Link_Sensor_E2_ANT( unsigned int ANT_ID);
 void Ask_Link_State_CE();
 void Ask_Link_State_CF();

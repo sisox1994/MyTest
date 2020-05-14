@@ -148,6 +148,9 @@ void BTM_background_Task(){
                   case Connect_Paired_BLE_HR_E2:
                     Link_Sensor_E2_BLE(BLE_Paired_legacy_Info);
                     break;
+                  case Connect_Paired_NFC_BLE_HR_E2:
+                    Link_BLE_NFC_Pairing_E2();
+                    break;
                   case Scan_BLE_HRC_Sensor:
                     ScanSensorE0(BLE_HR);
                     break;
@@ -163,9 +166,6 @@ void BTM_background_Task(){
                     
                   case BLE_HRC_Pairing:
                     Pairing_BLE_Sensor_E1(BLE_Scan_Device_List.messeage_List[NearestDevieIndex].DeviceNumber);
-                    break;
-                  case BLE_HRC_Link:
-                    Link_Sensor_E2_BLE(BLE_Paired_device_list.BLE_Paired_Device_Addr_List[0]);
                     break;
                     
                     //-----------------Fw Update---------------------------

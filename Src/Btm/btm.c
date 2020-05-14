@@ -39,7 +39,6 @@ unsigned char ucBtmRxData[BtmData];
 Scan_Meseseage_def    Scan_Msg;
 BLE_Device_List_def   BLE_Scan_Device_List;
 Pairing_Meseseage_def Pairing_Msg;             //當下配對取得的地址資訊
-BLE_Paired_Device_Addr_List_def  BLE_Paired_device_list; // 成功配對 就把資訊加入清單裡
 
 Now_Linked_HR_Sensor_Info_Def Linked_HR_info;
 Pairing_Meseseage_def BLE_Paired_legacy_Info;
@@ -517,38 +516,80 @@ void BLE_Pairing_Re_E1(){
         if(Scan_Msg.ScanType == BLE_HR){
             //先把連起來的BLE心跳存起來         
             memcpy( BLE_Paired_legacy_Info.BLE_Addrs,  Pairing_Msg.BLE_Addrs , 6);
-            BLE_Paired_legacy_Info.Pairing_Sensor_Type = BLE_HR;
-            BLE_Paired_legacy_Info.BLE_ADDR_TYPE = 0x01;
-        }                     
-        
-        //-------每次掃都清掉 配對清單  固定去連 最先掃到的那一個Sensor
-        BLE_Paired_device_list.Paired_Device_Cnt = 0;
-        
-        
-        /*//沒有配對過
-        if(BLE_Paired_device_list.Paired_Device_Cnt == 0){
-            BLE_Paired_device_list.BLE_Paired_Device_Addr_List[BLE_Paired_device_list.Paired_Device_Cnt] = Pairing_Msg;
-            BLE_Paired_device_list.Paired_Device_Cnt++;
-        }else{
-            
-            for(unsigned char i = 0; i < (BLE_Paired_device_list.Paired_Device_Cnt); i++){
-                //如果清單裡面沒有才新增
-                if(!charArrayEquals(BLE_Paired_device_list.BLE_Paired_Device_Addr_List[i].BLE_Addrs , Pairing_Msg.BLE_Addrs)){
-                    BLE_Paired_device_list.BLE_Paired_Device_Addr_List[BLE_Paired_device_list.Paired_Device_Cnt] = Pairing_Msg;
-                    BLE_Paired_device_list.Paired_Device_Cnt++;
-                    break;
-                }
-            }            
-        }*/
-        
-        //Btm_Task_Adder(BLE_HRC_Link);
-        
+            BLE_Paired_legacy_Info.Pairing_Sensor_Type = Pairing_Msg.Pairing_Sensor_Type;
+            BLE_Paired_legacy_Info.BLE_ADDR_TYPE = Pairing_Msg.BLE_ADDR_TYPE ;
+        }          
+
         Btm_Task_Adder(Connect_Paired_BLE_HR_E2);
         
     }
    
 }
 
+unsigned char NFC_Connect_Wait_flag;
+
+void Link_BLE_NFC_Pairing_E2(){
+    
+    Pairing_Msg.Pairing_Sensor_Type = BLE_HR;
+    for(unsigned char i = 0; i < 6; i++ ){
+        Pairing_Msg.BLE_Addrs[i] = ucNFC_BleID[i];
+    }
+    Pairing_Msg.BLE_ADDR_TYPE = 1;
+    
+    Scan_Msg.ScanType = BLE_HR;
+    
+    
+    //先把連起來的BLE心跳存起來         
+    memcpy( BLE_Paired_legacy_Info.BLE_Addrs,  Pairing_Msg.BLE_Addrs , 6);
+    BLE_Paired_legacy_Info.Pairing_Sensor_Type = Pairing_Msg.Pairing_Sensor_Type;
+    BLE_Paired_legacy_Info.BLE_ADDR_TYPE = Pairing_Msg.BLE_ADDR_TYPE;
+    
+    
+    if( (ant_CC_exisit_flag == 1) || (ble_CB_exisit_flag == 1)){    
+        if(ant_CC_exisit_flag == 1){
+            Btm_Task_Adder(ANT_HRC_Disconnect);
+        }else if(ble_CB_exisit_flag == 1){
+            Btm_Task_Adder(BLE_HRC_Disconnect);
+        }
+        
+        
+        NFC_Connect_Wait_flag = 1;
+    }else{
+    
+        //如果沒有連線中 就直接連
+        Btm_Task_Adder(Connect_Paired_BLE_HR_E2);
+    }
+
+
+    
+    
+    /*if(ant_CC_exisit_flag == 1){
+        Btm_Task_Adder(ANT_HRC_Disconnect);
+    }else{
+        Btm_Task_Adder(Connect_Paired_BLE_HR_E2);
+    }
+    if(ble_CB_exisit_flag == 1){
+        Btm_Task_Adder(BLE_HRC_Disconnect);
+    }else{
+    
+        Btm_Task_Adder(Connect_Paired_BLE_HR_E2);
+    }*/  
+    
+    
+    /*if(Linked_HR_info.Link_state == Linked){
+        if(Linked_HR_info.SensorType == BLE_HR){
+                        
+            disconnect_Sensor_E4(BLE_HR);
+            
+        }else if(Linked_HR_info.SensorType == ANT_HR){
+            
+            disconnect_Sensor_E4(ANT_HR);    
+        }
+    }*/
+    
+    
+      
+}
 
 
 //-------------------------------------------------------------------------------------------

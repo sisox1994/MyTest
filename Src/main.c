@@ -2,7 +2,6 @@
 #include "stm32f4xx_hal.h"
 #include "system.h"
 
-UART_HandleTypeDef huart6;
 TIM_HandleTypeDef htim1;
 
 /* TIM1 init function */
@@ -121,6 +120,9 @@ int main(void)
     Read_SerialNumber_From_Flash(ucProductionSerialNumber);  //Read  BTM  Serial Number
     
     OTA_Mode_Check();
+    
+    MX_NFC_UART_Init();
+    
     BLE_Init();
     Buzzer_Init();
     LED_Matrix_Init();
@@ -175,6 +177,8 @@ int main(void)
     
     while (1)
     {
+        
+        
         
         if(Set_B4_Page0_Flag){
             Set_B4_Page0_Flag = 0;

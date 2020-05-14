@@ -191,6 +191,7 @@ void USART2_IRQHandler(void)
 void USART6_IRQHandler(void)
 {
   HAL_UART_IRQHandler(&huart6);
+  F_NFCGetCmd();
 }
 
 void EXTI1_IRQHandler(void){

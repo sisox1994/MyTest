@@ -43,7 +43,7 @@ void F_HeartRate_Supervisor(){
         if(ant_hr_CC_exisit_chk_cnt <= 2){
             ant_CC_exisit_flag = 1;
         }else if(ant_hr_CC_exisit_chk_cnt > 2){
-            ant_CC_exisit_flag = 0;
+            ant_CC_exisit_flag = 0;           
         }
         ant_hr_CC_exisit_chk_cnt++; 
  
@@ -52,8 +52,18 @@ void F_HeartRate_Supervisor(){
             ble_CB_exisit_flag = 1;
         }else if(ble_hr_CB_exisit_chk_cnt > 2){
             ble_CB_exisit_flag = 0;
+            
         }            
         ble_hr_CB_exisit_chk_cnt++;
+        
+        if( (ble_CB_exisit_flag == 0) && (ant_CC_exisit_flag == 0)){
+            Linked_HR_info.Link_state = disconnect;
+            
+            if(NFC_Connect_Wait_flag == 1){  //斷線完要補連NFC
+                NFC_Connect_Wait_flag = 0;
+                Btm_Task_Adder(Connect_Paired_BLE_HR_E2);
+            }               
+        }
         
           
         if(HeartRate_Is_Exist_Flag == 0){
@@ -80,7 +90,7 @@ void F_HeartRate_Supervisor(){
             if(usNowHeartRate == 0){
                 HeartRate_Is_Exist_Flag = 0;
                 Linked_HR_info.SensorType = (Sensor_UUID_Type_Def)0; //防止斷線後 因為手握心跳  觸發錯誤 ICON
-                
+                Linked_HR_info.Link_state = disconnect; //++
             } 
         }
         
