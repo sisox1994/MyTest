@@ -543,6 +543,8 @@ unsigned char AutoPause_Flag = 1; //¡Ù¬√•\Ø‡
 Key_Name_Def Key159Record;
 unsigned DetectOderCnt;
 
+unsigned char btn_statte;
+
 void Idle_Key(){
      
  
@@ -597,8 +599,7 @@ void Idle_Key(){
     
 
     HR_SENSOR_LINK_Key(); 
-    
-    
+       
     
     if( KeyCatch(0,1 , Key_Manual) ){ 
         KeyChangeDetect(Key_Manual);

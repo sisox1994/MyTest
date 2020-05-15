@@ -202,6 +202,14 @@ void time(){
            b_NFCTXFlag = 1;
         }      
         
+        if(ucNFC_UIDBuf[10] == 0xAA){
+            clear_0xAA_cnt++;
+        }
+        if(clear_0xAA_cnt > 5){
+            ucNFC_UIDBuf[10] = 0x00;
+            clear_0xAA_cnt = 0;
+        }
+        
     }
     if(NeverClearCnt % 12 == 0){       //read ª½±µ¶Ê¨ì12ms
         if(ucNFCCmdCnt == C_ReadCard){

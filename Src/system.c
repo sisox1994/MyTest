@@ -60,7 +60,12 @@ void F_HeartRate_Supervisor(){
             Linked_HR_info.Link_state = disconnect;
             
             if(NFC_Connect_Wait_flag == 1){  //斷線完要補連NFC
-                NFC_Connect_Wait_flag = 0;
+                NFC_Connect_Wait_flag = 0;              
+      
+                Pairing_Msg.Pairing_Sensor_Type = BLE_HR;                
+                memcpy( Pairing_Msg.BLE_Addrs,   ucNFC_BleID , 6);
+                Pairing_Msg.BLE_ADDR_TYPE = 0x01;
+                
                 Btm_Task_Adder(Connect_Paired_BLE_HR_E2);
             }               
         }
@@ -76,12 +81,15 @@ void F_HeartRate_Supervisor(){
           
             if(usNowHeartRate > 0){
                 HeartRate_Is_Exist_Flag = 1; 
-                
-                if(Linked_HR_info.SensorType == ANT_HR){
-                    ANT_Icon_Display_Cnt = 10;
-                }else if(Linked_HR_info.SensorType == BLE_HR){
-                    Ble_Icon_Display_Cnt = 10;
+                //掃描中有心跳數值 90%是斷線後的 殘留CB 或 CC 所以這個情形必須排除
+                if( (Scan_Msg.Scan_State != Scaning) && (Scan_Msg.Scan_State != Scaning2)){
+                    if(Linked_HR_info.SensorType == ANT_HR){
+                        ANT_Icon_Display_Cnt = 10;
+                    }else if(Linked_HR_info.SensorType == BLE_HR){
+                        Ble_Icon_Display_Cnt = 10;
+                    }
                 }
+
                 
             } 
         }
@@ -90,7 +98,7 @@ void F_HeartRate_Supervisor(){
             if(usNowHeartRate == 0){
                 HeartRate_Is_Exist_Flag = 0;
                 Linked_HR_info.SensorType = (Sensor_UUID_Type_Def)0; //防止斷線後 因為手握心跳  觸發錯誤 ICON
-                Linked_HR_info.Link_state = disconnect; //++
+                //Linked_HR_info.Link_state = disconnect; //++
             } 
         }
         

@@ -1302,6 +1302,9 @@ extern unsigned char HoldingCnt;
 extern unsigned char Hold_Key_Flag;
 extern KeyName_Def  Holding_Key_Name;
 
+unsigned short scan_pattern_cnt;
+unsigned int scan_5ms_time_cnt;
+
 void Workout_Value_DisplayProcess(){
 
     if(System_Mode != StartUp){
@@ -1331,11 +1334,44 @@ void Workout_Value_DisplayProcess(){
             
             if(HeartRate_Display_Type == HR){
                 
-                if(HR_BlinkOneTime_Cnt > 0){
-                    SET_Seg_Display_Blink(HEARTRATE, usNowHeartRate , ND , DEC , 1 );
+                if( (Scan_Msg.Scan_State == Scaning) || (Scan_Msg.Scan_State == Scaning2)  ){
+                   
+                    scan_5ms_time_cnt++;
+                    
+                    if(scan_5ms_time_cnt % 2 == 0){
+                        scan_pattern_cnt++;                    
+                        scan_pattern_cnt = scan_pattern_cnt %6;
+                        
+                        if(scan_pattern_cnt == 0){
+                            SevenSegmentBuffer[HEARTRATE/4] = 0xC0;
+                        }else if(scan_pattern_cnt == 1){
+                            SevenSegmentBuffer[HEARTRATE/4] = 0x60;
+                        }else if(scan_pattern_cnt == 2){
+                            SevenSegmentBuffer[HEARTRATE/4] = 0x30;
+                        }else if(scan_pattern_cnt == 3){
+                            SevenSegmentBuffer[HEARTRATE/4] = 0x18;
+                        }else if(scan_pattern_cnt == 4){
+                            SevenSegmentBuffer[HEARTRATE/4] = 0x0C;
+                        }else if(scan_pattern_cnt == 5){
+                            SevenSegmentBuffer[HEARTRATE/4] = 0x84;
+                        }
+                        
+                        if(BLE_Scan_Device_List.Device_Cnt > 0){
+                            SevenSegmentBuffer[HEARTRATE/4] |= 1;  //有掃到東西  點就亮起來
+                        }
+                        
+                    }                   
+
+                    
                 }else{
-                    SET_Seg_Display(HEARTRATE  , usNowHeartRate , ND , DEC );
+                    if(HR_BlinkOneTime_Cnt > 0){
+                        SET_Seg_Display_Blink(HEARTRATE, usNowHeartRate , ND , DEC , 1 );
+                    }else{
+                        SET_Seg_Display(HEARTRATE  , usNowHeartRate , ND , DEC );
+                    }
                 }
+                
+
    
                 
             }else if(HeartRate_Display_Type == METS){

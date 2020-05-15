@@ -244,6 +244,8 @@ extern unsigned int uiAppTotalDist;
 extern Cmd_39_outData_Def  Cloud_0x39_Info;
 extern BLE_Device_List_def BLE_Scan_Device_List;
 
+extern Pairing_Meseseage_def Pairing_Msg;             //當下配對取得的地址資訊
+
 extern Now_Linked_HR_Sensor_Info_Def Linked_HR_info;
 extern unsigned char btm_Task_Cnt;
 extern Scan_Meseseage_def Scan_Msg;
@@ -267,6 +269,7 @@ void BLE_DeInit();
 
 void Btm_Recive();
 void BtmRst();
+void BTM_RESSET();
 void Btm_SetDeviceName(char* name,unsigned char Len);
 void ScanSensorE0(Sensor_UUID_Type_Def  Sensor_Type);
 void Pairing_BLE_Sensor_E1(unsigned char DeviceNumber);

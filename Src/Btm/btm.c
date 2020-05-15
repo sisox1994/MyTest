@@ -25,6 +25,14 @@ void BtmRst(){
     HAL_Delay(1300);
 }
 
+void BTM_RESSET(){
+    
+    HAL_GPIO_WritePin(GPIOA,GPIO_PIN_1,GPIO_PIN_RESET);
+    HAL_GPIO_WritePin(GPIOA,GPIO_PIN_1,GPIO_PIN_SET);
+    
+}
+
+
 void Btm_Recive();
 
 //Tx
@@ -382,6 +390,8 @@ unsigned char NearestDevieIndex;
 unsigned char RSSI_Compare;
 unsigned int ANT_ID_Paired_legacy;
 
+Scan_Meseseage_def The_RSSI_Most_Strength_Device;
+
 //Scan RX  下E0後 回傳的資訊
 void Scan_Re_E0(){
 
@@ -450,10 +460,15 @@ void Scan_Re_E0(){
                 if(BLE_Scan_Device_List.Device_Cnt == 0){
                     NearestDevieIndex = BLE_Scan_Device_List.Device_Cnt;
                     RSSI_Compare = Scan_Msg.RSSI;
+                    
+                    The_RSSI_Most_Strength_Device = Scan_Msg;
+                    
                 }else if(BLE_Scan_Device_List.Device_Cnt>0){
                     if(Scan_Msg.RSSI > RSSI_Compare){
                         RSSI_Compare = Scan_Msg.RSSI;
                         NearestDevieIndex = BLE_Scan_Device_List.Device_Cnt;
+                        
+                        The_RSSI_Most_Strength_Device = Scan_Msg;
                     }  
                 }
                 
@@ -713,10 +728,9 @@ void disconnect_Sensor_E4(Sensor_UUID_Type_Def  Sensor_Type){
     ucBtmTxBuf[2] = (unsigned char)Sensor_Type;  
     ucBtmTxBuf[3] = (unsigned char)((unsigned short)(Sensor_Type >> 8));
     
-    
+  
     Clear_BLE_Scan_Device_List();  // 清掉掃描資訊
-
-
+    
     __HAL_UART_ENABLE_IT(&huart2, UART_IT_RXNE); //----------------
     HAL_UART_Transmit(&huart2,ucBtmTxBuf, BtmData,tx_timeout);
     
@@ -739,6 +753,13 @@ void disconnect_Sensor_Re_E4(){
             memcpy(DisConDeviceName ,Linked_HR_info.DeviceName , 13 ); //把目前斷線的藍稱先記起來
             //Ask_Link_State_CE();
         
+            //收到 0xE4 的ACK後  重置BTM
+            if(System_Mode == Idle){
+                BTM_RESSET();
+                btm_is_ready = 0;
+            }
+             
+            
         }else if(Linked_HR_info.SensorType == ANT_HR){
             
             Linked_HR_info.Link_state = wait_disconnect;

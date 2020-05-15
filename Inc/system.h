@@ -22,7 +22,7 @@
 #ifndef __SYSTEM_H__
 #define __SYSTEM_H__
 
-#define System_Version "V20"        //APP 只判斷這個
+#define System_Version "V21"        //APP 只判斷這個
 #define Modify_Version "A00"        // AXX 細分版本 V10A01 V10A02 代表都是V10 但是 有稍微修改
 
 //----------NFC-------------------
@@ -32,8 +32,10 @@ void F_NFCGetCmd(void);
 void F_NFCSendCmd(void);
 extern unsigned char b_NFCTXFlag;
 extern unsigned char ucNFCCmdCnt;
+extern unsigned char ucNFC_UIDBuf[11];
 extern unsigned char ucNFC_BleID[7];
 extern unsigned char NFC_Connect_Wait_flag;
+extern unsigned short clear_0xAA_cnt;  //讓同一個RFID重複B  但是要延遲一段時間
 //--------功能開關---------  1 開   0關
 #define Use_BTSPK   0
 #define Use_FAN     0

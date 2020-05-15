@@ -18,6 +18,7 @@ UART_HandleTypeDef huart6;
 unsigned char ucNFCCmdCnt;
 unsigned char ucNFC_Type=0;     // 0:sleep /1:Idel(scan?) /2:Password /3.Read
 static unsigned char ucNFCTimmoutCnt;
+unsigned short clear_0xAA_cnt;  //讓同一個RFID重複B  但是要延遲一段時間
 unsigned char ucNFCRxAdr;
 unsigned char ucNFCtxCmd;
 unsigned char ucMaxNFCRxData;
@@ -127,6 +128,7 @@ void F_NFCSendCmd(void)
         MX_NFC_UART_Init();
       } 
 #endif 
+            
       uclen = 0;
       for(uci = 0;uci < 30;uci++){
         ucNFC_TxBuf[uci] = 0;
@@ -196,8 +198,13 @@ void F_NFCSendCmd(void)
       default:
            break;
       }
+      
+
       __HAL_UART_ENABLE(&huart6);
       HAL_UART_Transmit(&huart6,ucNFC_TxBuf, uclen,22);         // STM32F072內部晶振
+ 
+      
+
     }
   //}else{
    // __HAL_UART_DISABLE_IT(&huart6, UART_IT_TXE);
@@ -248,13 +255,14 @@ void F_NFC_DataSearch(void)
                       ucNFC_BleID[5] = ucNFC_DataBuf[Adr1+7];
                       ucNFC_BleID[6] = ucNFC_DataBuf[Adr1+8];
                       idx = 250;
-                      ucNFC_UIDBuf[10] = 0xAA;
                       ucNFC_DataAddr = 0x00;
                       
-                     
+                      if(System_Mode == Idle){
+                          ucNFC_UIDBuf[10] = 0xAA;     
+                          Buzzer_Set(60);        
+                          Btm_Task_Adder(Connect_Paired_NFC_BLE_HR_E2); 
+                      }     
                       
-                      Btm_Task_Adder(Connect_Paired_NFC_BLE_HR_E2);
-                      Buzzer_Set(60);
                       
                     }else{
                         if(ucNFC_DataBuf[Adr1]>0x20){
@@ -318,8 +326,8 @@ void F_NFCGetCode(void)
         }
         //ucNFC_DataAddr++;
         if(ucNFC_DataAddr>=224){
-          F_NFC_DataSearch();
-          ucNFCCmdCnt = C_CardSearch;
+            F_NFC_DataSearch();
+            ucNFCCmdCnt = C_CardSearch;
         }
       }else{
         if(ucNFCCmdCnt == C_WritwCard){
