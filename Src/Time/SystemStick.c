@@ -77,6 +77,11 @@ void ClearStd_1_Sec_Cnt(){
     standard_1_Sec_Cnt = 0;
     T1s_Flag = 0;  
 }
+
+unsigned short scan_pattern_cnt;
+unsigned int scan_5ms_time_cnt;
+
+
 void time(){
     
     F_NFCSendCmd();
@@ -184,10 +189,10 @@ void time(){
     }
     //-------------------------------------------------------------------//
     if(NeverClearCnt%5000 == 0){  //五秒丟一次廣播訊號給雲跑APP (閒置)
-        T5s_cmd39_Flag = 1;
+        T5s_cmd39_Flag = 1;        
     }
     if(NeverClearCnt%500 == 0){   ////500ms 丟一次廣播訊號給雲跑APP  (比賽中)
-        T500ms_cmd39_Flag = 1;
+        T500ms_cmd39_Flag = 1;   
     }
     if(NeverClearCnt%500 == 0){      //分號閃爍用
         T500ms_Time_Colon_Blink_Flag = 1;
@@ -221,8 +226,35 @@ void time(){
         T500ms_BTSPK_Det_Flag = 1;
     }
     if(NeverClearCnt%100 == 0){  //偵測pauseKey用
-        T100ms_PauseKey_Flag = 1;
+        T100ms_PauseKey_Flag = 1;     
     }
+    
+    if(NeverClearCnt%50 == 0){
+        if( (Scan_Msg.Scan_State == Scaning) || (Scan_Msg.Scan_State == Scaning2)  ){
+            scan_5ms_time_cnt++;            
+            if(scan_5ms_time_cnt % 2 == 0){
+                scan_pattern_cnt++;                    
+                scan_pattern_cnt = scan_pattern_cnt %6;                
+                if(scan_pattern_cnt == 0){
+                    SevenSegmentBuffer[HEARTRATE/4] = 0xC0;
+                }else if(scan_pattern_cnt == 1){
+                    SevenSegmentBuffer[HEARTRATE/4] = 0x60;
+                }else if(scan_pattern_cnt == 2){
+                    SevenSegmentBuffer[HEARTRATE/4] = 0x30;
+                }else if(scan_pattern_cnt == 3){
+                    SevenSegmentBuffer[HEARTRATE/4] = 0x18;
+                }else if(scan_pattern_cnt == 4){
+                    SevenSegmentBuffer[HEARTRATE/4] = 0x0C;
+                }else if(scan_pattern_cnt == 5){
+                    SevenSegmentBuffer[HEARTRATE/4] = 0x84;
+                }                
+                if(BLE_Scan_Device_List.Device_Cnt > 0){
+                    SevenSegmentBuffer[HEARTRATE/4] |= 1;  //有掃到東西  點就亮起來
+                }                
+            } 
+        }
+    }
+    
     //-------------------------------------------------------------------//    
     if(standard_1_Sec_Cnt % ONE_SEC_Cnt_Value == 0){  //標準一秒
         T1s_Flag = 1;
