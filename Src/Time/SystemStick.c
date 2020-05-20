@@ -203,7 +203,21 @@ void time(){
     if(NeverClearCnt%1000 == 0){   //盎代碭IDLE 家Α
         T1s_Idle = 1;
         
-        //------------------E2  筁7 ⊿Τは莱(砆硈)硈 程RSSI----------------------------
+        //---- BLE E0   15丁ずぃΩE0(BLE)
+        if(E0_ble_Time_out_cnt > 0){        
+            E0_ble_Time_out_cnt--;
+            
+            if(E0_ble_Time_out_cnt == 0){
+                
+                 if(Scan_Msg.Scan_State == Scaning){
+                     Scan_Msg.Scan_State = Scan_Time_Out;
+                 }
+            }
+        }
+        
+        
+        
+        //------------------E2  筁20 ⊿Τは莱(砆硈)硈 程RSSI----------------------------
         if(E2_but_No_CB_cnt > 0){            
             if(E2_but_No_CB_cnt == 1){
                 Btm_Task_Adder(BLE_HRC_Pairing);  //硈RSSI程眏ê

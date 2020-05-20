@@ -393,6 +393,9 @@ unsigned int ANT_ID_Paired_legacy;
 Scan_Meseseage_def The_RSSI_Most_Strength_Device;
 
 //Scan RX  下E0後 回傳的資訊
+
+//藍芽下E0之後  倒數15秒   在還沒有scan time out以前 不能馬上在下E0(BLE) 以免打亂前面搜尋的裝置
+unsigned char E0_ble_Time_out_cnt = 0;
 void Scan_Re_E0(){
 
 
@@ -435,9 +438,20 @@ void Scan_Re_E0(){
             
             Scan_Msg.Scan_State = (Scan_State_Def)ucBtmRxData[2];
             
+            if(Scan_Msg.Scan_State == Scaning){                
+                E0_ble_Time_out_cnt = 16;                               
+            }
+            
             if(Scan_Msg.Scan_State == Scan_Time_Out){ //掃描 15 秒 連訊號最強的那個
                 //Ask_Link_State_CE();
-                Btm_Task_Adder(BLE_HRC_Pairing);  //連RSSI最強的那一個
+                
+                if(BLE_Scan_Device_List.Device_Cnt == 0){
+                    BTM_RESSET();
+                    btm_is_ready = 0;
+                    Btm_Task_Adder(Scan_BLE_HRC_Sensor);
+                }else if(BLE_Scan_Device_List.Device_Cnt >0){
+                    Btm_Task_Adder(BLE_HRC_Pairing);  //連RSSI最強的那一個
+                }    
             }
           
         }else{
@@ -705,8 +719,8 @@ void Link_Sensor_Re_E2(){
           
           if(BLE_Scan_Device_List.Device_Cnt >=2){
               
-              //倒數15秒到1  沒有CB數值進來就連下一個
-              E2_but_No_CB_cnt = 10;
+              //倒數20秒到1  沒有CB數值進來就連下一個
+              E2_but_No_CB_cnt = 20;
               
               // 把 NearestDevieIndex 改成第2強的
               unsigned char Rssi_chk = 0;

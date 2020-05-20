@@ -178,16 +178,11 @@ int main(void)
     while (1)
     {
         
-        
-        
         if(Set_B4_Page0_Flag){
-            Set_B4_Page0_Flag = 0;
-            
+            Set_B4_Page0_Flag = 0;            
             Btm_Task_Adder(FEC_Data_Config_Page_0);
         }
-         
-        
-        
+
         #if RM6_Param_Debug
         if(MyParTask.AddTask_Flag == 1){
             MyParTask.AddTask_Flag = 0;

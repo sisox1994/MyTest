@@ -152,9 +152,11 @@ void BTM_background_Task(){
                     Link_BLE_NFC_Pairing_E2();
                     break;
                   case Scan_BLE_HRC_Sensor:
-                    ScanSensorE0(BLE_HR);
+                    if(E0_ble_Time_out_cnt == 0){
+                        ScanSensorE0(BLE_HR);
+                    }                   
                     break;
-                  case Scan_ANT_HRC_Sensor:
+                  case Scan_ANT_HRC_Sensor:                    
                     ScanSensorE0(ANT_HR);
                     break;
                   case BLE_HRC_Disconnect:

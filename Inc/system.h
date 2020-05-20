@@ -56,6 +56,7 @@ extern unsigned short clear_0xAA_cnt;  //讓同一個RFID重複B  但是要延遲一段時間
 
 #define FTMS_Activated_Permission 1
 //-------------------------------
+extern unsigned char E0_ble_Time_out_cnt;
 extern unsigned char E2_but_No_CB_cnt;
 extern unsigned char SevenSegmentBuffer[27];
 
