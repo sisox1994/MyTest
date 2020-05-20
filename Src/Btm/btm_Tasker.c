@@ -192,7 +192,7 @@ void BTM_background_Task(){
                     F_BtmReply36Cmd();
                     break;
                   case C_39Val:
-                    F_BtmReply39Cmd();
+                    //F_BtmReply39Cmd();
                     break;
                   case C_47Val:
                     F_BtmReply47Cmd();
@@ -234,7 +234,7 @@ void BTM_background_Task(){
                     break;  
 
                   case Connectuin_Configure_C8:
-                    //Btm_Set_Configure_C8();
+                    Btm_Set_Configure_C8();
                     break;
                   case No_Task:
                     break;

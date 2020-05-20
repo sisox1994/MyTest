@@ -1521,12 +1521,14 @@ HAL_StatusTypeDef HAL_UART_AbortReceive_IT(UART_HandleTypeDef *huart)
   *                the configuration information for the specified UART module.
   * @retval None
   */
+extern UART_HandleTypeDef huart1;
 extern UART_HandleTypeDef huart2;
 extern UART_HandleTypeDef huart6;
 uint16_t ore_err_cnt = 0;
 
 void Uart_error_flush(){
 
+  __HAL_UART_CLEAR_OREFLAG(&huart1);
   __HAL_UART_CLEAR_OREFLAG(&huart2);
   __HAL_UART_CLEAR_OREFLAG(&huart6);
   

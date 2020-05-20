@@ -672,7 +672,7 @@ void Link_Sensor_E2_ANT( unsigned int ANT_ID){
 //-----------------E2  Rx-------------------------------------------
 
 unsigned short FirstCB_Time_Cnt;
-
+unsigned char E2_but_No_CB_cnt;
 void Link_Sensor_Re_E2(){
 
 
@@ -691,13 +691,38 @@ void Link_Sensor_Re_E2(){
           // Linked  info 填入目前連線的裝置名稱   跟 藍芽位址       
           memcpy( Linked_HR_info.DeviceName,BLE_Scan_Device_List.messeage_List[NearestDevieIndex].DeviceName,13);
           memcpy( Linked_HR_info.BLE_Addrs,  Pairing_Msg.BLE_Addrs , 6);      
-          
+         
+          //清掉 目前去連的 (RSSI最強的)
+          //memset( (BLE_Scan_Device_List.messeage_List[NearestDevieIndex]) ,0x00,sizeof(Scan_Meseseage_def));
+          BLE_Scan_Device_List.messeage_List[NearestDevieIndex].ANT_ID = 0;        
+          BLE_Scan_Device_List.messeage_List[NearestDevieIndex].RSSI = 0;
+          BLE_Scan_Device_List.messeage_List[NearestDevieIndex].ScanType = (Sensor_UUID_Type_Def)0;
+          BLE_Scan_Device_List.messeage_List[NearestDevieIndex].TransDir = (Trans_Dir_Def)0;
+          BLE_Scan_Device_List.messeage_List[NearestDevieIndex].Type_Check = (Sensor_UUID_Type_Def)0;
+          BLE_Scan_Device_List.messeage_List[NearestDevieIndex].UUID = 0;
 
           
-            
+          
+          if(BLE_Scan_Device_List.Device_Cnt >=2){
+              
+              //倒數15秒到1  沒有CB數值進來就連下一個
+              E2_but_No_CB_cnt = 10;
+              
+              // 把 NearestDevieIndex 改成第2強的
+              unsigned char Rssi_chk = 0;
+              for(int i = 0; i < BLE_Scan_Device_List.Device_Cnt; i++){
+                  if(BLE_Scan_Device_List.messeage_List[i].RSSI > Rssi_chk){
+                      Rssi_chk = BLE_Scan_Device_List.messeage_List[i].RSSI;
+                      NearestDevieIndex = i;
+                  }                  
+              }
+          }
+          
+
+                      
           
           //--------------------藍芽掃描清單初始化-----------------------
-          Clear_BLE_Scan_Device_List();
+          //Clear_BLE_Scan_Device_List();
           //-------------------------------------------------------
           Clear_Scan_Msg();
           //----------------------------------------------      
@@ -729,7 +754,7 @@ void disconnect_Sensor_E4(Sensor_UUID_Type_Def  Sensor_Type){
     ucBtmTxBuf[3] = (unsigned char)((unsigned short)(Sensor_Type >> 8));
     
   
-    Clear_BLE_Scan_Device_List();  // 清掉掃描資訊
+    //Clear_BLE_Scan_Device_List();  // 清掉掃描資訊
     
     __HAL_UART_ENABLE_IT(&huart2, UART_IT_RXNE); //----------------
     HAL_UART_Transmit(&huart2,ucBtmTxBuf, BtmData,tx_timeout);
@@ -783,6 +808,10 @@ void disconnect_Sensor_Re_E4(){
 unsigned char cb_hr;
 void SensorReceive_CB(){
   
+    
+    //下了E2  CB有進來就直接清0
+    E2_but_No_CB_cnt = 0;
+    
     //只要CB有進來就清0
     ble_hr_CB_exisit_chk_cnt = 0;  
   

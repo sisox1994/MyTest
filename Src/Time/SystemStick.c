@@ -203,6 +203,15 @@ void time(){
     if(NeverClearCnt%1000 == 0){   //盎代碭IDLE 家Α
         T1s_Idle = 1;
         
+        //------------------E2  筁7 ⊿Τは莱(砆硈)硈 程RSSI----------------------------
+        if(E2_but_No_CB_cnt > 0){            
+            if(E2_but_No_CB_cnt == 1){
+                Btm_Task_Adder(BLE_HRC_Pairing);  //硈RSSI程眏ê
+            }            
+            E2_but_No_CB_cnt--;
+        }
+        //-------------------------------------------------------------
+        
         if(ucNFCCmdCnt != C_ReadCard){  //獶read 家Α 1s篊苯碞
            b_NFCTXFlag = 1;
         }      
@@ -250,7 +259,12 @@ void time(){
                 }                
                 if(BLE_Scan_Device_List.Device_Cnt > 0){
                     SevenSegmentBuffer[HEARTRATE/4] |= 1;  //Τ苯狥﹁  翴碞獹癬ㄓ
-                }                
+                }   
+                
+                SevenSegmentBuffer[HEARTRATE/4 + 1] = 0x00;
+                SevenSegmentBuffer[HEARTRATE/4 + 2] = 0x00;
+                
+                
             } 
         }
     }
