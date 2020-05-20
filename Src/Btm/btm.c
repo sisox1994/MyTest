@@ -488,7 +488,10 @@ void Scan_Re_E0(){
                 
                 //-------------------- 把掃到的裝置先存進清單裡 -----------------------
                 BLE_Scan_Device_List.messeage_List[ BLE_Scan_Device_List.Device_Cnt] = Scan_Msg;
-                BLE_Scan_Device_List.Device_Cnt++;
+                
+                if(BLE_Scan_Device_List.Device_Cnt < 10){
+                    BLE_Scan_Device_List.Device_Cnt++;
+                }                
                 //------------------------------------------------------- 
                 //---掃描對象類型是BLE+    ANT資料初始化   
                 Scan_Msg.ANT_ID = 0;
