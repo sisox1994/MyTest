@@ -685,6 +685,11 @@ void Write_SerialNumber_To_Flash(char *Data){
 
 void Read_SerialNumber_From_Flash(char *Data){
     Read_EE_Flash( Serial_Number_Address , 14 , (unsigned char*) Data);
+    
+#if Debug_Terminal
+    printf("Read SN from Flash :%s \n",Data);
+#endif
+    
 }
 
 unsigned char TestWriteData[1] ={0xAB};

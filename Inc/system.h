@@ -22,6 +22,12 @@
 #ifndef __SYSTEM_H__
 #define __SYSTEM_H__
 
+#define Debug_Terminal 1
+
+#if Debug_Terminal
+#include <stdio.h>
+#endif
+
 #define System_Version "V21"        //APP 只判斷這個
 #define Modify_Version "A00"        // AXX 細分版本 V10A01 V10A02 代表都是V10 但是 有稍微修改
 
@@ -56,6 +62,8 @@ extern unsigned short clear_0xAA_cnt;  //讓同一個RFID重複B  但是要延遲一段時間
 
 #define FTMS_Activated_Permission 1
 //-------------------------------
+extern unsigned char do_E0_scan_flag;
+extern unsigned char ble_device_list_Cnt;
 extern unsigned char E0_ble_Time_out_cnt;
 extern unsigned char E2_but_No_CB_cnt;
 extern unsigned char SevenSegmentBuffer[27];

@@ -22,24 +22,50 @@ void HR_SENSOR_LINK_Key(){
                     if(ble_CB_exisit_flag == 1){
                         Btm_Task_Adder(BLE_HRC_Disconnect);
                     }  
+                    
+                    if(E2_but_No_CB_cnt>0){
+                        E2_but_No_CB_cnt = 0;
+                    }
+                    
+                    if(do_E0_scan_flag == 1){
+                        do_E0_scan_flag = 0;  
+                        E0_ble_Time_out_cnt = 0;
+                    }     
+                    
                     Btm_Task_Adder(Scan_ANT_HRC_Sensor);                  
                 }else if(Linked_HR_info.SensorType == ANT_HR){
                     //如果本來就是ANT+ 就連原本連起來的那一個
                     Btm_Task_Adder(Connect_Paired_ANT_HR_E2);
                 }else{
+                    if(E2_but_No_CB_cnt>0){
+                        E2_but_No_CB_cnt = 0;
+                    }
+                    //如果原本正在掃描BLE HR
+                    if(do_E0_scan_flag == 1){
+                        do_E0_scan_flag = 0;  
+                        E0_ble_Time_out_cnt = 0;
+                    }                    
+                    
                     Btm_Task_Adder(Scan_ANT_HRC_Sensor);    
                 }
                
               
             }else{
-                //如果運動開始前沒有連到心跳裝置 就破例讓他使用E0連線
-              
+                //如果運動開始前沒有連到心跳裝置 就破例讓他使用E0連線               
                 if(ant_CC_exisit_flag == 1){
-                    Btm_Task_Adder(ANT_HRC_Disconnect);
+                    Btm_Task_Adder(ANT_HRC_Disconnect);                    
                 }
                 if(ble_CB_exisit_flag == 1){
-                    Btm_Task_Adder(BLE_HRC_Disconnect);
+                    Btm_Task_Adder(BLE_HRC_Disconnect);                    
                 }  
+                if(E2_but_No_CB_cnt>0){
+                    E2_but_No_CB_cnt = 0;
+                }
+                if(do_E0_scan_flag == 1){
+                    do_E0_scan_flag = 0;  
+                    E0_ble_Time_out_cnt = 0;
+                }    
+                
                 Btm_Task_Adder(Scan_ANT_HRC_Sensor);
             }
           
@@ -48,13 +74,27 @@ void HR_SENSOR_LINK_Key(){
            //其他狀況下就是直接重新E0搜尋ANT HR 並連線
            if(ant_CC_exisit_flag == 1){
                Btm_Task_Adder(ANT_HRC_Disconnect);
+               
            }
            if(ble_CB_exisit_flag == 1){
-               Btm_Task_Adder(BLE_HRC_Disconnect);
-           }  
-          
+               Btm_Task_Adder(BLE_HRC_Disconnect);              
+           }
+           
+          //如果原本正在掃描BLE HR
+           if(do_E0_scan_flag == 1){
+               do_E0_scan_flag = 0;  
+               E0_ble_Time_out_cnt = 0;
+           }
+           if(E2_but_No_CB_cnt>0){
+               E2_but_No_CB_cnt = 0;
+           }
+           
+           BTM_RESSET();
+           
            Btm_Task_Adder(Scan_ANT_HRC_Sensor);
         }       
+        
+
         
         __asm("NOP");
     }   
@@ -74,7 +114,7 @@ void HR_SENSOR_LINK_Key(){
                     }
                     if(ble_CB_exisit_flag == 1){
                         Btm_Task_Adder(BLE_HRC_Disconnect);
-                    }  
+                    }                    
                     Btm_Task_Adder(Scan_BLE_HRC_Sensor);                  
                 }else if(Linked_HR_info.SensorType == BLE_HR){
                     //如果本來就是BLE 就連原本連起來的那一個
@@ -91,12 +131,11 @@ void HR_SENSOR_LINK_Key(){
                   ClearAllOPTION_KeyDisplayCnt();
                   
                   if(ble_CB_exisit_flag == 1){
-                      Btm_Task_Adder(BLE_HRC_Disconnect);
+                      Btm_Task_Adder(BLE_HRC_Disconnect);                      
                   }  
                   if(ant_CC_exisit_flag == 1){
                       Btm_Task_Adder(ANT_HRC_Disconnect);
-                  }
-                  
+                  }                  
                   Btm_Task_Adder(Scan_BLE_HRC_Sensor);
               //}
           }
@@ -107,11 +146,17 @@ void HR_SENSOR_LINK_Key(){
               ClearAllOPTION_KeyDisplayCnt();
               
               if(ble_CB_exisit_flag == 1){
-                  Btm_Task_Adder(BLE_HRC_Disconnect);
+                  Btm_Task_Adder(BLE_HRC_Disconnect);                   
               }
               if(ant_CC_exisit_flag == 1){
-                  Btm_Task_Adder(ANT_HRC_Disconnect);
+                  Btm_Task_Adder(ANT_HRC_Disconnect);                 
               }  
+              //---Idle狀態直接reset BTM 增加連線成功率
+              if(E2_but_No_CB_cnt>0){
+                  E2_but_No_CB_cnt = 0;
+                  BTM_RESSET();
+              }
+              
               Btm_Task_Adder(Scan_BLE_HRC_Sensor);
           //}
       }
@@ -256,19 +301,16 @@ void SCREEN_OPTION_Key(){
 }
 
 void IntoReadyMode_Process(){
-
     
     ODO_RecordCnt      = 0;
     ODO_RecordDistance = 0;
     
-    console_status = 4;      // 1 : stop  2：pause  3: stop by safeKey   4: start 
+   /* console_status = 4;      // 1 : stop  2：pause  3: stop by safeKey   4: start 
     FE_Status = IN_USE;
-    Btm_Task_Adder(FEC_Data_Config_Page_1);
-    
+    Btm_Task_Adder(FEC_Data_Config_Page_1);    
     
     Training_status = Manual_mode;
-    Btm_Task_Adder(FEC_Data_Config_Page_0);
-    
+    Btm_Task_Adder(FEC_Data_Config_Page_0);*/    
     
     //-----重置  平均心跳  平均速度  平均揚升---------
     ResetWorkoutAvgParam(); 
@@ -276,23 +318,18 @@ void IntoReadyMode_Process(){
     //-------------------雲跑APP Program 初始化-----------------------
     if(Program_Select == APP_Cloud_Run){
         Cloud_Run_Program_Init();
-    }
-    
+    }    
    //-----------------------------------------------------
     if(Program_Select == APP_Train_Dist_Run){
         Train_Dist_Run_Program_Init();
-    }
-    
+    }    
     if(Program_Select == APP_Train_Time_Run){
         Train_Time_Run_Program_Init();
-    }
-    
-    
+    }       
     
     Time_Display_Type     = Remaining;    // 預設為 下數顯示
     Calories_Display_Type = Cal_;        // 預設為 卡路里顯示
-    Pace_Display_Switch   = 3;           //預設為  PACE
-    
+    Pace_Display_Switch   = 3;           //預設為  PACE    
     
     //Program_Select = (Program_Type_Def)0;
     str_cNt = 0;
@@ -301,13 +338,8 @@ void IntoReadyMode_Process(){
         Buzzer_Set(150);
     }
    
-    System_Mode = Ready;
-   
+    System_Mode = Ready;   
     ClearStd_1_Sec_Cnt();
-    
-    
-    
-    
     
 }
 extern unsigned char Hint_Disp_Flag;

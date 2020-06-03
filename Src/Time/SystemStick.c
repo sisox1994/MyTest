@@ -45,6 +45,7 @@ unsigned int   standard_1_Sec_Cnt;
 
 unsigned short ONE_SEC_Cnt_Value = 1000;
 //unsigned char T500ms_Matrix_Blink_Flag;
+unsigned char T3s_E2_ReConnect_Flag;
 
 void ClearBlinkCnt(){
     BlinkCnt = 0;
@@ -189,7 +190,7 @@ void time(){
     }
     //-------------------------------------------------------------------//
     if(NeverClearCnt%5000 == 0){  //五秒丟一次廣播訊號給雲跑APP (閒置)
-        T5s_cmd39_Flag = 1;        
+        T5s_cmd39_Flag = 1;  
     }
     if(NeverClearCnt%500 == 0){   ////500ms 丟一次廣播訊號給雲跑APP  (比賽中)
         T500ms_cmd39_Flag = 1;   
@@ -200,6 +201,11 @@ void time(){
     if(NeverClearCnt%1000 == 0){   //監控心跳數值
         T1s_HR_Monitor_Flag = 1;
     }
+    if(NeverClearCnt%3000 == 0){  //
+        T3s_E2_ReConnect_Flag = 1;  
+    }
+    
+    
     if(NeverClearCnt%1000 == 0){   //偵測幾秒回IDLE 模式
         T1s_Idle = 1;
         
@@ -216,16 +222,6 @@ void time(){
         }
         
         
-        
-        //------------------下E2  過20秒 沒有反應(可能被連住)連下一個 最大RSSI的----------------------------
-        if(E2_but_No_CB_cnt > 0){            
-            if(E2_but_No_CB_cnt == 1){
-                Btm_Task_Adder(BLE_HRC_Pairing);  //連RSSI最強的那一個
-            }            
-            E2_but_No_CB_cnt--;
-        }
-        //-------------------------------------------------------------
-        
         if(ucNFCCmdCnt != C_ReadCard){  //非read 模式 1s慢掃就好
            b_NFCTXFlag = 1;
         }      
@@ -239,6 +235,35 @@ void time(){
         }
         
     }
+    
+     if(NeverClearCnt%4000 == 0){   
+        //------------------下E2  過20秒 沒有反應(可能被連住)連下一個 最大RSSI的----------------------------
+        if(E2_but_No_CB_cnt > 0){            
+            if(E2_but_No_CB_cnt == 1){                
+#if Debug_Terminal
+                printf("0xE2 Link Time Out!!\n\n");
+#endif           
+                if(ble_device_list_Cnt>0){
+                    Btm_Task_Adder(BLE_HRC_Pairing);  //連RSSI最強的那一個
+                    ble_device_list_Cnt--; 
+#if Debug_Terminal
+                    if(ble_device_list_Cnt == 0){
+                        printf("No Device can't link!!\n\n");
+                    }   
+#endif        
+                }
+            }            
+            E2_but_No_CB_cnt--;
+#if Debug_Terminal
+            if(E2_but_No_CB_cnt>0){
+                printf("wait cnt %d \n",E2_but_No_CB_cnt);
+            }
+#endif    
+        }
+        //-------------------------------------------------------------
+     }
+    
+    
     if(NeverClearCnt % 12 == 0){       //read 直接催到12ms
         if(ucNFCCmdCnt == C_ReadCard){
            b_NFCTXFlag = 1;
@@ -253,7 +278,7 @@ void time(){
     }
     
     if(NeverClearCnt%50 == 0){
-        if( (Scan_Msg.Scan_State == Scaning) || (Scan_Msg.Scan_State == Scaning2)  ){
+        if( Scan_Msg.Scan_State == Scaning ){
             scan_5ms_time_cnt++;            
             if(scan_5ms_time_cnt % 2 == 0){
                 scan_pattern_cnt++;                    
@@ -276,10 +301,43 @@ void time(){
                 }   
                 
                 SevenSegmentBuffer[HEARTRATE/4 + 1] = 0x00;
+                SevenSegmentBuffer[HEARTRATE/4 + 2] = 0x00;  
+            } 
+        }
+
+        
+        
+    }
+    if(NeverClearCnt%100 == 0){
+        if(Scan_Msg.ScanType == BLE_HR){
+            
+            if(E2_but_No_CB_cnt > 0){
+                static uint8_t link_pattern_cnt;
+                
+                if(link_pattern_cnt == 0){
+                    SevenSegmentBuffer[HEARTRATE/4] = 0xC0;
+                }else if(link_pattern_cnt == 1){
+                    SevenSegmentBuffer[HEARTRATE/4] = 0x42;
+                }else if(link_pattern_cnt == 2){
+                    SevenSegmentBuffer[HEARTRATE/4] = 0x0A;
+                }else if(link_pattern_cnt == 3){
+                    SevenSegmentBuffer[HEARTRATE/4] = 0x18;
+                }else if(link_pattern_cnt == 4){
+                    SevenSegmentBuffer[HEARTRATE/4] = 0x30;
+                }else if(link_pattern_cnt == 5){
+                    SevenSegmentBuffer[HEARTRATE/4] = 0x22;
+                }else if(link_pattern_cnt == 6){
+                    SevenSegmentBuffer[HEARTRATE/4] = 0x06;
+                }else if(link_pattern_cnt == 7){
+                    SevenSegmentBuffer[HEARTRATE/4] = 0x84;
+                }
+                               
+                SevenSegmentBuffer[HEARTRATE/4 + 1] = 0x00;
                 SevenSegmentBuffer[HEARTRATE/4 + 2] = 0x00;
                 
-                
-            } 
+                link_pattern_cnt++;
+                link_pattern_cnt= link_pattern_cnt%8;
+            }
         }
     }
     

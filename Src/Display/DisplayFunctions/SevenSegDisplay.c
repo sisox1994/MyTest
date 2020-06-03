@@ -1332,7 +1332,7 @@ void Workout_Value_DisplayProcess(){
             
             if(HeartRate_Display_Type == HR){
                 
-                if( (Scan_Msg.Scan_State != Scaning) && (Scan_Msg.Scan_State != Scaning2)  ){                  
+                if( (Scan_Msg.Scan_State != Scaning ) && (E2_but_No_CB_cnt == 0)){                  
                    
                     if(HR_BlinkOneTime_Cnt > 0){
                         SET_Seg_Display_Blink(HEARTRATE, usNowHeartRate , ND , DEC , 1 );

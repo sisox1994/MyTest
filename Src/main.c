@@ -2,6 +2,8 @@
 #include "stm32f4xx_hal.h"
 #include "system.h"
 
+
+
 TIM_HandleTypeDef htim1;
 
 /* TIM1 init function */
@@ -121,7 +123,7 @@ int main(void)
     
     OTA_Mode_Check();
     
-    MX_NFC_UART_Init();
+    MX_NFC_UART_Init(); 
     
     BLE_Init();
     Buzzer_Init();
@@ -175,8 +177,17 @@ int main(void)
     System_Mode = RS485_Test_Mode;
 #endif
     
+#if Debug_Terminal
+    AutoPause_Flag = 0;
+    printf("無人模式 --開啟-- \n");           
+#endif  
+    
+    
+    
     while (1)
     {
+    
+
         
         if(Set_B4_Page0_Flag){
             Set_B4_Page0_Flag = 0;            

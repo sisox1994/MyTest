@@ -25,14 +25,17 @@ extern void NumberInsert_Time(unsigned int* Time_Modify);
 
 void IntoWorkoutModeProcess(){
     
-    console_status = 4;      // 1 : stop  2¡Gpause  3: stop by safeKey   4: start 
-     FE_Status = IN_USE;
-     Btm_Task_Adder(FEC_Data_Config_Page_1);
     
-  
+    Training_status = Manual_mode;
+    Btm_Task_Adder(FEC_Data_Config_Page_0); 
+    
+    console_status = 4;    // 1 : stop  2¡Gpause  3: stop by safeKey   4: start 
+    FE_Status = IN_USE;
+    Btm_Task_Adder(FEC_Data_Config_Page_1);      
+    
+           
     WarmUp_3_Minute_Cnt = 0;
-    System_Mode = Workout;
-    F_SetFEC_State(IN_USE);
+    System_Mode = Workout;   
     ClearStd_1_Sec_Cnt(); 
 
 }

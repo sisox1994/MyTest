@@ -124,7 +124,7 @@ typedef enum{
 
 typedef enum{
       Scaning   = 0x40,
-      Scaning2  = 0x4C,
+      Busy  = 0x4C,
       Paired_OK = 0x41,
       No_Device = 0x42,
       Scan_Time_Out = 0x4F,

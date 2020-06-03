@@ -35,6 +35,7 @@ extern Flags_32bit  TimeFlag;
 #define T100ms_PauseKey_Flag           TimeFlag.B25
 #define T5ms_Workout_Display_Flag      TimeFlag.B26
 
+extern unsigned char T3s_E2_ReConnect_Flag;
 
 extern unsigned short Ble_wait_disconnect_Time_out_Cnt;
 

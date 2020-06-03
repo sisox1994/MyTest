@@ -9,7 +9,7 @@
 
 unsigned char FW_Transmiting_03_Flag;
 unsigned char ucRFVersion[3];          //FTMS SetFeature B0 cmd 取得RF版本 
-unsigned short EepromVer_3;       // V1.2  
+unsigned short EepromVer_3;        // V1.2  
 unsigned short EepromVer_4;        // A01
 
 UART_HandleTypeDef huart2;
@@ -19,17 +19,16 @@ unsigned char btm_Rx_is_busy;
 unsigned char Cloud_Run_Initial_Busy_Flag = 0;
 
 void BtmRst(){
-    HAL_GPIO_WritePin(GPIOA,GPIO_PIN_0,GPIO_PIN_RESET);
+    HAL_GPIO_WritePin(GPIOA,GPIO_PIN_1,GPIO_PIN_RESET);
     HAL_Delay(200);
-    HAL_GPIO_WritePin(GPIOA,GPIO_PIN_0,GPIO_PIN_SET);
+    HAL_GPIO_WritePin(GPIOA,GPIO_PIN_1,GPIO_PIN_SET);
     HAL_Delay(1300);
 }
 
 void BTM_RESSET(){
-    
+    btm_is_ready = 0;
     HAL_GPIO_WritePin(GPIOA,GPIO_PIN_1,GPIO_PIN_RESET);
-    HAL_GPIO_WritePin(GPIOA,GPIO_PIN_1,GPIO_PIN_SET);
-    
+    HAL_GPIO_WritePin(GPIOA,GPIO_PIN_1,GPIO_PIN_SET);    
 }
 
 
@@ -282,8 +281,11 @@ void Btm_Set_Configure_C8(){
     ucBtmTxBuf[1] = 0xC8;
     
     ucBtmTxBuf[3] = 3;      //斷掉重連次數 number of relink
-    ucBtmTxBuf[4] = 7;   //ant+ pairing proximity   1~10
+    ucBtmTxBuf[4] = 10;   //ant+ pairing proximity   1~10
     
+#if Debug_Terminal
+    printf("0xC8 斷線重連次數:%d  ANT+連線等級:%d \n",ucBtmTxBuf[3],ucBtmTxBuf[4]);
+#endif
     
     __HAL_UART_ENABLE_IT(&huart2, UART_IT_RXNE); //----------------
     HAL_UART_Transmit(&huart2,ucBtmTxBuf, BtmData,tx_timeout);
@@ -349,6 +351,9 @@ void Clear_Scan_Msg(){
 }
 
 //Scan TX
+//----------這個flag 是證明我自己下的  不是BTM自己亂丟的-----------
+unsigned char do_E0_scan_flag;
+
 void ScanSensorE0(Sensor_UUID_Type_Def  Sensor_Type){
  
     
@@ -375,33 +380,29 @@ void ScanSensorE0(Sensor_UUID_Type_Def  Sensor_Type){
     //-------------------------------------------------------
     Clear_Scan_Msg(); 
     //-------------------------------------------------------------------------
+    if( Scan_Msg.ScanType == BLE_HR){
+        do_E0_scan_flag = 1;
+    }
     
     BTM_UART_Transmit();
-   // __HAL_UART_ENABLE_IT(&huart2, UART_IT_RXNE); //----------------
-    //HAL_UART_Transmit(&huart2,ucBtmTxBuf, BtmData,tx_timeout);  
-
 }
 
 //----------------------------E0  --掃描Sensor--  Rx-----------------------------------
 
-
-
 unsigned char NearestDevieIndex;
 unsigned char RSSI_Compare;
-unsigned int ANT_ID_Paired_legacy;
-
+unsigned int  ANT_ID_Paired_legacy;
 Scan_Meseseage_def The_RSSI_Most_Strength_Device;
 
 //Scan RX  下E0後 回傳的資訊
 
 //藍芽下E0之後  倒數15秒   在還沒有scan time out以前 不能馬上在下E0(BLE) 以免打亂前面搜尋的裝置
 unsigned char E0_ble_Time_out_cnt = 0;
+unsigned char ble_device_list_Cnt;
 void Scan_Re_E0(){
-
 
     //---------------------  Scan_Meseseage  ---------------------------
     //----Common
-
     Scan_Msg.TransDir   = Rxx;
     
     ////Tx 送出就決定了
@@ -419,10 +420,21 @@ void Scan_Re_E0(){
             //儲存E0 掃描連線到的 ANT_HR ID 在運動中斷線就可以連這一個
             ANT_ID_Paired_legacy = Scan_Msg.ANT_ID;            
             
+#if Debug_Terminal
+            printf("0xE0 (ANT+) ID:[%d]  Paired OK...  \n",Linked_HR_info.ANT_ID );
+#endif  
+            
             //ANT_Icon_Display_Cnt = 10;
             
         }else if(Scan_Msg.Scan_State == No_Device){
+#if Debug_Terminal
+            printf("0xE0 (ANT+) No Device...  \n");
+#endif  
             Scan_Msg.ANT_ID = 0;
+        }else if(Scan_Msg.Scan_State == Scaning){
+#if Debug_Terminal
+            printf("0xE0 (ANT+) Scan start..  \n");
+#endif   
         }
         
         //---掃描對象類型是ANT+    BLE資料初始化      
@@ -438,20 +450,40 @@ void Scan_Re_E0(){
             
             Scan_Msg.Scan_State = (Scan_State_Def)ucBtmRxData[2];
             
-            if(Scan_Msg.Scan_State == Scaning){                
+            if(Scan_Msg.Scan_State == Scaning){
+    
+#if Debug_Terminal
+    printf("0xE0 (BLE) Scan start..  \n");
+#endif      
                 E0_ble_Time_out_cnt = 16;                               
             }
             
             if(Scan_Msg.Scan_State == Scan_Time_Out){ //掃描 15 秒 連訊號最強的那個
                 //Ask_Link_State_CE();
                 
-                if(BLE_Scan_Device_List.Device_Cnt == 0){
-                    BTM_RESSET();
-                    btm_is_ready = 0;
-                    Btm_Task_Adder(Scan_BLE_HRC_Sensor);
-                }else if(BLE_Scan_Device_List.Device_Cnt >0){
-                    Btm_Task_Adder(BLE_HRC_Pairing);  //連RSSI最強的那一個
-                }    
+                //只理我自己下的E0  BTM自己E2連不到發出來的不要理它
+                if(do_E0_scan_flag == 1){
+                    do_E0_scan_flag = 0;
+                    
+#if Debug_Terminal
+                    printf("0xE0 (BLE) Scan time out... device num(%d)\n",BLE_Scan_Device_List.Device_Cnt );
+#endif                  
+                    if(BLE_Scan_Device_List.Device_Cnt == 0){
+                        BTM_RESSET();                       
+                        Btm_Task_Adder(Scan_BLE_HRC_Sensor);
+#if Debug_Terminal
+                        printf("0xE0 (BLE) 一個裝置都沒有掃到.. Reset BTM後再重新掃一次 \n");
+#endif    
+                    }else if(BLE_Scan_Device_List.Device_Cnt >0){
+                    
+                        ble_device_list_Cnt = BLE_Scan_Device_List.Device_Cnt;
+                    
+                        Btm_Task_Adder(BLE_HRC_Pairing);  //連RSSI最強的那一個
+                    } 
+                    
+                    
+                }
+                
             }
           
         }else{
@@ -465,40 +497,40 @@ void Scan_Re_E0(){
             for(unsigned char i = 6;i < 6 + 13; i++){  //BLE Device Name長度為13
                 Scan_Msg.DeviceName[i-6] = ucBtmRxData[i];
             }    
+    
+#if Debug_Terminal
+            printf("[%d]: <%s> Rssi[%d] \n",BLE_Scan_Device_List.Device_Cnt,Scan_Msg.DeviceName,Scan_Msg.RSSI);
+#endif                  
             
-           
-            char RejectDeviceName[] = {"Chandler_HRM"};
-            if(!charArrayEquals(Scan_Msg.DeviceName , RejectDeviceName )){
-            
-                //尋找訊號最強的裝置  Brian 說 RSSI越大 訊號愈強
-                if(BLE_Scan_Device_List.Device_Cnt == 0){
-                    NearestDevieIndex = BLE_Scan_Device_List.Device_Cnt;
+            //尋找訊號最強的裝置  Brian 說 RSSI越大 訊號愈強
+            if(BLE_Scan_Device_List.Device_Cnt == 0){
+                NearestDevieIndex = BLE_Scan_Device_List.Device_Cnt;
+                RSSI_Compare = Scan_Msg.RSSI;
+                The_RSSI_Most_Strength_Device = Scan_Msg; 
+#if Debug_Terminal
+                printf(" -------------------------------> Most Strength Rssi=> [%d]: <%s> Rssi:[%d] \n",NearestDevieIndex,The_RSSI_Most_Strength_Device.DeviceName,The_RSSI_Most_Strength_Device.RSSI);
+#endif     
+    
+             }else if(BLE_Scan_Device_List.Device_Cnt>0){
+                if(Scan_Msg.RSSI > RSSI_Compare){
                     RSSI_Compare = Scan_Msg.RSSI;
-                    
+                    NearestDevieIndex = BLE_Scan_Device_List.Device_Cnt;                        
                     The_RSSI_Most_Strength_Device = Scan_Msg;
-                    
-                }else if(BLE_Scan_Device_List.Device_Cnt>0){
-                    if(Scan_Msg.RSSI > RSSI_Compare){
-                        RSSI_Compare = Scan_Msg.RSSI;
-                        NearestDevieIndex = BLE_Scan_Device_List.Device_Cnt;
-                        
-                        The_RSSI_Most_Strength_Device = Scan_Msg;
-                    }  
-                }
-                
-                //-------------------- 把掃到的裝置先存進清單裡 -----------------------
-                BLE_Scan_Device_List.messeage_List[ BLE_Scan_Device_List.Device_Cnt] = Scan_Msg;
-                
-                if(BLE_Scan_Device_List.Device_Cnt < 10){
-                    BLE_Scan_Device_List.Device_Cnt++;
-                }                
-                //------------------------------------------------------- 
-                //---掃描對象類型是BLE+    ANT資料初始化   
-                Scan_Msg.ANT_ID = 0;
-            }
-
-        }         
-        
+#if Debug_Terminal
+                    printf(" -------------------------------> Most Strength Rssi=> [%d]: <%s> Rssi:[%d] \n",NearestDevieIndex,The_RSSI_Most_Strength_Device.DeviceName,The_RSSI_Most_Strength_Device.RSSI);
+#endif     
+                }  
+             }                
+             //-------------------- 把掃到的裝置先存進清單裡 -----------------------
+             BLE_Scan_Device_List.messeage_List[ BLE_Scan_Device_List.Device_Cnt] = Scan_Msg;             
+             if(BLE_Scan_Device_List.Device_Cnt < 10){
+                 BLE_Scan_Device_List.Device_Cnt++;
+             }                
+             //------------------------------------------------------- 
+             //---掃描對象類型是BLE+    ANT資料初始化   
+             Scan_Msg.ANT_ID = 0;     
+            
+        }
     }
     
     //if(Linked_HR_info.Link_state == Linked ){ //藍芽心跳 =>0xFF時  ble會回E0 4F
@@ -517,7 +549,7 @@ void Pairing_BLE_Sensor_E1(unsigned char DeviceNumber){
    
     
     
-    if((BLE_Scan_Device_List.Device_Cnt>=1)){ //掃描完去連線??  至少要掃到一個device 才能去連線
+    if(ble_device_list_Cnt>=1){ //掃描完去連線??  至少要掃到一個device 才能去連線
         
         memset(ucBtmTxBuf,0x00,20);
         ucBtmTxBuf[0] = '[';	
@@ -526,11 +558,11 @@ void Pairing_BLE_Sensor_E1(unsigned char DeviceNumber){
         ucBtmTxBuf[1] = 0xE1;
         ucBtmTxBuf[2] = DeviceNumber;   
         
-        
-         BTM_UART_Transmit();
-        //__HAL_UART_ENABLE_IT(&huart2, UART_IT_RXNE); //----------------
-        //HAL_UART_Transmit(&huart2,ucBtmTxBuf, BtmData,tx_timeout);
-        
+#if Debug_Terminal
+        printf("\n0xE1 get [%d] <%s> Info =>  Rssi<%d> \n",NearestDevieIndex,BLE_Scan_Device_List.messeage_List[NearestDevieIndex].DeviceName,BLE_Scan_Device_List.messeage_List[NearestDevieIndex].RSSI);
+#endif          
+        BTM_UART_Transmit();
+
     }
 }
 
@@ -552,6 +584,10 @@ void BLE_Pairing_Re_E1(){
             BLE_Paired_legacy_Info.BLE_ADDR_TYPE = Pairing_Msg.BLE_ADDR_TYPE ;
         }          
 
+#if Debug_Terminal
+    printf("0xE1  MAC address[0x%02X:0x%02X:0x%02X:0x%02X:0x%02X:0x%02X] \n",Pairing_Msg.BLE_Addrs[0],Pairing_Msg.BLE_Addrs[1],Pairing_Msg.BLE_Addrs[2],Pairing_Msg.BLE_Addrs[3],Pairing_Msg.BLE_Addrs[4],Pairing_Msg.BLE_Addrs[5]);
+#endif         
+    
         Btm_Task_Adder(Connect_Paired_BLE_HR_E2);
         
     }
@@ -568,8 +604,7 @@ void Link_BLE_NFC_Pairing_E2(){
     }
     Pairing_Msg.BLE_ADDR_TYPE = 1;
     
-    Scan_Msg.ScanType = BLE_HR;
-    
+    Scan_Msg.ScanType = BLE_HR;    
     
     //先把連起來的BLE心跳存起來         
     memcpy( BLE_Paired_legacy_Info.BLE_Addrs,  Pairing_Msg.BLE_Addrs , 6);
@@ -582,45 +617,14 @@ void Link_BLE_NFC_Pairing_E2(){
             Btm_Task_Adder(ANT_HRC_Disconnect);
         }else if(ble_CB_exisit_flag == 1){
             Btm_Task_Adder(BLE_HRC_Disconnect);
-        }
-        
+        }        
         
         NFC_Connect_Wait_flag = 1;
-    }else{
-    
+    }else{    
         //如果沒有連線中 就直接連
         Btm_Task_Adder(Connect_Paired_BLE_HR_E2);
     }
 
-
-    
-    
-    /*if(ant_CC_exisit_flag == 1){
-        Btm_Task_Adder(ANT_HRC_Disconnect);
-    }else{
-        Btm_Task_Adder(Connect_Paired_BLE_HR_E2);
-    }
-    if(ble_CB_exisit_flag == 1){
-        Btm_Task_Adder(BLE_HRC_Disconnect);
-    }else{
-    
-        Btm_Task_Adder(Connect_Paired_BLE_HR_E2);
-    }*/  
-    
-    
-    /*if(Linked_HR_info.Link_state == Linked){
-        if(Linked_HR_info.SensorType == BLE_HR){
-                        
-            disconnect_Sensor_E4(BLE_HR);
-            
-        }else if(Linked_HR_info.SensorType == ANT_HR){
-            
-            disconnect_Sensor_E4(ANT_HR);    
-        }
-    }*/
-    
-    
-      
 }
 
 
@@ -629,7 +633,6 @@ void Link_BLE_NFC_Pairing_E2(){
 //-----------------------E2  BLE  Tx  -------------------------------------------------------
 void Link_Sensor_E2_BLE(Pairing_Meseseage_def paired_msg){
 
-    
     memset(ucBtmTxBuf,0x00,20);
     ucBtmTxBuf[0] = '[';	
     ucBtmTxBuf[19] = ']';
@@ -639,23 +642,21 @@ void Link_Sensor_E2_BLE(Pairing_Meseseage_def paired_msg){
     ucBtmTxBuf[2] = (unsigned char)paired_msg.Pairing_Sensor_Type;  
     ucBtmTxBuf[3] = (unsigned char)((unsigned short)(paired_msg.Pairing_Sensor_Type >> 8));  
     
-    ucBtmTxBuf[4] = paired_msg.BLE_Addrs[0];
-    ucBtmTxBuf[5] = paired_msg.BLE_Addrs[1];
-    ucBtmTxBuf[6] = paired_msg.BLE_Addrs[2];
-    ucBtmTxBuf[7] = paired_msg.BLE_Addrs[3];
-    ucBtmTxBuf[8] = paired_msg.BLE_Addrs[4];
-    ucBtmTxBuf[9] = paired_msg.BLE_Addrs[5];
+    ucBtmTxBuf[4]  = paired_msg.BLE_Addrs[0];
+    ucBtmTxBuf[5]  = paired_msg.BLE_Addrs[1];
+    ucBtmTxBuf[6]  = paired_msg.BLE_Addrs[2];
+    ucBtmTxBuf[7]  = paired_msg.BLE_Addrs[3];
+    ucBtmTxBuf[8]  = paired_msg.BLE_Addrs[4];
+    ucBtmTxBuf[9]  = paired_msg.BLE_Addrs[5];
     ucBtmTxBuf[10] = paired_msg.BLE_ADDR_TYPE;
     
-   
     Linked_HR_info.SensorType = BLE_HR;
     
-        
-        
-     BTM_UART_Transmit();
-    //__HAL_UART_ENABLE_IT(&huart2, UART_IT_RXNE); //----------------
-    //HAL_UART_Transmit(&huart2,ucBtmTxBuf, BtmData,tx_timeout);
+#if Debug_Terminal
+    printf("0xE2 Try to Link(%d)...\n",ble_device_list_Cnt);
+#endif
     
+    BTM_UART_Transmit(); 
 }
 
 //-----------------------E2  ANT+  Tx  -------------------------------------------------------
@@ -691,68 +692,55 @@ void Link_Sensor_E2_ANT( unsigned int ANT_ID){
 unsigned short FirstCB_Time_Cnt;
 unsigned char E2_but_No_CB_cnt;
 void Link_Sensor_Re_E2(){
-
-
+    
     if(ucBtmRxData[2] == 0x40 || ucBtmRxData[2] == 0x42){  //if -- [OK]
-
-      if(Linked_HR_info.SensorType == ANT_HR){
-                  
-          if(Linked_HR_info.usHR_bpm>0){
-              Linked_HR_info.Link_state = (Linking_State_Def)ucBtmRxData[2];   
-              Linked_HR_info.ANT_ID = Scan_Msg.ANT_ID;             
-          }
-
-          
-      }else if(Linked_HR_info.SensorType == BLE_HR){          
-          Linked_HR_info.Link_state = (Linking_State_Def)ucBtmRxData[2];        
-          // Linked  info 填入目前連線的裝置名稱   跟 藍芽位址       
-          memcpy( Linked_HR_info.DeviceName,BLE_Scan_Device_List.messeage_List[NearestDevieIndex].DeviceName,13);
-          memcpy( Linked_HR_info.BLE_Addrs,  Pairing_Msg.BLE_Addrs , 6);      
-         
-          //清掉 目前去連的 (RSSI最強的)
-          //memset( (BLE_Scan_Device_List.messeage_List[NearestDevieIndex]) ,0x00,sizeof(Scan_Meseseage_def));
-          BLE_Scan_Device_List.messeage_List[NearestDevieIndex].ANT_ID = 0;        
-          BLE_Scan_Device_List.messeage_List[NearestDevieIndex].RSSI = 0;
-          BLE_Scan_Device_List.messeage_List[NearestDevieIndex].ScanType = (Sensor_UUID_Type_Def)0;
-          BLE_Scan_Device_List.messeage_List[NearestDevieIndex].TransDir = (Trans_Dir_Def)0;
-          BLE_Scan_Device_List.messeage_List[NearestDevieIndex].Type_Check = (Sensor_UUID_Type_Def)0;
-          BLE_Scan_Device_List.messeage_List[NearestDevieIndex].UUID = 0;
-
-          
-          
-          if(BLE_Scan_Device_List.Device_Cnt >=2){
-              
-              //倒數20秒到1  沒有CB數值進來就連下一個
-              E2_but_No_CB_cnt = 20;
-              
-              // 把 NearestDevieIndex 改成第2強的
-              unsigned char Rssi_chk = 0;
-              for(int i = 0; i < BLE_Scan_Device_List.Device_Cnt; i++){
-                  if(BLE_Scan_Device_List.messeage_List[i].RSSI > Rssi_chk){
-                      Rssi_chk = BLE_Scan_Device_List.messeage_List[i].RSSI;
-                      NearestDevieIndex = i;
-                  }                  
-              }
-          }
-          
-
-                      
-          
-          //--------------------藍芽掃描清單初始化-----------------------
-          //Clear_BLE_Scan_Device_List();
-          //-------------------------------------------------------
-          Clear_Scan_Msg();
-          //----------------------------------------------      
-          //Ble_Icon_Display_Cnt = 10;
-          Ble_wait_HR_value_First_IN_Flag = 1;
-          FirstCB_Time_Cnt = 0;        
-      }
-      
-
+        
+        if(Linked_HR_info.SensorType == ANT_HR){
+                    
+            if(Linked_HR_info.usHR_bpm>0){
+                Linked_HR_info.Link_state = (Linking_State_Def)ucBtmRxData[2];   
+                Linked_HR_info.ANT_ID = Scan_Msg.ANT_ID;             
+            }
+            
+        }else if(Linked_HR_info.SensorType == BLE_HR){          
+            Linked_HR_info.Link_state = (Linking_State_Def)ucBtmRxData[2];        
+            // Linked  info 填入目前連線的裝置名稱   跟 藍芽位址       
+            memcpy( Linked_HR_info.DeviceName,BLE_Scan_Device_List.messeage_List[NearestDevieIndex].DeviceName,13);
+            memcpy( Linked_HR_info.BLE_Addrs,  Pairing_Msg.BLE_Addrs , 6);      
+            
+            //清掉 目前去連的 (RSSI最強的)
+            //memset( (BLE_Scan_Device_List.messeage_List[NearestDevieIndex]) ,0x00,sizeof(Scan_Meseseage_def));
+            BLE_Scan_Device_List.messeage_List[NearestDevieIndex].ANT_ID = 0;        
+            BLE_Scan_Device_List.messeage_List[NearestDevieIndex].RSSI = 0;
+            BLE_Scan_Device_List.messeage_List[NearestDevieIndex].ScanType = (Sensor_UUID_Type_Def)0;
+            BLE_Scan_Device_List.messeage_List[NearestDevieIndex].TransDir = (Trans_Dir_Def)0;
+            BLE_Scan_Device_List.messeage_List[NearestDevieIndex].Type_Check = (Sensor_UUID_Type_Def)0;
+            BLE_Scan_Device_List.messeage_List[NearestDevieIndex].UUID = 0;
+            
+            if(BLE_Scan_Device_List.Device_Cnt >=1){                
+                //倒數20秒到1  沒有CB數值進來就連下一個
+                E2_but_No_CB_cnt = 5;                
+                // 把 NearestDevieIndex 改成第2強的
+                unsigned char Rssi_chk = 0;
+                for(int i = 0; i < BLE_Scan_Device_List.Device_Cnt; i++){
+                    if(BLE_Scan_Device_List.messeage_List[i].RSSI > Rssi_chk){
+                        Rssi_chk = BLE_Scan_Device_List.messeage_List[i].RSSI;
+                        NearestDevieIndex = i;
+                    }                  
+                }
+            }              
+            //--------------------藍芽掃描清單初始化-----------------------
+            //Clear_BLE_Scan_Device_List();
+            //-------------------------------------------------------
+            Clear_Scan_Msg();
+            //----------------------------------------------      
+            //Ble_Icon_Display_Cnt = 10;
+            //------等待0xCB有心跳數值近來清0----------
+            Ble_wait_HR_value_First_IN_Flag = 1;
+            FirstCB_Time_Cnt = 0;        
+        }  
     }
-    
-}
-    
+}    
 //---------------------------------------------------------
 
 //unsigned char BLE_HR_Force_disconnct_Flag;
@@ -797,8 +785,7 @@ void disconnect_Sensor_Re_E4(){
         
             //收到 0xE4 的ACK後  重置BTM
             if(System_Mode == Idle){
-                BTM_RESSET();
-                btm_is_ready = 0;
+                BTM_RESSET();               
             }
              
             
@@ -825,7 +812,6 @@ void disconnect_Sensor_Re_E4(){
 unsigned char cb_hr;
 void SensorReceive_CB(){
   
-    
     //下了E2  CB有進來就直接清0
     E2_but_No_CB_cnt = 0;
     
@@ -834,12 +820,17 @@ void SensorReceive_CB(){
   
     cb_hr = ucBtmRxData[3];
     if(Scan_Msg.ScanType == BLE_HR){
-      
+        
         if(ucBtmRxData[3]!=0xFF){                   //有心跳
             wait_HR_disconnect_Flag = 0;
             
             if(Ble_wait_HR_value_First_IN_Flag == 1){
                 Ble_wait_HR_value_First_IN_Flag = 0;
+                
+#if Debug_Terminal
+                printf("0xE2 Link successful!!\n\n");
+#endif 
+                
             }
             
             disconnect_buffer_0xFF_Cnt = 0;
@@ -851,47 +842,13 @@ void SensorReceive_CB(){
                 Linked_HR_info.Link_state = Linked;
             }
             
-            
-            
-              
-        }else if(ucBtmRxData[3] == 0xFF){           //心跳0xFF    暫時離線狀態
-          
-            //if(Linked_HR_info.SensorType == BLE_HR){
-                
-                //disconnect_buffer_0xFF_Cnt++;
-                Linked_HR_info.usHR_bpm = 0;
-                
-                /*if(Ble_wait_HR_value_First_IN_Flag == 1){
-                    Linked_HR_info.Link_state = wait_hr_value;
-                }else{
-                    Linked_HR_info.Link_state = hr_disconnect;      
-                }*/
-                
-              // wait_HR_disconnect_Flag = 0;
-                
-                
-                /*if(disconnect_buffer_0xFF_Cnt == 5){
-                    disconnect_Sensor_E4(Linked_HR_info.SensorType);
-              
-                }else if(disconnect_buffer_0xFF_Cnt >5){
-                    Ask_Link_State_CE();
-                }*/
-                
-            //}
-        
-          
+        }else if(ucBtmRxData[3] == 0xFF){           //心跳0xFF    暫時離線狀態   
+            Linked_HR_info.usHR_bpm = 0;
         }
     }
     
     Ble_wait_disconnect_Time_out_Cnt = 20;
     
-    //---------強制斷線 -------------
-    /*
-    if(BLE_HR_Force_disconnct_Flag == 1){
-        disconnect_Sensor_E4(BLE_HR);
-    }*/
-
-
 }
 
 unsigned char ant_hr_exisit_cnt;
@@ -1664,6 +1621,9 @@ void F_BtmRead44Cmd(void){
       Write_SerialNumber_To_Flash(ucProductionSerialNumber);  //將序號寫入Flash
       Read_SerialNumber_From_Flash(ucProductionSerialNumber);  //讀出Flash
         
+#if Debug_Terminal
+      printf("Write SN by 0x44 from App  :%s \n",ucProductionSerialNumber);
+#endif
       
       
       __asm("NOP");
@@ -2134,6 +2094,10 @@ void F_Btm_FTMS_B0(unsigned char ucPage){
     }
     
 
+#if Debug_Terminal
+    printf("0xB0 page:%d ",ucPage); 
+#endif
+    
          
     ucBtmTxBuf[19] = ']';
     
@@ -2173,7 +2137,12 @@ void F_Btm_FTMS_B0_Read(void){
     
     ucRFVersion[0] = ucBtmRxData[3];
     ucRFVersion[1] = ucBtmRxData[4];
-    ucRFVersion[2] = ucBtmRxData[5];  
+    ucRFVersion[2] = ucBtmRxData[5];
+    
+#if Debug_Terminal
+    printf("版本%d%d%d 設定成功\n",ucRFVersion[2],ucRFVersion[1],ucRFVersion[0]); 
+#endif
+    
 }
 
 
@@ -3326,6 +3295,46 @@ void F_Btm_FEC_B4_SET_Data(unsigned char page){
         ucBtmTxBuf[17] = maximum_heart_rate;
         ucBtmTxBuf[18] = minimum_heart_rate_increment;
         
+#if Debug_Terminal        
+        printf("\n0xB4  page:%d  Training status: <", page );     
+       
+        if(Training_status == 0){
+            printf(" other "); 
+        }else if(Training_status == 1){    //// 1 : stop  2：pause  3: stop by safeKey   4: start         
+            printf(" IDLE ");  
+        }else if(Training_status == 2){
+            printf(" Warming_up ");  
+        }else if(Training_status == 3){
+            printf(" Low_intensity_interval "); 
+        }else if(Training_status == 4){
+            printf(" High_intensity_interval ");
+        }else if(Training_status == 5){
+            printf(" Recovery_interval ");  
+        }else if(Training_status == 6){
+            printf(" Isometric "); 
+        }else if(Training_status == 7){
+            printf(" Heart_rate_control ");
+        }else if(Training_status == 8){
+            printf(" Fitness_test ");  
+        }else if(Training_status == 9){
+            printf(" Speed_outside_of_control_region_Low "); 
+        }else if(Training_status == 10){
+            printf(" Speed_outside_of_control_region_High ");
+        }else if(Training_status == 11){
+            printf(" Cool_down ");
+        }else if(Training_status == 12){
+            printf(" Watt_control ");  
+        }else if(Training_status == 13){
+            printf(" Manual_mode "); 
+        }else if(Training_status == 14){
+            printf(" Pre_workout ");
+        }else if(Training_status == 15){
+            printf(" Post_workout ");  
+        }
+         printf(">"); 
+ #endif
+        
+        
     }else if(page == 1){
    
         ucBtmTxBuf[3] = (unsigned char)minimum_resistance_level;
@@ -3351,8 +3360,38 @@ void F_Btm_FEC_B4_SET_Data(unsigned char page){
         ucBtmTxBuf[16] = cycle_length_for_FEC;
         ucBtmTxBuf[17] = (unsigned char)FE_Status;
         ucBtmTxBuf[18] = 0;
-              
+         
+#if Debug_Terminal        
+        printf("0xB4  page:%d  console_status:<", page );     
+        
+        if(console_status == 1){    //// 1 : stop  2：pause  3: stop by safeKey   4: start         
+            printf(" stop ");  
+        }else if(console_status == 2){
+            printf(" pause ");  
+        }else if(console_status == 3){
+            printf(" stop by safeKey "); 
+        }else if(console_status == 4){
+            printf(" start ");
+        }
+        
+        printf("> FE_Status: <");
+        
+        if(FE_Status == ASLEEP){    ////      
+            printf(" ASLEEP ");  
+        }else if(FE_Status == READY){
+            printf(" READY ");  
+        }else if(FE_Status == IN_USE){
+            printf(" IN_USE "); 
+        }else if(FE_Status == FINISHED){
+            printf(" FINISHED ");
+        }                
+         printf(">");
+#endif
+        
     }
+
+
+    
     
     ucBtmTxBuf[19] = ']';
 
@@ -3391,6 +3430,19 @@ void F_SetFEC_State(FEC_State_Def FEC_State){
     ucBtmTxBuf[16] = cycle_length_for_FEC;
     ucBtmTxBuf[17] = (unsigned char)FEC_State;
     ucBtmTxBuf[18] = 0;  
+    
+    
+#if Debug_Terminal        
+    
+    if(FEC_State == IN_USE){
+        printf("0xB4  FE State: IN_Use " );  
+    }else if(FEC_State == READY ){
+        printf("0xB4  FE State: READY " );  
+    }else if(FEC_State == FINISHED ){
+        printf("0xB4  FE State: FINISHED " );  
+    }
+    
+#endif
     
     ucBtmTxBuf[19] = ']';
     
@@ -3512,6 +3564,11 @@ void Btm_Recive(){
             ucRFVersion[0] = ucBtmRxData[2];       // RF L    BLE version L
             ucRFVersion[1] = ucBtmRxData[3];       // RF M    BLE version M
             ucRFVersion[2] = ucBtmRxData[4];       // RF H    BLE version H
+            
+#if Debug_Terminal
+    printf("--btm rst successful-- \n"); 
+#endif
+            
         }
         
         //-----------------------------------------------------心跳裝置------------------------
@@ -3526,6 +3583,14 @@ void Btm_Recive(){
         
         if(ucBtmRxData[1] == 0xE2){  // 裝置連線解碼
             Link_Sensor_Re_E2();        
+        }
+        
+        if(ucBtmRxData[1] == 0xC8){
+            if(ucBtmRxData[2] == 0x40){
+#if Debug_Terminal
+                printf("0xC8 設定成功\n");
+#endif
+            }
         }
         
         if(ucBtmRxData[1] == 0xCB){  // BLE裝置數值回傳解碼
@@ -3615,6 +3680,22 @@ void Btm_Recive(){
         if( ucBtmRxData[1] == 0xB2 ){
             F_Btm_FTMS_B2_Read();
         }
+        
+        if( ucBtmRxData[1] == 0xB4 ){
+#if Debug_Terminal
+            printf("設定成功 \n\n"); 
+#endif
+        }   
+        
+        if( ucBtmRxData[1] == 0xB5 ){
+            if( ucBtmRxData[2] == 0x40 ){
+                
+#if Debug_Terminal
+                printf("0xB5 ANT+ FEC  SN:%s 設定成功 \n",ucProductionSerialNumber);
+#endif                
+            }
+        }
+        
         btm_Rx_is_busy = 0;
     }
     
@@ -3662,12 +3743,14 @@ void BLE_Init(){
     HAL_UART_MspDeInit(&huart2); 
     HAL_UART_MspInit(&huart2);    
     BtmRst();
+    //BTM_RESSET();
     __HAL_UART_ENABLE_IT(&huart2, UART_IT_RXNE);
    
     while(btm_is_ready!=1){}
     HAL_Delay(10);
     //ScanSensorE0(ANT_HR);
     HAL_Delay(10);
+    
     __asm("NOP");
     
 }

@@ -33,9 +33,31 @@ unsigned int ble_hr_CB_exisit_chk_cnt;
 unsigned char ant_CC_exisit_flag;
 unsigned char ble_CB_exisit_flag;
 
-
+unsigned short hrs_cnt;
 void F_HeartRate_Supervisor(){
-
+        
+    if(T3s_E2_ReConnect_Flag){
+        T3s_E2_ReConnect_Flag = 0;
+        
+        //ANT 斷線重新連線 (只連原本連住的那一個)
+        if( (HeartRate_Is_Exist_Flag == 0) && (Scan_Msg.ScanType == ANT_HR) && (ANT_ID_Paired_legacy !=0 ) ){
+        
+          if((System_Mode == WarmUp) || (System_Mode == Workout)  || (System_Mode == CooolDown) ||  (System_Mode == Paused)){
+            //如果是正在運動中的情況下要去連原本連線的那一個
+             Btm_Task_Adder(Connect_Paired_ANT_HR_E2);
+          }          
+        }
+        
+        //BLE 斷線重新連線 (只連原本連住的那一個)
+        if( (HeartRate_Is_Exist_Flag == 0) && (Scan_Msg.ScanType == BLE_HR ) && (Linked_HR_info.Link_state == disconnect) && (BLE_Paired_legacy_Info.BLE_Addrs[0] != 0) ){
+        
+          if((System_Mode == WarmUp) || (System_Mode == Workout)  || (System_Mode == CooolDown) ||  (System_Mode == Paused)){
+            //如果是正在運動中的情況下要去連原本連線的那一個
+             Btm_Task_Adder(Connect_Paired_BLE_HR_E2);
+          }          
+        }   
+    }
+    
     if(T1s_HR_Monitor_Flag){
         T1s_HR_Monitor_Flag = 0;      
         
@@ -68,8 +90,7 @@ void F_HeartRate_Supervisor(){
                 
                 Btm_Task_Adder(Connect_Paired_BLE_HR_E2);
             }               
-        }
-        
+        }        
           
         if(HeartRate_Is_Exist_Flag == 0){
           
@@ -82,15 +103,13 @@ void F_HeartRate_Supervisor(){
             if(usNowHeartRate > 0){
                 HeartRate_Is_Exist_Flag = 1; 
                 //掃描中有心跳數值 90%是斷線後的 殘留CB 或 CC 所以這個情形必須排除
-                if( (Scan_Msg.Scan_State != Scaning) && (Scan_Msg.Scan_State != Scaning2)){
+                if( Scan_Msg.Scan_State != Scaning){
                     if(Linked_HR_info.SensorType == ANT_HR){
                         ANT_Icon_Display_Cnt = 10;
                     }else if(Linked_HR_info.SensorType == BLE_HR){
                         Ble_Icon_Display_Cnt = 10;
                     }
-                }
-
-                
+                }                
             } 
         }
         else if(HeartRate_Is_Exist_Flag == 1){
@@ -100,27 +119,7 @@ void F_HeartRate_Supervisor(){
                 Linked_HR_info.SensorType = (Sensor_UUID_Type_Def)0; //防止斷線後 因為手握心跳  觸發錯誤 ICON
                 //Linked_HR_info.Link_state = disconnect; //++
             } 
-        }
-        
-        //ANT 斷線重新連線 (只連原本連住的那一個)
-        if( (HeartRate_Is_Exist_Flag == 0) && (Scan_Msg.ScanType == ANT_HR) && (ANT_ID_Paired_legacy !=0 ) ){
-        
-          if((System_Mode == WarmUp) || (System_Mode == Workout)  || (System_Mode == CooolDown) ||  (System_Mode == Paused)){
-            //如果是正在運動中的情況下要去連原本連線的那一個
-             Btm_Task_Adder(Connect_Paired_ANT_HR_E2);
-          }          
-        }
-        
-        //BLE 斷線重新連線 (只連原本連住的那一個)
-        if( (HeartRate_Is_Exist_Flag == 0) && (Scan_Msg.ScanType == BLE_HR ) && (Linked_HR_info.Link_state == disconnect) && (BLE_Paired_legacy_Info.BLE_Addrs[0] != 0) ){
-        
-          if((System_Mode == WarmUp) || (System_Mode == Workout)  || (System_Mode == CooolDown) ||  (System_Mode == Paused)){
-            //如果是正在運動中的情況下要去連原本連線的那一個
-             Btm_Task_Adder(Connect_Paired_BLE_HR_E2);
-          }          
-        }
-        
-        
+        }              
     }
 }
 

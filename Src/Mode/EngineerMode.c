@@ -747,15 +747,12 @@ void Engineer_Func(){
             if( KeyCatch(0,1 , Start) ){   //重新掃描
                 
                 if(Ble_wait_HR_value_First_IN_Flag == 0){
-                    if(Scan_Msg.Scan_State != Scaning ){  //掃描中防止又按一次
-                        if(Scan_Msg.Scan_State != Scaning2 ){
-                            if(Linked_HR_info.Link_state != Linked){
-                                Btm_Task_Adder(Scan_BLE_HRC_Sensor);
-                            }else if((Linked_HR_info.Link_state == Linked) || (Linked_HR_info.Link_state == Linked_2)){
-                                Btm_Task_Adder(BLE_HRC_Disconnect);
-                            }
+                    if(Scan_Msg.Scan_State != Scaning ){  //掃描中防止又按一次                        
+                        if(Linked_HR_info.Link_state != Linked){
+                            Btm_Task_Adder(Scan_BLE_HRC_Sensor);
+                        }else if((Linked_HR_info.Link_state == Linked) || (Linked_HR_info.Link_state == Linked_2)){
+                            Btm_Task_Adder(BLE_HRC_Disconnect);
                         }
-                        
                     }
                 }
             }  

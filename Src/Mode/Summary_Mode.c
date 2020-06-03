@@ -15,8 +15,9 @@ void IntoSummaryMode_Process(){
     
     System_Mode = Summary;
     
+    console_status =  1;//1 : stop  2¡Gpause  3: stop by safeKey   4: start 
     FE_Status = FINISHED;
-    F_SetFEC_State(FINISHED);
+    Btm_Task_Adder(FEC_Data_Config_Page_1);
         
     ClearStd_1_Sec_Cnt(); 
     

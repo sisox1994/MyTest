@@ -23,7 +23,7 @@ void IntoIdleMode_Process(){
     F_BtmReply39Cmd();//立馬告訴APP 進入Idle了 
     
     FE_Status = READY;
-    F_SetFEC_State(READY);
+    Btm_Task_Adder(FEC_Data_Config_Page_1);
     
     Program_Select = Quick_start;
     Cloud_Run_Initial_Busy_Flag = 0;
@@ -588,10 +588,16 @@ void Idle_Key(){
            
         if(AutoPause_Flag == 0){
             AutoPause_Flag = 1;
-            Buzzer_BeeBee(400, 2);  //開啟B2聲
+            Buzzer_BeeBee(400, 2);  //B2聲
+#if Debug_Terminal
+            printf("無人模式 --關閉-- \n");
+#endif   
         }else{
-            AutoPause_Flag = 0;    //關掉B1聲
+            AutoPause_Flag = 0;    //B1聲
             Buzzer_Btn(); 
+#if Debug_Terminal
+            printf("無人模式 --開啟-- \n");
+#endif   
         }
         
         
