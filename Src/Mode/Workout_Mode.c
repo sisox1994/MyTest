@@ -26,7 +26,7 @@ extern void NumberInsert_Time(unsigned int* Time_Modify);
 void IntoWorkoutModeProcess(){
     
     
-    Training_status = Manual_mode;
+    Training_status = Manual_mode;//Manual_mode;
     Btm_Task_Adder(FEC_Data_Config_Page_0); 
     
     console_status = 4;    // 1 : stop  2¡Gpause  3: stop by safeKey   4: start 

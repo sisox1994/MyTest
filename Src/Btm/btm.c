@@ -1834,7 +1834,8 @@ void Config_FTMS_Data_Flag(FTMS_Machine_Type_Def Type){
         FTMS_Data_Flag =  heart_rate_present | treadmill_instantaneouse_pace_present | treadmill_average_pace_present | 
                           elevation_gain_present | inclination_and_ramp_angle_present | metalbolic_equivalent_present |
                           force_belt_power_output_present | total_distance_present | elapsed_time_present | remaining_time_present;
-                   
+               
+
 #endif
         
           
@@ -1949,6 +1950,7 @@ typedef enum{
     
 }FTMS_Feature_Def;
 
+
 //------------------------FTMS Feature  Control ---------------------------//
 typedef enum{
     
@@ -2001,7 +2003,9 @@ void FTMS_Feature_Config(FTMS_Machine_Type_Def Type){
         FTMS_Feature = heart_rate_support | pace_support | elevation_gain_support | inclination_support  |
                        metalbolic_equivalent_support | forceOnbelt_and_powerOutput_support | total_distance_support |
                        elapsed_time_support | remaining_time_support | expended_energy_support | expended_energy_support;
-            
+        
+
+        
         //  expended_energy_support (只要丟卡路里資料出來  Kinomap就收不到心跳= =)
         //average_speed_support                     
          
@@ -2009,6 +2013,10 @@ void FTMS_Feature_Config(FTMS_Machine_Type_Def Type){
         FTMS_Control = inclination_target_setting_support | heart_rate_target_setting_support |
              target_expended_energy_configuration_support | target_step_number_configuartion_support |
              target_distance_configuration_support        | target_training_time_configuration_support;      
+
+        
+        
+        
 #endif
 
         
@@ -3001,6 +3009,9 @@ void F_Btm_FTMS_B2_Read(){
     B2_Event_List[B2_Event_Cnt%50] = FTMS_OP_Code;
     B2_Event_Cnt++;
     
+#if Debug_Terminal    
+        printf("OPCODE 0x%X\n",FTMS_OP_Code);
+#endif
     
      //------------接收 FEC Page 51 坡度----------------------------
     if(FTMS_OP_Code == page_51_track_resistance){   
@@ -3012,6 +3023,11 @@ void F_Btm_FTMS_B2_Read(){
     
     if(FTMS_OP_Code == set_target_speed){
         FTMS_Control_Value.target_Speed = (unsigned short)ucBtmRxData[3] + (unsigned short)(ucBtmRxData[4]<<8);  
+
+#if Debug_Terminal    
+        printf("get target_Speed %d\n",FTMS_Control_Value.target_Speed);
+#endif
+    
     }
  
     if(FTMS_OP_Code == set_target_inclination){
@@ -3019,6 +3035,9 @@ void F_Btm_FTMS_B2_Read(){
         Buzzer_BeeBee(300, 3);
         
         FTMS_Control_Value.target_Incline = (unsigned short)ucBtmRxData[3] + (unsigned short)(ucBtmRxData[4]<<8);  
+#if Debug_Terminal    
+        printf("get target_Incline %d\n",FTMS_Control_Value.target_Incline);
+#endif
         if(System_Mode == Workout){
             
             unsigned short tmp = FTMS_Control_Value.target_Incline;
@@ -3033,6 +3052,9 @@ void F_Btm_FTMS_B2_Read(){
     
 #if FTMS_Activated_Permission   //防止被Zwift隨機啟動
     if(FTMS_OP_Code == start_or_resume){
+#if Debug_Terminal    
+        printf("start_or_resume\n");
+#endif
         if(System_Mode == Idle){
             Quick_Start_Init();       //Zwift 沒事就會一直下這個cmd (包括掃描裝置時)
             IntoReadyMode_Process();
@@ -3058,8 +3080,11 @@ void F_Btm_FTMS_B2_Read(){
             
             if(System_Mode == Workout){
                 
+#if Debug_Terminal    
+                printf("stop_or_pause\n");
+#endif
                
-                IntoSummaryMode_Process(); //190115 直接進入summary
+               /* IntoSummaryMode_Process(); //190115 直接進入summary
                 
                 Btm_Task_Adder(FTMS_Data_Broadcast); //Page 0 //廣播運動資料 歸零
                 Btm_Task_Adder(FTMS_Data_Broadcast); //Page 1
@@ -3070,7 +3095,7 @@ void F_Btm_FTMS_B2_Read(){
                 RM6_Task_Adder(Set_INCLINE);
                 RM6_Task_Adder(Motor_STOP);
                 
-               Buzzer_BeeBee(Time_Set, Cnt_Set);
+               Buzzer_BeeBee(Time_Set, Cnt_Set);*/
             }
             __asm("NOP");
         }else if(ucBtmRxData[3] == 0x02){
