@@ -1762,6 +1762,13 @@ void writeLEDMatrix(){
     
     //---------------------------------------------------
     
+    if(btm_is_ready == 0){
+        LedMatrixBuffer[0] |= 0x80;
+    }
+    if(Tx_0xB1_cnt > 10){
+        LedMatrixBuffer[1] |= 0x80;
+    }
+   
     
     for(unsigned char i = 0; i < 32;i++){
         HT_Write( MatrixOderTable[i] * 4  ,LedMatrixBuffer[i] , 0);

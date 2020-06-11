@@ -1350,7 +1350,6 @@ unsigned short  usSegmentNumber;
 
 Cmd_39_outData_Def  Cloud_0x39_Info;
 
-
 void F_BtmReply39Cmd(void){
     
     
@@ -2401,6 +2400,8 @@ void Test_Data_Brocast(){
 
 #endif
 
+uint32_t Tx_0xB1_cnt;
+
 void Treadmill_B1(){
 
     memset(ucBtmTxBuf,0x00,20);
@@ -2594,6 +2595,7 @@ void Treadmill_B1(){
     
     ucBtmTxBuf[19] = ']';
     
+    Tx_0xB1_cnt++;
     __HAL_UART_ENABLE_IT(&huart2, UART_IT_RXNE); //----------------
     HAL_UART_Transmit(&huart2,ucBtmTxBuf, BtmData,tx_timeout);
     
@@ -3589,7 +3591,7 @@ void Btm_Recive(){
             ucRFVersion[0] = ucBtmRxData[2];       // RF L    BLE version L
             ucRFVersion[1] = ucBtmRxData[3];       // RF M    BLE version M
             ucRFVersion[2] = ucBtmRxData[4];       // RF H    BLE version H
-            
+            Btm_Task_Adder(FEC_SET_SN); 
 #if Debug_Terminal
     printf("--btm rst successful-- \n"); 
 #endif
@@ -3711,6 +3713,27 @@ void Btm_Recive(){
             printf("設定成功 \n\n"); 
 #endif
         }   
+        
+        if( ucBtmRxData[1] == 0x39 ){
+            static uint32_t cnt_39;
+            cnt_39++;
+#if Debug_Terminal
+            printf("get 0x39 ack:%d \n\n",cnt_39);             
+#endif
+ 
+        }   
+        
+        if( ucBtmRxData[1] == 0xB1){            
+            static uint32_t cnt_B1;
+            cnt_B1++;
+#if Debug_Terminal
+            //printf("get 0xB1 ack:%d \n\n",cnt_B1);             
+#endif
+            Tx_0xB1_cnt = 0;
+            //Tx_0xB1_cnt = 0;
+        }         
+        
+        
         
         if( ucBtmRxData[1] == 0xB5 ){
             if( ucBtmRxData[2] == 0x40 ){

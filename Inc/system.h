@@ -43,6 +43,9 @@ extern unsigned char ucNFC_BleID[7];
 extern unsigned char NFC_Connect_Wait_flag;
 extern unsigned short clear_0xAA_cnt;  //讓同一個RFID重複B  但是要延遲一段時間
 
+extern uint32_t Tx_0xB1_cnt;
+
+
 //--------功能開關---------  1 開   0關
 #define Use_BTSPK   0
 #define Use_FAN     0
