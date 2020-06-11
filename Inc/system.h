@@ -30,6 +30,7 @@
 
 #define System_Version "V21"        //APP 只判斷這個
 #define Modify_Version "A00"        // AXX 細分版本 V10A01 V10A02 代表都是V10 但是 有稍微修改
+//修改測試by Bill PC2
 
 //----------NFC-------------------
 void NFC_UART6_Transmit_Test();
